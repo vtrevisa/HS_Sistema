@@ -1,4 +1,3 @@
-<!-- filepath: /home/vtrevisa/Documents/prog/PHP/HS_Sistema/index.php -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -9,6 +8,17 @@
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
+    <?php
+    // Handle form submission
+    if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['name'])) {
+        include 'add_client.php';
+    }
+    
+    // Check if we need to show the modal or refresh
+    $showModal = isset($_GET['show_modal']) && $_GET['show_modal'] === 'true';
+    $refresh = isset($_GET['refresh']) && $_GET['refresh'] === 'true';
+    ?>
+    
     <div class="menu">
         <img src="logo.png" alt="HS Sistema Logo">
         <h1>HS Sistema</h1>
@@ -20,8 +30,8 @@
         <div class="content-header">
             <h1>Client Management</h1>
             <div>
-                <button class="add-client-btn" id="add-client-btn">Add Client</button>
-                <button class="refresh-btn" id="refresh-btn">Refresh Data</button>
+                <a href="?show_modal=true" class="add-client-btn">Add Client</a>
+                <a href="?refresh=true" class="refresh-btn">Refresh Data</a>
             </div>
         </div>
         
@@ -31,11 +41,12 @@
     </div>
 
     <!-- Modal -->
-    <div class="modal" id="add-client-modal">
+    <?php if ($showModal): ?>
+    <div class="modal" id="add-client-modal" style="display: flex;">
         <div class="modal-content">
-            <button class="close-btn" id="close-modal-btn">X</button>
+            <a href="?" class="close-btn">X</a>
             <h2>Add Client</h2>
-            <form method="POST" action="add_client.php">
+            <form method="POST" action="">
                 <label for="name">Name:</label>
                 <input type="text" id="name" name="name" required>
 
@@ -52,35 +63,6 @@
             </form>
         </div>
     </div>
-
-    <script>
-        // JavaScript to handle modal functionality
-        const addClientBtn = document.getElementById('add-client-btn');
-        const modal = document.getElementById('add-client-modal');
-        const closeModalBtn = document.getElementById('close-modal-btn');
-
-        addClientBtn.addEventListener('click', (e) => {
-            e.preventDefault();
-            modal.style.display = 'flex';
-        });
-
-        closeModalBtn.addEventListener('click', () => {
-            modal.style.display = 'none';
-        });
-
-        window.addEventListener('click', (e) => {
-            if (e.target === modal) {
-                modal.style.display = 'none';
-            }
-        });
-		// Add refresh button functionality
-        document.getElementById('refresh-btn').addEventListener('click', function() {
-            fetch('get_clients.php')
-                .then(response => response.text())
-                .then(data => {
-                    document.getElementById('client-grid').innerHTML = data;
-                });
-        });
-    </script>
+    <?php endif; ?>
 </body>
 </html>
