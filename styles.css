@@ -1,0 +1,159 @@
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+}
+.menu {
+    width: 250px;
+    height: 100vh;
+    background-color: #d32f2f; /* Red stripe */
+    color: white;
+    position: fixed;
+    top: 0;
+    left: 0;
+    padding: 20px;
+    box-sizing: border-box;
+}
+.menu h1 {
+    font-size: 24px;
+    margin: 0;
+    text-align: center;
+}
+.menu img {
+    display: block;
+    margin: 20px auto;
+    width: 100px;
+}
+.menu ul {
+    list-style: none;
+    padding: 0;
+    margin: 20px 0;
+}
+.menu ul li {
+    margin: 10px 0;
+}
+.menu ul li a {
+    color: white;
+    text-decoration: none;
+    font-size: 18px;
+}
+.content {
+    margin-left: 250px;
+    padding: 20px;
+}
+.content-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+.content-header h1 {
+    margin: 0;
+}
+.add-client-btn {
+    padding: 10px 20px;
+    background-color: #d32f2f;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+.add-client-btn:hover {
+    background-color: #b71c1c;
+}
+.modal {
+    display: none; /* Hidden by default */
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 1000;
+    justify-content: center;
+    align-items: center;
+}
+.modal-content {
+    background-color: white;
+    padding: 20px;
+    border-radius: 5px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    width: 400px;
+}
+.modal-content h2 {
+    margin-top: 0;
+}
+.modal-content form {
+    display: flex;
+    flex-direction: column;
+}
+.modal-content form label {
+    margin-bottom: 5px;
+    font-weight: bold;
+}
+.modal-content form input, .modal-content form textarea {
+    margin-bottom: 15px;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+}
+.modal-content form button {
+    padding: 10px;
+    background-color: #d32f2f;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+.modal-content form button:hover {
+    background-color: #b71c1c;
+}
+.close-btn {
+    background-color: #d32f2f;
+    color: white;
+    border: none;
+    padding: 5px 10px;
+    border-radius: 5px;
+    cursor: pointer;
+    float: right;
+}
+.close-btn:hover {
+    background-color: #b71c1c;
+}
+
+.client-grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+	gap: 20px;
+	margin-top: 20px;
+}
+
+.client-card {
+	border: 1px solid #ddd;
+	border-radius: 5px;
+	padding: 15px;
+	background-color: white;
+	box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.client-card h3 {
+	margin-top: 0;
+	color: #d32f2f;
+}
+
+.client-card p {
+	margin: 5px 0;
+}
+
+.refresh-btn {
+	padding: 10px 20px;
+	background-color: #4CAF50;
+	color: white;
+	border: none;
+	border-radius: 5px;
+	cursor: pointer;
+	margin-left: 10px;
+}
+
+.refresh-btn:hover {
+	background-color: #388E3C;
+}
