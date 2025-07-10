@@ -1,0 +1,9 @@
+/* public/css/dashboard.css */
+.sidebar {
+    height: 100vh;
+    background: rgb(182, 48, 48);
+    padding: 20px;
+}
+.content {
+    padding: 20px;
+}
