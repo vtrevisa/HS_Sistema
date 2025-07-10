@@ -6,10 +6,32 @@
 <div class="container">
     <div class="d-flex justify-content-between mb-4">
         <h1>Clientes</h1>
-        <a href="{{ route('clients.index', ['import' => true]) }}" 
-           class="btn btn-primary">
-           Import CSV
-        </a>
+        <!-- Import CSV Button triggers modal -->
+        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#importCsvModal">
+            Import CSV
+        </button>
+    </div>
+
+    <!-- Import CSV Modal -->
+    <div class="modal fade" id="importCsvModal" tabindex="-1" aria-labelledby="importCsvModalLabel" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <form method="POST" action="{{ route('clients.importCsv') }}" enctype="multipart/form-data">
+            @csrf
+            <div class="modal-header">
+              <h5 class="modal-title" id="importCsvModalLabel">Importar Clientes via CSV</h5>
+              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+              <input type="file" name="csv_file" class="form-control" accept=".csv" required />
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+              <button type="submit" class="btn btn-primary">Importar</button>
+            </div>
+          </form>
+        </div>
+      </div>
     </div>
 
     <div class="row">
@@ -29,6 +51,9 @@
                             <strong>Bairro:</strong> {{ $client->bairro }}<br>
                             <strong>Ocupação:</strong> {{ $client->ocupacao }}
                         </p>
+                    </div>
+                    <div class="card-footer text-end">
+                        <a href="{{ route('clients.moreinfo', $client->id) }}" class="btn btn-info">Mais Info</a>
                     </div>
                 </div>
             </div>

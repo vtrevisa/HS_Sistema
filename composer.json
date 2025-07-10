@@ -7,8 +7,13 @@
     "license": "MIT",
     "require": {
         "php": "^8.2",
+        "guzzlehttp/guzzle": "^7.9",
+        "illuminate/cache": "*",
         "laravel/framework": "^12.0",
-        "laravel/tinker": "^2.10.1"
+        "laravel/tinker": "^2.10.1",
+        "league/csv": "^9.24",
+        "spatie/robots-txt": "^2.5",
+        "symfony/dom-crawler": "^7.3"
     },
     "require-dev": {
         "fakerphp/faker": "^1.23",

@@ -14,3 +14,7 @@ composer require guzzlehttp/guzzle      # HTTP requests
 composer require symfony/dom-crawler    # Parse HTML
 composer require illuminate/cache       # Caching (if not included)
 
+composer require tomzx/robots-txt
+
+composer require spatie/robots-txt
+composer require league/csv
