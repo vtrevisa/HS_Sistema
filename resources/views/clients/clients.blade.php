@@ -45,7 +45,7 @@
                         <h5 class="card-title">Licença: {{ $client->licenca }}</h5>
                         <p class="card-text">
                             <strong>Vigência:</strong> {{ $client->vigencia }}<br>
-                            <strong>Endereço:</strong> {{ $client->endereco }}<br>
+                            <strong>Endereço:</strong> {{ $client->endereco }}{{ $client->numero ? ', ' . $client->numero : '' }}<br>
                             <strong>Complemento:</strong> {{ $client->complemento ?? '-' }}<br>
                             <strong>Município:</strong> {{ $client->municipio }}<br>
                             <strong>Bairro:</strong> {{ $client->bairro }}<br>

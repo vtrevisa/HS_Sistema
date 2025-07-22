@@ -59,12 +59,13 @@ class ClientController extends Controller
         // Refresh DB: delete all and insert new
         \App\Models\Client::truncate();
         foreach ($data as $row) {
-            // Map CSV keys to DB columns
+            // Map CSV keys to DB columns, including address number
             $mapped = [
                 'tipo' => $row['tipo'] ?? $row['Tipo'] ?? null,
                 'licenca' => $row['licenca'] ?? $row['Licenca'] ?? null,
                 'vigencia' => $row['vigencia'] ?? $row['Vigência'] ?? null,
                 'endereco' => $row['endereco'] ?? $row['Endereço'] ?? null,
+                'numero' => $row['numero'] ?? $row['Nº'] ?? $row['nº'] ?? $row['numero'] ?? null,
                 'complemento' => $row['complemento'] ?? $row['Complemento'] ?? null,
                 'municipio' => $row['municipio'] ?? $row['Município'] ?? null,
                 'bairro' => $row['bairro'] ?? $row['Bairro'] ?? null,
