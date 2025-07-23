@@ -1,0 +1,22 @@
+<?php
+
+use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\UserController;
+
+use Illuminate\Support\Facades\Route;
+
+// Auth
+Route::post('/auth', [AuthController::class, 'login']); //POST
+
+Route::group(['middleware' => ['auth:sanctum']], function () {
+    // Users
+    Route::get('/users', [UserController::class, 'index']); //GET
+    Route::get('/users/{user}', [UserController::class, 'show']); //GET
+    Route::post('/users', [UserController::class, 'store']); //POST
+    Route::put('/users/{user}', [UserController::class, 'update']); //PUT
+    Route::delete('/users/{user}', [UserController::class, 'destroy']); //DELETE
+
+
+    // Logout
+    Route::post('/logout/{user}', [AuthController::class, 'logout']); //POST
+});
