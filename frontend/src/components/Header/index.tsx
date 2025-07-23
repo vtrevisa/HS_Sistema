@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom'
 import {
  LayoutDashboard,
+ LogOut,
  Users
  //  Trello,
  //  Shield,
@@ -22,8 +23,10 @@ import {
  SidebarMenuButton,
  SidebarMenuItem,
  SidebarHeader,
+ SidebarFooter,
  useSidebar
 } from '@/components/ui/sidebar'
+import { useLogout } from '@/http/use-logout'
 
 interface AppSidebarProps {
  activeTab: string
@@ -52,6 +55,12 @@ export function Header({ activeTab, onTabChange }: AppSidebarProps) {
   // { id: 'whatsapp', label: 'WhatsApp', icon: MessageCircle },
   // { id: 'settings', label: 'Configurações', icon: Cog }
  ]
+
+ const { mutateAsync: logout } = useLogout()
+
+ async function handleLogout() {
+  await logout()
+ }
 
  return (
   <Sidebar collapsible="icon">
@@ -93,6 +102,21 @@ export function Header({ activeTab, onTabChange }: AppSidebarProps) {
      </SidebarGroupContent>
     </SidebarGroup>
    </SidebarContent>
+
+   <SidebarFooter>
+    <SidebarMenu>
+     <SidebarMenuItem>
+      <SidebarMenuButton
+       onClick={handleLogout}
+       tooltip={isCollapsed ? 'Sair' : undefined}
+       className="text-destructive hover:text-destructive hover:bg-destructive/10"
+      >
+       <LogOut className="h-4 w-4" />
+       <span>Sair</span>
+      </SidebarMenuButton>
+     </SidebarMenuItem>
+    </SidebarMenu>
+   </SidebarFooter>
   </Sidebar>
  )
 }

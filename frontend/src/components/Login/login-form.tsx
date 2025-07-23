@@ -3,11 +3,12 @@ import { LockKeyhole, User } from 'lucide-react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
+import { useAuth } from '@/http/use-auth'
 
 import logo from '../../assets/logo.svg'
 
 const loginSchema = z.object({
- username: z.string().min(1, 'Informe o usuário ou e-mail'),
+ login: z.string().min(1, 'Informe o usuário ou e-mail'),
  password: z
   .string()
   .min(1, 'Informe a senha')
@@ -19,6 +20,8 @@ type LoginFormData = z.infer<typeof loginSchema>
 export function LoginForm() {
  const [checked, setChecked] = useState(false)
 
+ const { mutateAsync: auth } = useAuth()
+
  const {
   register,
   handleSubmit,
@@ -28,7 +31,7 @@ export function LoginForm() {
  })
 
  async function handleLogin(data: LoginFormData) {
-  console.log(data)
+  await auth(data)
  }
 
  return (
@@ -42,15 +45,15 @@ export function LoginForm() {
      </label>
      <input
       type="text"
-      {...register('username')}
-      id="username"
-      name="username"
-      autoComplete="username"
+      {...register('login')}
+      id="login"
+      name="login"
+      autoComplete="login"
       placeholder="Usuário ou E-mail"
       className="pl-10 py-2 w-full border-2 rounded border-red-1000 placeholder:text-stone-900 placeholder:text-sm placeholder:font-semibold text-stone-900 text-base font-normal focus:outline-none"
      />
-     {errors.username && (
-      <p className="text-red-1000 text-sm">{errors.username.message}</p>
+     {errors.login && (
+      <p className="text-red-1000 text-sm">{errors.login.message}</p>
      )}
     </div>
     <div className="relative">
