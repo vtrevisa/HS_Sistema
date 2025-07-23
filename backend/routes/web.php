@@ -3,17 +3,25 @@
 // routes/web.php
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\ClientController;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use App\Models\User;
+use Illuminate\Support\Facades\Hash;
 
 // Dashboard (Root URL)
 Route::get('/', function () {
-    return view('home');
+    return redirect()->route('login');
 });
 
-// Clients Page
-Route::get('/clients', [ClientController::class, 'index'])->name('clients.index');
 
-// More Info for Client
-Route::get('/clients/{id}/moreinfo', [ClientController::class, 'moreInfo'])->name('clients.moreinfo');
+// Login page
+Route::get('/login', [\App\Http\Controllers\AuthController::class, 'showLogin'])->name('login');
 
-// Import CSV POST route
-Route::post('/clients/import-csv', [ClientController::class, 'importCsv'])->name('clients.importCsv');
+// Handle login POST
+Route::post('/login', [\App\Http\Controllers\AuthController::class, 'login']);
+
+// Dashboard page (after login)
+Route::get('/dashboard', [\App\Http\Controllers\AuthController::class, 'dashboard'])->name('dashboard');
+
+// Logout
+Route::post('/logout', [\App\Http\Controllers\AuthController::class, 'logout'])->name('logout');
