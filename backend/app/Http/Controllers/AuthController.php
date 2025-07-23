@@ -26,7 +26,7 @@ class AuthController extends Controller
         }
         // Try login as name (username)
         $user = User::where('name', $login)->first();
-        if ($user && Hash::check($password, $user->password)) {
+        if ($user && Hash::check($password, $user->getAuthPassword())) {
             Auth::login($user);
             $request->session()->regenerate();
             return redirect()->intended('/dashboard');
