@@ -187,7 +187,7 @@ export function LeadsTable({ leads, onLeadClick }: LeadsTableProps) {
            <Mail size={14} />
           </button>
           <button
-           onClick={e => e.stopPropagation()}
+           onClick={() => onLeadClick?.(lead)}
            className="bg-amber-100 dark:bg-amber-900/30 hover:bg-amber-200 dark:hover:bg-amber-900/50 text-amber-700 dark:text-amber-300 p-2 rounded-lg transition-colors"
            title="Editar"
           >
