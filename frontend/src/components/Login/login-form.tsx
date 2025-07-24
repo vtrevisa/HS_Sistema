@@ -1,9 +1,10 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { LockKeyhole, User } from 'lucide-react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { useAuth } from '@/http/use-auth'
+import { Loading } from './loading'
 
 import logo from '../../assets/logo.svg'
 
@@ -18,21 +19,53 @@ const loginSchema = z.object({
 type LoginFormData = z.infer<typeof loginSchema>
 
 export function LoginForm() {
- const [checked, setChecked] = useState(false)
-
- const { mutateAsync: auth } = useAuth()
+ const savedLogin =
+  typeof window !== 'undefined' ? localStorage.getItem('remember_login') : null
 
  const {
   register,
   handleSubmit,
+  setValue,
+  watch,
   formState: { errors }
  } = useForm<LoginFormData>({
-  resolver: zodResolver(loginSchema)
+  resolver: zodResolver(loginSchema),
+  defaultValues: {
+   login: savedLogin || ''
+  }
  })
+
+ const { mutateAsync: auth, isPending } = useAuth()
+
+ const [checked, setChecked] = useState(!!savedLogin)
+
+ const loginValue = watch('login')
 
  async function handleLogin(data: LoginFormData) {
   await auth(data)
+
+  if (checked) {
+   localStorage.setItem('remember_login', data.login)
+  } else {
+   localStorage.removeItem('remember_login')
+  }
  }
+
+ useEffect(() => {
+  if (checked) {
+   localStorage.setItem('remember_login', loginValue || '')
+  } else {
+   localStorage.removeItem('remember_login')
+  }
+ }, [checked, loginValue])
+
+ useEffect(() => {
+  const savedLogin = localStorage.getItem('remember_login')
+  if (savedLogin) {
+   setValue('login', savedLogin)
+   setChecked(true)
+  }
+ }, [setValue])
 
  return (
   <form onSubmit={handleSubmit(handleLogin)}>
@@ -75,24 +108,23 @@ export function LoginForm() {
      )}
     </div>
     <div className="flex flex-col gap-4 justify-center items-center">
+     <input
+      type="checkbox"
+      id="remember"
+      name="remember"
+      checked={checked}
+      onChange={() => setChecked(!checked)}
+      className="sr-only"
+     />
      <label
       htmlFor="remember"
-      className="flex gap-2 items-center cursor-pointer select-none"
+      className="flex gap-2 items-center cursor-pointer"
      >
-      <input
-       type="checkbox"
-       id="remember"
-       name="remember"
-       checked={checked}
-       onChange={() => setChecked(!checked)}
-       className="sr-only peer"
-      />
-      <div className="w-5 h-5 border-2 border-red-1000 rounded flex items-center justify-center peer-focus:outline-none">
-       {checked && (
-        <span className="text-red-1000 font-bold text-sm leading-none select-none">
-         ✓
-        </span>
-       )}
+      <div
+       aria-hidden="true"
+       className="w-5 h-5 border-2 border-red-1000 rounded flex items-center justify-center"
+      >
+       {checked && <span className="text-red-1000 font-bold text-sm">✓</span>}
       </div>
       <span className="text-stone-900 text-sm font-semibold">
        Salvar meus Dados
@@ -100,9 +132,10 @@ export function LoginForm() {
      </label>
      <button
       type="submit"
-      className="bg-red-1000 hover:bg-red-700 rounded text-white text-base font-extrabold uppercase p-2 w-44 focus:outline-none"
+      disabled={isPending}
+      className="bg-red-1000 hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed rounded text-white text-base font-extrabold uppercase p-2 w-44 focus:outline-none"
      >
-      Login
+      {isPending ? <Loading size={22} /> : 'Login'}
      </button>
      <a
       href="#forgotpassword"

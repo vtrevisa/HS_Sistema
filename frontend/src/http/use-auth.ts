@@ -10,8 +10,8 @@ export function useAuth() {
 
   const history = useNavigate();
 
-  return useMutation({
-    mutationFn: async (data: AuthRequest) => {
+  return useMutation<AuthResponse, AxiosError<{ message: string }>, AuthRequest>({
+    mutationFn: async (data) => {
       const response = await api.post('/auth', data, {
         headers: {
           'Content-Type': 'application/json',
@@ -21,21 +21,21 @@ export function useAuth() {
       return response.data
     },
 
-    onSuccess: (data: AuthResponse) => {
+    onSuccess: (data) => {
 
-      const user = {
+      const authUser = {
         id: data.user.id,
         token: data.token
       }
 
-      localStorage.setItem('auth_user', JSON.stringify(user))
+      localStorage.setItem('auth_user', JSON.stringify(authUser))
 
       toast.success(data.message)
 
       history('/dashboard')
     },
 
-    onError: (error: AxiosError<{ message: string }>) => {
+    onError: (error) => {
       const message = error.response?.data?.message
       toast.error(message)
     }
