@@ -1,15 +1,31 @@
+import { ClipboardList, Target } from 'lucide-react'
 import { StatsCards } from './stats-cards'
 import { ChecklistNotifications } from './checklist-notifications'
 import { RecentLeads } from './recent-leads'
 import { UpcomingTasks } from './upcoming-tasks'
 
-export function Dashboard() {
+interface DashboardProps {
+ sectionType?: 'comercial' | 'processos'
+}
+
+export function Dashboard({ sectionType = 'comercial' }: DashboardProps) {
  return (
   <div className="p-4 lg:p-6 space-y-6">
    <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
-    <h1 className="text-2xl lg:text-3xl font-bold text-gray-800 dark:text-white">
-     Dashboard
-    </h1>
+    <div className="flex items-center gap-3">
+     {sectionType === 'comercial' ? (
+      <div className="flex items-center gap-2 text-blue-600">
+       <Target className="h-6 w-6" />
+       <h1 className="text-2xl lg:text-3xl font-bold">Dashboard Comercial</h1>
+      </div>
+     ) : (
+      <div className="flex items-center gap-2 text-green-600">
+       <ClipboardList className="h-6 w-6" />
+       <h1 className="text-2xl lg:text-3xl font-bold">Dashboard Técnico</h1>
+      </div>
+     )}
+    </div>
+
     <div className="text-sm text-gray-600 dark:text-gray-400">
      Última atualização: {new Date().toLocaleDateString('pt-BR')}
     </div>

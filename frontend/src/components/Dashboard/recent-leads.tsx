@@ -29,8 +29,8 @@ export function RecentLeads() {
  ]
 
  return (
-  <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-4 lg:p-6">
-   <h2 className="text-lg lg:text-xl font-bold text-gray-800 dark:text-white mb-4 flex items-center gap-2">
+  <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-4 lg:p-6 border-l-4 border-blue-500">
+   <h2 className="text-lg lg:text-xl font-bold text-blue-600 mb-4 flex items-center gap-2">
     <Users size={20} />
     Leads Recentes
    </h2>

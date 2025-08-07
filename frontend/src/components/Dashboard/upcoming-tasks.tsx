@@ -21,10 +21,10 @@ export function UpcomingTasks() {
  ]
 
  return (
-  <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-4 lg:p-6">
-   <h2 className="text-lg lg:text-xl font-bold text-gray-800 dark:text-white mb-4 flex items-center gap-2">
+  <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-4 lg:p-6 border-l-4 border-blue-500">
+   <h2 className="text-lg lg:text-xl font-bold text-blue-600 mb-4 flex items-center gap-2">
     <Calendar size={20} />
-    Próximas Tarefas
+    Ações Comerciais
    </h2>
    <div className="space-y-4">
     {upcomingTasks.map((task, index) => (

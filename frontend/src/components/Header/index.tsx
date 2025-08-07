@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom'
 import {
  LayoutDashboard,
  LogOut,
+ Target,
  Users
  //  Trello,
  //  Shield,
@@ -37,14 +38,19 @@ export function Header({ activeTab, onTabChange }: AppSidebarProps) {
  const { state } = useSidebar()
  const isCollapsed = state === 'collapsed'
 
- const menuItems = [
+ const comercialItems = [
   {
    id: 'dashboard',
-   label: 'Dashboard',
+   label: 'Dashboard CRM',
    icon: LayoutDashboard,
    href: '/dashboard'
   },
-  { id: 'leads', label: 'Leads', icon: Users, href: '/dashboard/leads' }
+  {
+   id: 'leads',
+   label: 'Gestão de Leads',
+   icon: Users,
+   href: '/dashboard/leads'
+  }
   // { id: 'kanban', label: 'Kanban', icon: Trello },
   // { id: 'clcb', label: 'CLCB', icon: Shield },
   // { id: 'orcamentos', label: 'Orçamentos', icon: Calculator },
@@ -79,10 +85,13 @@ export function Header({ activeTab, onTabChange }: AppSidebarProps) {
 
    <SidebarContent>
     <SidebarGroup>
-     <SidebarGroupLabel>Menu Principal</SidebarGroupLabel>
+     <SidebarGroupLabel className="text-blue-600 font-semibold flex items-center gap-2">
+      <Target className="h-4 w-4" />
+      {!isCollapsed && 'Gestão Comercial'}
+     </SidebarGroupLabel>
      <SidebarGroupContent>
       <SidebarMenu>
-       {menuItems.map(item => {
+       {comercialItems.map(item => {
         return (
          <SidebarMenuItem key={item.id}>
           <Link to={item.href}>
@@ -90,6 +99,7 @@ export function Header({ activeTab, onTabChange }: AppSidebarProps) {
             onClick={() => onTabChange(item.id)}
             isActive={activeTab === item.id}
             tooltip={isCollapsed ? item.label : undefined}
+            className="data-[active=true]:bg-blue-50 data-[active=true]:text-blue-700 data-[active=true]:border-l-2 data-[active=true]:border-blue-500"
            >
             <item.icon className="h-4 w-4" />
             <span>{item.label}</span>

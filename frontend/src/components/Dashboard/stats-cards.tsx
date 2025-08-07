@@ -1,4 +1,4 @@
-import { AlertTriangle, TrendingUp, Users, CheckCircle } from 'lucide-react'
+import { TrendingUp, Users, DollarSign, Target } from 'lucide-react'
 
 export function StatsCards() {
  const stats = [
@@ -10,25 +10,25 @@ export function StatsCards() {
    color: 'bg-blue-500'
   },
   {
-   title: 'Leads Ativos',
+   title: 'Pipeline Ativo',
    value: '89',
    change: '+8%',
    icon: TrendingUp,
-   color: 'bg-green-500'
+   color: 'bg-blue-600'
   },
   {
-   title: 'Contratos Fechados',
+   title: 'Propostas Enviadas',
    value: '23',
    change: '+15%',
-   icon: CheckCircle,
-   color: 'bg-orange-500'
+   icon: DollarSign,
+   color: 'bg-blue-700'
   },
   {
-   title: 'Vencimentos (30 dias)',
-   value: '15',
-   change: '!',
-   icon: AlertTriangle,
-   color: 'bg-red-500'
+   title: 'Taxa de Conversão',
+   value: '18%',
+   change: '+3%',
+   icon: Target,
+   color: 'bg-blue-800'
   }
  ]
 

@@ -5,11 +5,13 @@ import { LeadsFilters } from './lead-filters'
 import { LeadsTable } from './leads-table'
 import { NewLeadModal } from '../Modals/new-leads'
 import { LeadDetailsModal } from '../Modals/lead-details'
+import { ImportLeadsModal } from '../Modals/import-leads'
 
 export function Leads() {
  const [searchTerm, setSearchTerm] = useState('')
  const [selectedFilter, setSelectedFilter] = useState('todos')
  const [isNewLeadModalOpen, setIsNewLeadModalOpen] = useState(false)
+ const [isImportModalOpen, setIsImportModalOpen] = useState(false)
  const [isLeadDetailsModalOpen, setIsLeadDetailsModalOpen] = useState(false)
  // eslint-disable-next-line @typescript-eslint/no-explicit-any
  const [selectedLead, setSelectedLead] = useState<any>(null)
@@ -25,6 +27,34 @@ export function Leads() {
 
   return matchesSearch && lead.status === selectedFilter
  })
+
+ // eslint-disable-next-line @typescript-eslint/no-explicit-any
+ function handleImportComplete(importedLeads: any[]) {
+  const processedLeads = importedLeads.map(lead => {
+   const completeAddress = [
+    lead.address || lead.endereco,
+    lead.numero,
+    lead.complemento,
+    lead.bairro,
+    lead.municipio || lead.cidade
+   ]
+    .filter(Boolean)
+    .join(', ')
+
+   return {
+    ...lead,
+    address: completeAddress,
+    // Manter os campos originais para referência
+    numero: lead.numero,
+    complemento: lead.complemento,
+    municipio: lead.municipio || lead.cidade,
+    bairro: lead.bairro
+   }
+  })
+
+  processedLeads.forEach(lead => addLead(lead))
+  console.log('Leads importados e processados:', processedLeads)
+ }
 
  // eslint-disable-next-line @typescript-eslint/no-explicit-any
  function handleNewLead(leadData: any) {
@@ -54,7 +84,10 @@ export function Leads() {
      Gerenciar Leads
     </h1>
     <div className="flex gap-2 flex-wrap">
-     <LeadsActions onNewLeadClick={() => setIsNewLeadModalOpen(true)} />
+     <LeadsActions
+      onImportClick={() => setIsImportModalOpen(true)}
+      onNewLeadClick={() => setIsNewLeadModalOpen(true)}
+     />
     </div>
    </div>
 
@@ -73,6 +106,12 @@ export function Leads() {
      setSelectedLead(lead)
      setIsLeadDetailsModalOpen(true)
     }}
+   />
+
+   <ImportLeadsModal
+    isOpen={isImportModalOpen}
+    onClose={() => setIsImportModalOpen(false)}
+    onImportComplete={handleImportComplete}
    />
 
    <NewLeadModal
