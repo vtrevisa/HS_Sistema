@@ -9,6 +9,7 @@ import {
 } from '../ui/dialog'
 import {
  AlertCircle,
+ CheckCircle,
  Download,
  FileSpreadsheet,
  Link,
@@ -18,7 +19,12 @@ import { Button } from '../ui/button'
 import { Label } from '../ui/label'
 import { Input } from '../ui/input'
 import { Alert, AlertDescription } from '../ui/alert'
-import { useDataEnrichment } from '@/hooks/useDataEnrichment'
+import {
+ extractSheetId,
+ fetchGoogleSheetData,
+ readExcelFile
+} from '@/services/leads'
+import type { ExcelLead } from '@/http/types/leads'
 
 interface ImportLeadsModalProps {
  isOpen: boolean
@@ -41,10 +47,6 @@ export function ImportLeadsModal({
  )
  const [importProgress, setImportProgress] = useState({ current: 0, total: 0 })
 
- const { enrichCompanyData, config } = useDataEnrichment()
-
- console.log(importProgress)
-
  function handleClose() {
   if (!isLoading) {
    onClose()
@@ -58,60 +60,12 @@ export function ImportLeadsModal({
  async function loadRawLeads() {
   if (importType === 'sheets') {
    const sheetId = extractSheetId(sheetsUrl)
-   if (!sheetId) throw new Error('URL inválida do Google Sheets.')
+   if (!sheetId)
+    throw new Error('URL inválida. Use uma URL do Google Sheets válida.')
    return await fetchGoogleSheetData(sheetId)
   } else {
    return await readExcelFile(selectedFile!)
   }
- }
-
- // eslint-disable-next-line @typescript-eslint/no-explicit-any
- async function enrichLeads(leads: any[]) {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const enriched: any[] = []
-
-  for (let i = 0; i < leads.length; i++) {
-   const lead = leads[i]
-   setImportProgress({ current: i + 1, total: leads.length })
-
-   try {
-    let enrichedLead = { ...lead, id: Date.now() + i }
-
-    if (config && enrichCompanyData && lead.enderecoParaBusca) {
-     let data = await enrichCompanyData(lead.enderecoParaBusca)
-
-     if (!data?.cnpj && !data?.phone) {
-      data = await enrichCompanyData(lead.company)
-     }
-
-     if (data) {
-      enrichedLead = {
-       ...enrichedLead,
-       company:
-        data.company?.length > lead.company.length
-         ? data.company
-         : lead.company,
-       cnpj: data.cnpj || enrichedLead.cnpj,
-       phone: data.phone || enrichedLead.phone,
-       email: data.email || enrichedLead.email,
-       website: data.website || enrichedLead.website,
-       address: data.address || enrichedLead.address
-      }
-     }
-
-     await new Promise(resolve => setTimeout(resolve, 500)) // delay para evitar rate limit
-    }
-
-    delete enrichedLead.enderecoParaBusca
-    enriched.push(enrichedLead)
-   } catch (err) {
-    console.error(`Erro ao enriquecer ${lead.company}:`, err)
-    const { enderecoParaBusca, ...fallbackLead } = lead
-    enriched.push({ ...fallbackLead, id: Date.now() + i })
-   }
-  }
-
-  return enriched
  }
 
  function resetImportStateAfterDelay() {
@@ -139,42 +93,33 @@ export function ImportLeadsModal({
 
  async function handleImport() {
   // Validação inicial
-  if (
-   (importType === 'sheets' && !sheetsUrl) ||
-   (importType === 'excel' && !selectedFile)
-  ) {
-   toast.error(
-    importType === 'sheets'
-     ? 'Por favor, insira a URL da planilha do Google Sheets'
-     : 'Por favor, selecione um arquivo Excel'
-   )
+
+  if (importType === 'sheets' && !sheetsUrl) {
+   toast.error('Por favor, insira a URL da planilha do Google Sheets')
+   return
+  }
+
+  if (importType === 'excel' && !selectedFile) {
+   toast.error('Por favor, selecione um arquivo Excel')
    return
   }
 
   setIsLoading(true)
   setImportProgress({ current: 0, total: 0 })
+  console.log(
+   `Iniciando importação ${importType === 'sheets' ? 'Google Sheets' : 'Excel'}`
+  )
 
   try {
-   const rawLeads = await loadRawLeads()
+   const rawLeads = (await loadRawLeads()) as ExcelLead[]
    if (rawLeads.length === 0)
     throw new Error('Nenhum dado encontrado na planilha')
 
-   const leadsWithCompany = rawLeads.filter(lead => !!lead.company)
-   setImportProgress({ current: 0, total: leadsWithCompany.length })
-
-   const enrichedLeads = await enrichLeads(leadsWithCompany)
-
-   onImportComplete(enrichedLeads)
+   onImportComplete(rawLeads)
    setImportStatus('success')
 
-   const enrichedCount = enrichedLeads.filter(
-    lead => lead.cnpj || lead.phone || lead.email || lead.website
-   ).length
-
    toast.success('Importação Concluída', {
-    description: config
-     ? `${enrichedLeads.length} leads importados! ${enrichedCount} enriquecidos via API.`
-     : `${enrichedLeads.length} leads importados! Configure as APIs para enriquecimento automático.`
+    description: `${rawLeads.length} leads importados!`
    })
 
    resetImportStateAfterDelay()
@@ -206,95 +151,151 @@ export function ImportLeadsModal({
     </DialogHeader>
 
     <div className="space-y-4">
-     <>
-      <div className="flex gap-2 mb-4">
-       <Button
-        variant={importType === 'sheets' ? 'default' : 'outline'}
-        onClick={() => setImportType('sheets')}
-        className="flex-1"
-        disabled={isLoading}
-       >
-        <Link className="h-4 w-4 mr-2" />
-        Google Sheets
-       </Button>
-       <Button
-        variant={importType === 'excel' ? 'default' : 'outline'}
-        onClick={() => setImportType('excel')}
-        className="flex-1"
-        disabled={isLoading}
-       >
-        <FileSpreadsheet className="h-4 w-4 mr-2" />
-        Arquivo Excel
+     {importStatus === 'idle' && (
+      <>
+       <div className="flex gap-2 mb-4">
+        <Button
+         variant={importType === 'sheets' ? 'default' : 'outline'}
+         onClick={() => setImportType('sheets')}
+         className="flex-1"
+         disabled={isLoading}
+        >
+         <Link className="h-4 w-4 mr-2" />
+         Google Sheets
+        </Button>
+        <Button
+         variant={importType === 'excel' ? 'default' : 'outline'}
+         onClick={() => setImportType('excel')}
+         className="flex-1"
+         disabled={isLoading}
+        >
+         <FileSpreadsheet className="h-4 w-4 mr-2" />
+         Arquivo Excel
+        </Button>
+       </div>
+
+       {importType === 'sheets' ? (
+        <div className="space-y-2">
+         <Label htmlFor="sheets-url">URL da Planilha do Google Sheets</Label>
+         <Input
+          id="sheets-url"
+          type="url"
+          placeholder="https://docs.google.com/spreadsheets/d/..."
+          value={sheetsUrl}
+          onChange={e => setSheetsUrl(e.target.value)}
+          disabled={isLoading}
+         />
+        </div>
+       ) : (
+        <div className="space-y-2">
+         <Label htmlFor="excel-file">Arquivo Excel (.xlsx ou .xls)</Label>
+         <Input
+          id="excel-file"
+          type="file"
+          accept=".xlsx,.xls"
+          onChange={handleFileSelect}
+          disabled={isLoading}
+         />
+         {selectedFile && (
+          <p className="text-sm text-gray-600">
+           Arquivo selecionado: {selectedFile.name}
+          </p>
+         )}
+        </div>
+       )}
+
+       <Alert>
+        <AlertCircle className="h-4 w-4" />
+        <AlertDescription>
+         <strong>Campos reconhecidos:</strong> Empresa/Estabelecimento, CNPJ,
+         Email, Telefone/WhatsApp, Endereço (completo), Tipo de Serviço (AVCB,
+         CLCB, PPCI, etc.), Vigência/Validade, Ocupação, Valor do Serviço.
+         <br />
+         <strong>Enriquecimento automático:</strong> CNPJ, Site, Email e
+         WhatsApp clique no botão atualizar.
+        </AlertDescription>
+       </Alert>
+
+       {isLoading && importProgress.total > 0 && (
+        <div className="space-y-2">
+         <div className="flex justify-between text-sm">
+          {/* <span>
+           {config
+            ? 'Processando e enriquecendo leads...'
+            : 'Processando leads...'}
+          </span> */}
+          <span>Processando leads...</span>
+          <span>
+           {importProgress.current}/{importProgress.total}
+          </span>
+         </div>
+         <div className="w-full bg-gray-200 rounded-full h-2">
+          <div
+           className="bg-green-600 h-2 rounded-full transition-all duration-300"
+           style={{
+            width: `${(importProgress.current / importProgress.total) * 100}%`
+           }}
+          />
+         </div>
+        </div>
+       )}
+
+       <div className="flex justify-between gap-3">
+        <Button variant="outline" onClick={handleClose} disabled={isLoading}>
+         Cancelar
+        </Button>
+        <Button
+         onClick={handleImport}
+         disabled={
+          isLoading || (importType === 'sheets' ? !sheetsUrl : !selectedFile)
+         }
+         className="bg-green-600 hover:bg-green-700"
+        >
+         {isLoading ? (
+          <>
+           <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+           {/* {config ? 'Enriquecendo...' : 'Importando...'} */}
+           Importando..
+          </>
+         ) : (
+          <>
+           <Download className="h-4 w-4 mr-2" />
+           {/* {config ? 'Importar e Enriquecer' : 'Importar Dados'} */}
+           Importar Dados
+          </>
+         )}
+        </Button>
+       </div>
+      </>
+     )}
+
+     {importStatus === 'success' && (
+      <div className="text-center py-6">
+       <CheckCircle className="h-16 w-16 text-green-500 mx-auto mb-4" />
+       <h3 className="text-lg font-semibold text-gray-900 mb-2">
+        Importação Concluída!
+       </h3>
+       <p className="text-gray-600">
+        Os leads foram importados com os dados especificados.
+        {/* {config && ' Dados enriquecidos via APIs reais.'} */}
+       </p>
+      </div>
+     )}
+
+     {importStatus === 'error' && (
+      <div className="text-center py-6">
+       <AlertCircle className="h-16 w-16 text-red-500 mx-auto mb-4" />
+       <h3 className="text-lg font-semibold text-gray-900 mb-2">
+        Erro na Importação
+       </h3>
+       <p className="text-gray-600 mb-4">
+        Verifique se a planilha está pública e se a URL está correta.
+       </p>
+       <Button variant="outline" onClick={() => setImportStatus('idle')}>
+        Tentar Novamente
        </Button>
       </div>
-
-      {importType === 'sheets' ? (
-       <div className="space-y-2">
-        <Label htmlFor="sheets-url">URL da Planilha do Google Sheets</Label>
-        <Input
-         id="sheets-url"
-         type="url"
-         placeholder="https://docs.google.com/spreadsheets/d/..."
-         value={sheetsUrl}
-         onChange={e => setSheetsUrl(e.target.value)}
-         disabled={isLoading}
-        />
-       </div>
-      ) : (
-       <div className="space-y-2">
-        <Label htmlFor="excel-file">Arquivo Excel (.xlsx ou .xls)</Label>
-        <Input
-         id="excel-file"
-         type="file"
-         accept=".xlsx,.xls"
-         onChange={handleFileSelect}
-         disabled={isLoading}
-        />
-        {selectedFile && (
-         <p className="text-sm text-gray-600">
-          Arquivo selecionado: {selectedFile.name}
-         </p>
-        )}
-       </div>
-      )}
-
-      <Alert>
-       <AlertCircle className="h-4 w-4" />
-       <AlertDescription>
-        <strong>Campos reconhecidos:</strong> Empresa/Estabelecimento, CNPJ,
-        Email, Telefone/WhatsApp, Endereço (completo), Tipo de Serviço (AVCB,
-        CLCB, PPCI, etc.), Vigência/Validade, Ocupação, Valor do Serviço.
-        <br />
-        <strong>Enriquecimento automático:</strong> CNPJ, Site, Email e WhatsApp
-        clique no botão atualizar.
-       </AlertDescription>
-      </Alert>
-
-      <div className="flex justify-between gap-3">
-       <Button variant="outline" onClick={handleClose} disabled={isLoading}>
-        Cancelar
-       </Button>
-       <Button
-        onClick={handleImport}
-        disabled={
-         isLoading || (importType === 'sheets' ? !sheetsUrl : !selectedFile)
-        }
-        className="bg-green-600 hover:bg-green-700"
-       >
-        {isLoading ? (
-         <>
-          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-          {config ? 'Enriquecendo...' : 'Importando...'}
-         </>
-        ) : (
-         <>
-          <Download className="h-4 w-4 mr-2" />
-          {config ? 'Importar e Enriquecer' : 'Importar Dados'}
-         </>
-        )}
-       </Button>
-      </div>
-     </>
+     )}
     </div>
    </DialogContent>
   </Dialog>

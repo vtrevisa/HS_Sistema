@@ -1,5 +1,5 @@
 import type { Lead } from '@/http/types/leads'
-import { Calendar, Mail, MapPin, Pencil, Phone, RefreshCcw } from 'lucide-react'
+import { Calendar, Mail, MapPin, Pencil, Phone, Sparkles } from 'lucide-react'
 
 interface LeadsTableProps {
  leads: Lead[]
@@ -13,7 +13,7 @@ interface LeadsTableProps {
 
 export function LeadsTable({ leads, onLeadClick }: LeadsTableProps) {
  function getCompleteAddress(lead: Lead) {
-  const parts = []
+  const parts: string[] = []
   if (lead.address) parts.push(lead.address)
   if (lead.numero) parts.push(lead.numero)
   if (lead.complemento) parts.push(lead.complemento)
@@ -82,7 +82,7 @@ export function LeadsTable({ leads, onLeadClick }: LeadsTableProps) {
      <tbody className="divide-y divide-border">
       {leads.map(lead => (
        <tr
-        key={lead.id}
+        key={lead.license}
         className="data-row cursor-pointer"
         onClick={() => onLeadClick?.(lead)}
        >
@@ -196,9 +196,9 @@ export function LeadsTable({ leads, onLeadClick }: LeadsTableProps) {
           <button
            onClick={e => e.stopPropagation()}
            className="bg-purple-100 dark:bg-purple-900/30 hover:bg-purple-200 dark:hover:bg-purple-900/50 text-purple-700 dark:text-purple-300 p-2 rounded-lg transition-colors"
-           title="Atualizar"
+           title="Enriquecimento Avançado"
           >
-           <RefreshCcw size={14} />
+           <Sparkles size={14} />
           </button>
          </div>
         </td>
@@ -211,7 +211,7 @@ export function LeadsTable({ leads, onLeadClick }: LeadsTableProps) {
    <div className="lg:hidden divide-y divide-border">
     {leads.map(lead => (
      <div
-      key={lead.id}
+      key={lead.license}
       className="p-4 hover:bg-muted/30 transition-colors cursor-pointer"
       onClick={() => onLeadClick?.(lead)}
      >

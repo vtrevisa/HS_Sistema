@@ -19,9 +19,11 @@ export function Leads() {
  const { leads, addLead } = useLeads()
 
  const filteredLeads = leads.filter(lead => {
-  const matchesSearch =
-   lead.company.toLowerCase().includes(searchTerm.toLowerCase()) ||
-   lead.contact.toLowerCase().includes(searchTerm.toLowerCase())
+  const company = lead.company ? lead.company.toLowerCase() : ''
+  const contact = lead.contact ? lead.contact.toLowerCase() : ''
+  const search = searchTerm.toLowerCase()
+
+  const matchesSearch = company.includes(search) || contact.includes(search)
 
   if (selectedFilter === 'todos') return matchesSearch
 
@@ -35,7 +37,7 @@ export function Leads() {
     lead.address || lead.endereco,
     lead.numero,
     lead.complemento,
-    lead.bairro,
+    lead.bairro || lead.Bairro,
     lead.municipio || lead.cidade
    ]
     .filter(Boolean)
@@ -53,7 +55,7 @@ export function Leads() {
   })
 
   processedLeads.forEach(lead => addLead(lead))
-  console.log('Leads importados e processados:', processedLeads)
+  //console.log('Leads importados e processados:', processedLeads)
  }
 
  // eslint-disable-next-line @typescript-eslint/no-explicit-any
