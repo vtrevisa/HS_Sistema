@@ -37,7 +37,7 @@ export function Leads() {
     lead.address || lead.endereco,
     lead.numero,
     lead.complemento,
-    lead.bairro || lead.Bairro,
+    lead.bairro,
     lead.municipio || lead.cidade
    ]
     .filter(Boolean)
