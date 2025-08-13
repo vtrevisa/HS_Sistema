@@ -16,6 +16,7 @@ export function useAuth() {
         headers: {
           'Content-Type': 'application/json',
         },
+        withCredentials: true
       })
 
       return response.data
@@ -24,8 +25,7 @@ export function useAuth() {
     onSuccess: (data) => {
 
       const authUser = {
-        id: data.user.id,
-        token: data.token
+        id: data.user.id
       }
 
       localStorage.setItem('auth_user', JSON.stringify(authUser))
