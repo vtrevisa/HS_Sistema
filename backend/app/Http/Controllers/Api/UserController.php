@@ -30,7 +30,7 @@ class UserController extends Controller
     {
         return response()->json([
             'status' => true,
-            'users' => $user,
+            'user' => $user,
         ], 200);
     }
 
@@ -106,6 +106,8 @@ class UserController extends Controller
             ], 400);
         }
     }
+
+    // Delete user from db
 
     public function destroy(User $user): JsonResponse
     {

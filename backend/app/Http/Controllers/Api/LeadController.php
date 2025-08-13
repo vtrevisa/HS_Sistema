@@ -1,0 +1,151 @@
+<?php
+
+namespace App\Http\Controllers\Api;
+
+use App\Http\Controllers\Controller;
+use App\Http\Requests\LeadRequest;
+use App\Models\Lead;
+use App\Services\DateService;
+use Exception;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\DB;
+
+
+class LeadController extends Controller
+{
+    // Show all leads from db
+
+    public function index(): JsonResponse
+    {
+
+        $leads = Lead::orderBy('id', 'DESC')->get();
+
+        return response()->json([
+            'status' => true,
+            'leads' => $leads,
+        ], 200);
+    }
+
+    // Show lead from db
+
+    public function show(Lead $lead): JsonResponse
+    {
+        return response()->json([
+            'status' => true,
+            'lead' => $lead,
+        ], 200);
+    }
+
+
+    // Add lead to db
+
+    public function store(LeadRequest $request): JsonResponse
+    {
+        // Init transaction on DB
+        DB::beginTransaction();
+
+        try {
+
+            // Add lead on DB
+
+            $lead = Lead::create([
+                'tipo' => strtoupper($request->tipo),
+                'licenca' => $request->licenca,
+                'vigencia' => DateService::convertToDatabaseFormat($request->vigencia),
+                'endereco' => ucwords(strtolower($request->endereco)),
+                'numero' => $request->numero,
+                'municipio' => ucwords(strtolower($request->municipio)),
+                'bairro' => ucwords(strtolower($request->bairro)),
+                'ocupacao' => $request->ocupacao,
+                'complemento' => ucwords($request->complemento)
+            ]);
+
+            // Success Operation
+            DB::commit();
+
+            return response()->json([
+                'status' => true,
+                'lead' => $lead,
+                'message' => "Lead cadastrado com sucesso!",
+            ], 201);
+        } catch (Exception $e) {
+
+            // Init rollback transaction on DB
+            DB::rollBack();
+
+            return response()->json([
+                'status' => false,
+                'message' => "Lead não cadastrado!",
+            ], 400);
+        }
+    }
+
+    // Edit lead from db
+
+    public function update(LeadRequest $request, Lead $lead): JsonResponse
+    {
+        // Init transaction on DB
+        DB::beginTransaction();
+
+        try {
+
+            // Edit lead on DB
+
+            $lead->update([
+                'tipo' => strtoupper($request->tipo),
+                'licenca' => $request->licenca,
+                'vigencia' => DateService::convertToDatabaseFormat($request->vigencia),
+                'endereco' => ucwords(strtolower($request->endereco)),
+                'numero' => $request->numero,
+                'municipio' => ucwords(strtolower($request->municipio)),
+                'bairro' => ucwords(strtolower($request->bairro)),
+                'ocupacao' => $request->ocupacao,
+                'complemento' => ucwords(strtolower($request->complemento)),
+                'cnpj'        => $request->cnpj,
+                'site'        => strtolower($request->site),
+                'contato'     => ucwords(strtolower($request->contato)),
+                'whatsapp'    => $request->whatsapp,
+                'email'       => strtolower($request->email),
+            ]);
+
+            // Success Operation
+            DB::commit();
+
+            return response()->json([
+                'status' => true,
+                'lead' => $lead,
+                'message' => "Lead editado com sucesso!",
+            ], 200);
+        } catch (Exception $e) {
+            // Init rollback transaction on DB
+            DB::rollBack();
+
+            return response()->json([
+                'status' => false,
+                'message' => "Lead não editado!",
+            ], 400);
+        }
+    }
+
+    // Delete lead from db
+
+    public function destroy(Lead $lead): JsonResponse
+    {
+        try {
+
+            // Delete lead on DB
+            $lead->delete();
+
+            return response()->json([
+                'status' => true,
+                'lead' => $lead,
+                'message' => "Lead deletado com sucesso!",
+            ], 200);
+        } catch (Exception $e) {
+            return response()->json([
+                'status' => false,
+                'message' => "Lead não apagado!",
+            ], 400);
+        }
+    }
+}

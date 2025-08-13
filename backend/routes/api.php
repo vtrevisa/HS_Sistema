@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\LeadController;
 use App\Http\Controllers\Api\UserController;
 
 use Illuminate\Support\Facades\Route;
@@ -9,6 +10,7 @@ use Illuminate\Support\Facades\Route;
 Route::post('/auth', [AuthController::class, 'login']); //POST
 
 Route::group(['middleware' => ['auth:sanctum']], function () {
+
     // Users
     Route::get('/users', [UserController::class, 'index']); //GET
     Route::get('/users/{user}', [UserController::class, 'show']); //GET
@@ -16,6 +18,12 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
     Route::put('/users/{user}', [UserController::class, 'update']); //PUT
     Route::delete('/users/{user}', [UserController::class, 'destroy']); //DELETE
 
+    // Leads
+    Route::get('/leads', [LeadController::class, 'index']); //GET
+    Route::get('/leads/{lead}', [LeadController::class, 'show']); //GET
+    Route::post('/leads', [LeadController::class, 'store']); //POST
+    Route::put('/leads/{lead}', [LeadController::class, 'update']); //PUT
+    Route::delete('/leads/{lead}', [LeadController::class, 'destroy']); //DELETE
 
     // Logout
     Route::post('/logout/{user}', [AuthController::class, 'logout']); //POST
