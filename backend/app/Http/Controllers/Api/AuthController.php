@@ -83,7 +83,7 @@ class AuthController extends Controller
             $accessToken->delete();
 
             // Clean cookie
-            $cookie = cookie('auth_token', '', -1, '/');
+            $cookie = cookie('auth-token', '', -1, '/');
 
             return response()->json([
                 'status' => true,
