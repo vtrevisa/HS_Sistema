@@ -3,11 +3,12 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use App\Models\User;
 use Exception;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Laravel\Sanctum\PersonalAccessToken;
+use App\Helpers\AuthHelper;
 
 class AuthController extends Controller
 {
@@ -15,54 +16,118 @@ class AuthController extends Controller
 
     public function login(Request $request): JsonResponse
     {
+
+        // Validation
+        $request->validate([
+            'login' => 'required|string',
+            'password' => 'required|string|min:6',
+        ]);
+
         $login = $request->input('login');
         $password = $request->input('password');
 
         // Detects whether user entered email or username
         $field = filter_var($login, FILTER_VALIDATE_EMAIL) ? 'email' : 'name';
-
         $credentials = [$field => $login, 'password' => $password];
 
         if (Auth::attempt($credentials)) {
 
-            // Get data from user
-            $user = Auth::user();
+            // Get user from DB
+            $user = $request->user();
 
             // Generate token
-            $token = $request->user()->createToken('auth-token')->plainTextToken;
+            $token = $user->createToken('auth-token')->plainTextToken;
+
+            // Cookie HttpOnly seguro
+
+            $cookie = cookie(
+                'auth-token',
+                $token,
+                60 * 24,       // 1 day
+                '/',           // path
+                null,          //domain
+                false,         // secure=false in localhost, true in prod with HTTPS
+                true,          // httpOnly
+                false,
+                'Strict'
+            );
 
             return response()->json([
                 'status' => true,
                 'message' => "Usuário logado com sucesso",
-                'token' => $token,
-                'user' => $user,
-            ], 201);
+                //'token' => $token,
+            ], 200)->withCookie($cookie);
         } else {
             return response()->json([
                 'status' => false,
                 'message' => "Credenciais inválidas",
-            ], 404);
+            ], 401);
         }
     }
 
     // Logout
 
-    public function logout(User $user): JsonResponse
+    public function logout(Request $request): JsonResponse
     {
         try {
 
-            $user->tokens()->delete();
+            $accessToken = AuthHelper::getAccessTokenFromRequest($request);
+
+            if (!$accessToken) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Token de autenticação não fornecido ou inválido.',
+                ], 401);
+            }
+
+            $accessToken->delete();
+
+            // Clean cookie
+            $cookie = cookie('auth_token', '', -1, '/');
 
             return response()->json([
                 'status' => true,
                 'message' => 'Usuário deslogado com sucesso.',
-            ], 200);
+            ], 200)->withCookie($cookie);
         } catch (Exception $e) {
 
             return response()->json([
                 'status' => false,
                 'message' => 'Usuário não deslogado.',
-            ], 400);
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    public function me(Request $request)
+    {
+
+        try {
+
+            $accessToken = AuthHelper::getAccessTokenFromRequest($request);
+
+            var_dump($accessToken);
+
+            if (!$accessToken) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Token de autenticação é inválido ou não fornecido.',
+                ], 401);
+            }
+
+            // Retrieves the user associated with the token
+            $user = $accessToken->tokenable;
+
+            return response()->json([
+                'status' => true,
+                'user' => $user,
+            ], 200);
+        } catch (Exception $e) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Erro ao verificar o usuário.',
+                'error' => $e->getMessage(),
+            ], 500);
         }
     }
 }
