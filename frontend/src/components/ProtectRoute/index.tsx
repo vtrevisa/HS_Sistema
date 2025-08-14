@@ -1,11 +1,12 @@
+import { useUser } from '@/http/use-user'
 import { Navigate, Outlet } from 'react-router-dom'
 
 export function ProtectedRoute() {
- const authUser = localStorage.getItem('auth_user')
+ const { data: authUser, isLoading } = useUser()
 
- if (!authUser) {
-  return <Navigate to="/" replace />
- }
+ if (isLoading) return <p>Carregando...</p>
+
+ if (!authUser) return <Navigate to="/" replace />
 
  return <Outlet />
 }

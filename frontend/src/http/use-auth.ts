@@ -8,7 +8,7 @@ import { toast } from "sonner"
 
 export function useAuth() {
 
-  const history = useNavigate();
+  const navigate = useNavigate();
 
   return useMutation<AuthResponse, AxiosError<{ message: string }>, AuthRequest>({
     mutationFn: async (data) => {
@@ -24,15 +24,9 @@ export function useAuth() {
 
     onSuccess: (data) => {
 
-      const authUser = {
-        id: data.user.id
-      }
-
-      localStorage.setItem('auth_user', JSON.stringify(authUser))
-
       toast.success(data.message)
 
-      history('/dashboard')
+      navigate('/dashboard')
     },
 
     onError: (error) => {

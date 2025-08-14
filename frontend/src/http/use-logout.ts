@@ -7,22 +7,13 @@ import { useNavigate } from "react-router-dom";
 
 export function useLogout() {
 
-  const history = useNavigate();
+  const navigate = useNavigate();
 
   return useMutation({
     mutationFn: async () => {
-      const userData = localStorage.getItem('auth_user')
 
-      if (!userData) return
-
-      const user = JSON.parse(userData)
-      const { id, token } = user
-
-      const response = await api.post(`/logout/${id}`, null, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
+      const response = await api.post('/auth/logout', {
+        withCredentials: true,
       })
 
       return response.data
@@ -30,11 +21,9 @@ export function useLogout() {
 
     onSuccess: (data: AuthResponse) => {
 
-      localStorage.removeItem('auth_user')
-
       toast.success(data.message)
 
-      history('/')
+      navigate('/')
     },
 
     onError: (error: AxiosError<{ message: string }>) => {

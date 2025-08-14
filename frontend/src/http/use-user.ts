@@ -6,7 +6,7 @@ export function useUser() {
     queryKey: ['authUser'],
     queryFn: async () => {
       const response = await api.get('/auth/me', { withCredentials: true });
-      return response.data.status ? response.data.user : null;
+      return response.data.user;
     },
     staleTime: 1000 * 60 * 5,
     retry: false,
