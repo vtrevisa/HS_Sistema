@@ -13,21 +13,27 @@ Route::post('/auth', [AuthController::class, 'login']); //POST
 Route::get('/auth/me', [AuthController::class, 'me']); //GET 
 
 // Logout
-Route::middleware('auth:sanctum')->post('/auth/logout', [AuthController::class, 'logout']); //POST
+Route::post('/auth/logout', [AuthController::class, 'logout']); //POST
 
-Route::group(['middleware' => ['auth:sanctum']], function () {
+// Leads
+Route::get('/leads', [LeadController::class, 'index']); //GET
+Route::get('/leads/{lead}', [LeadController::class, 'show']); //GET
+Route::post('/leads', [LeadController::class, 'store']); //POST
+Route::put('/leads/{lead}', [LeadController::class, 'update']); //PUT
+Route::delete('/leads/{lead}', [LeadController::class, 'destroy']); //DELETE
 
-    // Users
-    Route::get('/users', [UserController::class, 'index']); //GET
-    Route::get('/users/{user}', [UserController::class, 'show']); //GET
-    Route::post('/users', [UserController::class, 'store']); //POST
-    Route::put('/users/{user}', [UserController::class, 'update']); //PUT
-    Route::delete('/users/{user}', [UserController::class, 'destroy']); //DELETE
 
-    // Leads
-    Route::get('/leads', [LeadController::class, 'index']); //GET
-    Route::get('/leads/{lead}', [LeadController::class, 'show']); //GET
-    Route::post('/leads', [LeadController::class, 'store']); //POST
-    Route::put('/leads/{lead}', [LeadController::class, 'update']); //PUT
-    Route::delete('/leads/{lead}', [LeadController::class, 'destroy']); //DELETE
-});
+// Users
+Route::post('/users', [UserController::class, 'store']); //POST
+
+// Route::group(['middleware' => ['auth:sanctum']], function () {
+
+//     // Users
+//     Route::get('/users', [UserController::class, 'index']); //GET
+//     Route::get('/users/{user}', [UserController::class, 'show']); //GET
+//     Route::post('/users', [UserController::class, 'store']); //POST
+//     Route::put('/users/{user}', [UserController::class, 'update']); //PUT
+//     Route::delete('/users/{user}', [UserController::class, 'destroy']); //DELETE
+
+
+// });

@@ -8,7 +8,6 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Laravel\Sanctum\PersonalAccessToken;
-use App\Helpers\AuthHelper;
 
 class AuthController extends Controller
 {
@@ -38,18 +37,18 @@ class AuthController extends Controller
             // Generate token
             $token = $user->createToken('auth-token')->plainTextToken;
 
-            // Cookie HttpOnly seguro
+            // Cookie HttpOnly secure
 
             $cookie = cookie(
                 'auth-token',
                 $token,
                 60 * 24,       // 1 day
                 '/',           // path
-                null,          //domain
+                'localhost',   //domain
                 false,         // secure=false in localhost, true in prod with HTTPS
                 true,          // httpOnly
                 false,
-                'Strict'
+                'Lax'
             );
 
             return response()->json([
@@ -71,19 +70,33 @@ class AuthController extends Controller
     {
         try {
 
-            $accessToken = AuthHelper::getAccessTokenFromRequest($request);
+            $token = $request->cookie('auth-token');
 
-            if (!$accessToken) {
+            if (!$token) {
                 return response()->json([
                     'status' => false,
                     'message' => 'Token de autenticação não fornecido ou inválido.',
                 ], 401);
             }
 
-            $accessToken->delete();
+            // Delete token from user
+            $accessToken = PersonalAccessToken::findToken($token);
+            if ($accessToken) {
+                $accessToken->delete();
+            }
 
             // Clean cookie
-            $cookie = cookie('auth-token', '', -1, '/');
+            $cookie = cookie(
+                'auth-token',
+                '',
+                -1,
+                '/',
+                'localhost',
+                false,
+                true,
+                false,
+                'Lax'
+            );
 
             return response()->json([
                 'status' => true,
@@ -104,11 +117,9 @@ class AuthController extends Controller
 
         try {
 
-            $accessToken = AuthHelper::getAccessTokenFromRequest($request);
+            $token = $request->cookie('auth-token');
 
-            var_dump($accessToken);
-
-            if (!$accessToken) {
+            if (!$token) {
                 return response()->json([
                     'status' => false,
                     'message' => 'Token de autenticação é inválido ou não fornecido.',
@@ -116,6 +127,8 @@ class AuthController extends Controller
             }
 
             // Retrieves the user associated with the token
+            $accessToken = PersonalAccessToken::findToken($token);
+
             $user = $accessToken->tokenable;
 
             return response()->json([

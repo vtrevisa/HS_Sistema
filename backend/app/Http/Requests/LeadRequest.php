@@ -39,6 +39,7 @@ class LeadRequest extends FormRequest
         $leadId = $this->route('lead');
 
         return [
+            'empresa' => 'nullable|string',
             'tipo'      => $isUpdate ? 'sometimes|required' : 'required',
             'licenca'   => 'required|string|unique:leads,licenca,' . ($leadId ? $leadId->id : null),
             'vigencia'  => $isUpdate ? 'sometimes|required' : 'required',

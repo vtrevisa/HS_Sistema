@@ -9,7 +9,7 @@ use App\Services\DateService;
 use Exception;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\DB;
-
+use Laravel\Sanctum\PersonalAccessToken;
 
 class LeadController extends Controller
 {
@@ -41,6 +41,28 @@ class LeadController extends Controller
 
     public function store(LeadRequest $request): JsonResponse
     {
+
+        $token = $request->cookie('auth-token');
+
+        if (!$token) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Token de autenticação é inválido ou não fornecido.',
+            ], 401);
+        }
+
+        // Retrieves the user associated with the token
+        $accessToken = PersonalAccessToken::findToken($token);
+
+        if (!$accessToken) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Token de autenticação é inválido ou expirado.',
+            ], 401);
+        }
+
+        $user = $accessToken->tokenable;
+
         // Init transaction on DB
         DB::beginTransaction();
 
@@ -49,9 +71,10 @@ class LeadController extends Controller
             // Add lead on DB
 
             $lead = Lead::create([
+                'empresa' => strtoupper($request->empresa),
                 'tipo' => strtoupper($request->tipo),
                 'licenca' => $request->licenca,
-                'vigencia' => DateService::convertToDatabaseFormat($request->vigencia),
+                'vigencia' => $request->vigencia,
                 'endereco' => ucwords(strtolower($request->endereco)),
                 'numero' => $request->numero,
                 'municipio' => ucwords(strtolower($request->municipio)),
@@ -66,6 +89,7 @@ class LeadController extends Controller
             return response()->json([
                 'status' => true,
                 'lead' => $lead,
+                'user' => $user,
                 'message' => "Lead cadastrado com sucesso!",
             ], 201);
         } catch (Exception $e) {
@@ -76,6 +100,7 @@ class LeadController extends Controller
             return response()->json([
                 'status' => false,
                 'message' => "Lead não cadastrado!",
+                'error' => $e->getMessage()
             ], 400);
         }
     }

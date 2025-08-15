@@ -13,6 +13,7 @@ return new class extends Migration
 	{
 		Schema::create('leads', function (Blueprint $table) {
 			$table->id();
+			$table->string('empresa')->nullable();  // Empresa (optional)
 			$table->string('tipo');              				// Tipo
 			$table->string('licenca');          				// Licença
 			$table->date('vigencia');           				// Vigência
