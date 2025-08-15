@@ -12,12 +12,7 @@ export function useAuth() {
 
   return useMutation<AuthResponse, AxiosError<{ message: string }>, AuthRequest>({
     mutationFn: async (data) => {
-      const response = await api.post('/auth', data, {
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        withCredentials: true
-      })
+      const response = await api.post('/auth', data)
 
       return response.data
     },

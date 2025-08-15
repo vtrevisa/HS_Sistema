@@ -42,3 +42,23 @@ export interface ExcelLead {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   [key: string]: any
 }
+
+export interface LeadRequest {
+  empresa: string;
+  tipo: string
+  licenca: string
+  vigencia: string
+  endereco: string
+  numero?: string
+  municipio: string
+  bairro: string
+  ocupacao?: string
+  complemento?: string
+  contato?:string
+}
+
+export interface LeadResponse {
+  status: boolean
+  lead: LeadRequest & { id: number }
+  message: string
+}

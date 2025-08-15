@@ -52,6 +52,8 @@ export function LeadsTable({ leads, onLeadClick }: LeadsTableProps) {
   return diasAteVencimento <= 30
  }
 
+ console.log(leads)
+
  return (
   <div className="data-table overflow-hidden">
    {/* Versão Desktop */}
@@ -82,7 +84,7 @@ export function LeadsTable({ leads, onLeadClick }: LeadsTableProps) {
      <tbody className="divide-y divide-border">
       {leads.map(lead => (
        <tr
-        key={lead.license}
+        key={lead.license || lead.id}
         className="data-row cursor-pointer"
         onClick={() => onLeadClick?.(lead)}
        >
@@ -211,7 +213,7 @@ export function LeadsTable({ leads, onLeadClick }: LeadsTableProps) {
    <div className="lg:hidden divide-y divide-border">
     {leads.map(lead => (
      <div
-      key={lead.license}
+      key={lead.license || lead.id}
       className="p-4 hover:bg-muted/30 transition-colors cursor-pointer"
       onClick={() => onLeadClick?.(lead)}
      >

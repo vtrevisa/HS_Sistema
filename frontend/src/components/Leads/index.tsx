@@ -6,6 +6,7 @@ import { LeadsTable } from './leads-table'
 import { NewLeadModal } from '../Modals/new-leads'
 import { LeadDetailsModal } from '../Modals/lead-details'
 import { ImportLeadsModal } from '../Modals/import-leads'
+import { useLead } from '@/http/use-lead'
 
 export function Leads() {
  const [searchTerm, setSearchTerm] = useState('')
@@ -17,10 +18,12 @@ export function Leads() {
  const [selectedLead, setSelectedLead] = useState<any>(null)
 
  const { leads, addLead } = useLeads()
+ const { leadsDB } = useLead()
 
+ // Filter leads from context
  const filteredLeads = leads.filter(lead => {
-  const company = lead.company ? lead.company.toLowerCase() : ''
-  const contact = lead.contact ? lead.contact.toLowerCase() : ''
+  const company = lead.company?.toLowerCase() ?? ''
+  const contact = lead.contact?.toLowerCase() ?? ''
   const search = searchTerm.toLowerCase()
 
   const matchesSearch = company.includes(search) || contact.includes(search)
@@ -29,6 +32,23 @@ export function Leads() {
 
   return matchesSearch && lead.status === selectedFilter
  })
+
+ // Filter leads from DB
+ const filteredLeadsFromDB = leadsDB.data?.filter(lead => {
+  const company = lead.lead?.empresa?.toLowerCase() ?? ''
+  const contact = lead.lead?.contato?.toLowerCase() ?? ''
+  const search = searchTerm.toLowerCase()
+
+  const matchesSearch = company.includes(search) || contact.includes(search)
+
+  if (selectedFilter === 'todos') return matchesSearch
+
+  return matchesSearch && String(lead.status) === selectedFilter
+ })
+
+ const allFilteredLeads = [...filteredLeads, ...(filteredLeadsFromDB || [])]
+
+ console.log(allFilteredLeads)
 
  // eslint-disable-next-line @typescript-eslint/no-explicit-any
  function handleImportComplete(importedLeads: any[]) {

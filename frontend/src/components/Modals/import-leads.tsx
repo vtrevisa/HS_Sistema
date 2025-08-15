@@ -24,7 +24,8 @@ import {
  fetchGoogleSheetData,
  readExcelFile
 } from '@/services/leads'
-import type { ExcelLead } from '@/http/types/leads'
+import type { ExcelLead, LeadRequest } from '@/http/types/leads'
+import { useLead } from '@/http/use-lead'
 
 interface ImportLeadsModalProps {
  isOpen: boolean
@@ -46,6 +47,8 @@ export function ImportLeadsModal({
   'idle'
  )
  const [importProgress, setImportProgress] = useState({ current: 0, total: 0 })
+
+ const { saveLeads } = useLead()
 
  function handleClose() {
   if (!isLoading) {
@@ -115,12 +118,35 @@ export function ImportLeadsModal({
    if (rawLeads.length === 0)
     throw new Error('Nenhum dado encontrado na planilha')
 
+   const leadRequests: LeadRequest[] = rawLeads.map(lead => ({
+    empresa: lead.empresa || '',
+    tipo: lead.tipo || lead.type || '',
+    licenca: lead.licenca || lead.license || '',
+    vigencia: lead.vigencia || '',
+    endereco: lead.address || '',
+    numero: lead.numero,
+    municipio: lead.municipio || '',
+    bairro: lead.bairro || '',
+    ocupacao: lead.ocupacao || lead.occupation,
+    complemento: lead.complemento
+   }))
+
+   // Save on DB
+   const savedLeads = await saveLeads.mutateAsync(leadRequests)
+
    onImportComplete(rawLeads)
    setImportStatus('success')
 
    toast.success('Importação Concluída', {
-    description: `${rawLeads.length} leads importados!`
+    description: `${rawLeads.length} leads importados!`,
+    duration: 3000
    })
+
+   await new Promise(resolve => setTimeout(resolve, 3000))
+
+   toast.success(
+    `Todos os ${savedLeads.length} leads foram salvos com sucesso!`
+   )
 
    resetImportStateAfterDelay()
   } catch (error) {
