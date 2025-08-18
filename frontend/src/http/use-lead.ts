@@ -28,12 +28,10 @@ export function useLead() {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const saveMutation = useMutation<LeadResponse[], AxiosError<any>, LeadRequest[]>({
     mutationFn: async (leads: LeadRequest[]) => {
-    const responses: LeadResponse[] = [];
-    for (const lead of leads) {
-      const response = await api.post<LeadResponse>("/leads", lead);
-      responses.push(response.data);
-    }
-    return responses;
+      const responses = await Promise.all(
+        leads.map(lead => api.post<LeadResponse>("/leads", lead).then(res => res.data))
+      );
+      return responses;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["leads"] });

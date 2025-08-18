@@ -47,8 +47,6 @@ export function ImportLeadsModal({
  )
  const [importProgress, setImportProgress] = useState({ current: 0, total: 0 })
 
- console.log(importStatus)
-
  function handleClose() {
   if (!isLoading) {
    onClose()
