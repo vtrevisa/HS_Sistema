@@ -47,6 +47,8 @@ export function ImportLeadsModal({
  )
  const [importProgress, setImportProgress] = useState({ current: 0, total: 0 })
 
+ console.log(importStatus)
+
  function handleClose() {
   if (!isLoading) {
    onClose()
@@ -112,10 +114,11 @@ export function ImportLeadsModal({
 
   try {
    const rawLeads = (await loadRawLeads()) as ExcelLead[]
-   if (rawLeads.length === 0)
+   if (!rawLeads || rawLeads.length === 0) {
     throw new Error('Nenhum dado encontrado na planilha')
+   }
 
-   const leadRequests: LeadRequest[] = rawLeads.map(lead => ({
+   const processedLeads: LeadRequest[] = rawLeads.map(lead => ({
     empresa: lead.empresa || '',
     tipo: lead.tipo || lead.type || '',
     licenca: lead.licenca || lead.license || '',
@@ -132,27 +135,24 @@ export function ImportLeadsModal({
    }))
 
    onImportComplete(rawLeads)
-   setImportStatus('success')
 
-   const importedCount = rawLeads.length
+   setImportStatus('success')
 
    toast.success('Importação Concluída', {
     description:
-     importedCount === 1
-      ? `${importedCount} lead importado!`
-      : `${importedCount} leads importados!`,
+     processedLeads.length === 1
+      ? '1 lead importado com sucesso!'
+      : `${rawLeads.length} leads importados com sucesso!`,
     duration: 3000
    })
 
-   await new Promise(resolve => setTimeout(resolve, 3000))
-
-   const count = leadRequests.length
-
-   toast.success(
-    count === 1
-     ? '1 lead foi salvo com sucesso!'
-     : `Todos os ${count} leads foram salvos com sucesso!`
-   )
+   setTimeout(() => {
+    toast.success(
+     processedLeads.length === 1
+      ? '1 lead foi salvo com sucesso!'
+      : `Todos os ${processedLeads.length} leads foram salvos com sucesso!`
+    )
+   }, 3200)
 
    resetImportStateAfterDelay()
   } catch (error) {

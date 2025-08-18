@@ -69,7 +69,7 @@ class LeadRequest extends FormRequest
             'bairro'    => $isUpdate ? 'sometimes|required' : 'required',
             'ocupacao'  => $isUpdate ? 'sometimes|required' : 'required',
             'vencimento' => $isUpdate ? 'sometimes|required' : 'required',
-            'proxima_acao' => $isUpdate ? 'sometimes|required' : 'required',
+            'proxima_acao' => 'sometimes|nullable|string',
 
             // Campos opcionais no POST e obrigatórios no UPDATE
             // 'complemento' => $isUpdate ? 'required|string' : 'nullable|string',

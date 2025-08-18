@@ -8,15 +8,15 @@ export function useLead() {
   const queryClient = useQueryClient();
 
 
-  // Fn to save leads
-  const saveLeads = async (leads: LeadRequest[]): Promise<LeadResponse[]> => {
-    const responses: LeadResponse[] = [];
-    for (const lead of leads) {
-      const response = await api.post<LeadResponse>("/leads", lead);
-      responses.push(response.data);
-    }
-    return responses;
-  };
+  // // Fn to save leads
+  // const saveLeads = async (leads: LeadRequest[]): Promise<LeadResponse[]> => {
+  //   const responses: LeadResponse[] = [];
+  //   for (const lead of leads) {
+  //     const response = await api.post<LeadResponse>("/leads", lead);
+  //     responses.push(response.data);
+  //   }
+  //   return responses;
+  // };
 
    // Fn to show all leads
   const fetchLeads = async (): Promise<LeadRequest[]> => {
@@ -24,10 +24,17 @@ export function useLead() {
     return data.leads;
   };
 
-  // Hook to salve leads
+  // Mutation to save leads
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const saveMutation = useMutation<LeadResponse[], AxiosError<any>, LeadRequest[]>({
-    mutationFn: saveLeads,
+    mutationFn: async (leads: LeadRequest[]) => {
+    const responses: LeadResponse[] = [];
+    for (const lead of leads) {
+      const response = await api.post<LeadResponse>("/leads", lead);
+      responses.push(response.data);
+    }
+    return responses;
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["leads"] });
     },
@@ -48,3 +55,4 @@ export function useLead() {
     leadsDB,
   };
 }
+
