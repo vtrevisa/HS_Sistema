@@ -71,16 +71,20 @@ class LeadController extends Controller
             // Add lead on DB
 
             $lead = Lead::create([
-                'empresa' => strtoupper($request->empresa),
-                'tipo' => strtoupper($request->tipo),
-                'licenca' => $request->licenca,
-                'vigencia' => $request->vigencia,
-                'endereco' => ucwords(strtolower($request->endereco)),
-                'numero' => $request->numero,
-                'municipio' => ucwords(strtolower($request->municipio)),
-                'bairro' => ucwords(strtolower($request->bairro)),
-                'ocupacao' => $request->ocupacao,
-                'complemento' => ucwords($request->complemento)
+                'empresa' => strtoupper($request->input('empresa', '')),
+                'tipo' => strtoupper($request->input('tipo', '')),
+                'licenca' => $request->input('licenca', ''),
+                'vigencia' => $request->input('vigencia', ''),
+                'endereco' => ucwords(strtolower($request->input('endereco', ''))),
+                'numero' => $request->input('numero', ''),
+                'municipio' => ucwords(strtolower($request->input('municipio', ''))),
+                'bairro' => ucwords(strtolower($request->input('bairro', ''))),
+                'cep' => $request->input('cep', ''),
+                'ocupacao' => $request->input('ocupacao', ''),
+                'complemento' => ucwords(strtolower($request->input('complemento', ''))),
+                'vencimento' => $request->input('vencimento', ''),
+                'proxima_acao' => $request->input('proxima_acao', ''),
+                'status' => $request->input('status', ''),
             ]);
 
             // Success Operation

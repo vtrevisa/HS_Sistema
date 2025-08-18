@@ -143,17 +143,18 @@ function parseDataToLeads(data: any[][], debug = false): Lead[] {
     const bairro = getColumnValue(values, ['bairro', 'district']);
     const municipio = getColumnValue(values, ['municipio', 'cidade', 'city']);
     const cep = getColumnValue(values, ['cep', 'zipcode']);
-
-    const enderecoParaBusca = [endereco, numero, complemento, bairro, municipio, cep]
-      .filter(Boolean).join(', ');
-
     const ocupacao = getColumnValue(values, ['ocupacao', 'occupation', 'atividade', 'uso', 'categoria de uso']);
     const valorServico = getColumnValue(values, ['valor', 'price', 'preco', 'custo', 'valor do servico', 'preco do servico']);
     const license = getColumnValue(values, ['licenca', 'license', 'numero', 'protocolo', 'numero do protocolo']);
 
+    const enderecoParaBusca = [endereco, numero, complemento, bairro, municipio, cep]
+      .filter(Boolean).join(', ');
+
+
+
     const lead: Lead = {
       company,
-      type,
+      type: type,
       license: license || '',
       contact: '',
       phone: '',

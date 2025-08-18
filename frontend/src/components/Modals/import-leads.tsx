@@ -25,7 +25,6 @@ import {
  readExcelFile
 } from '@/services/leads'
 import type { ExcelLead, LeadRequest } from '@/http/types/leads'
-import { useLead } from '@/http/use-lead'
 
 interface ImportLeadsModalProps {
  isOpen: boolean
@@ -47,8 +46,6 @@ export function ImportLeadsModal({
   'idle'
  )
  const [importProgress, setImportProgress] = useState({ current: 0, total: 0 })
-
- const { saveLeads } = useLead()
 
  function handleClose() {
   if (!isLoading) {
@@ -123,6 +120,9 @@ export function ImportLeadsModal({
     tipo: lead.tipo || lead.type || '',
     licenca: lead.licenca || lead.license || '',
     vigencia: lead.vigencia || '',
+    vencimento: lead.vencimento || '',
+    proxima_acao: lead.proxima_acao || '',
+    status: lead.status || '',
     endereco: lead.address || '',
     numero: lead.numero,
     municipio: lead.municipio || '',
@@ -131,21 +131,27 @@ export function ImportLeadsModal({
     complemento: lead.complemento
    }))
 
-   // Save on DB
-   const savedLeads = await saveLeads.mutateAsync(leadRequests)
-
    onImportComplete(rawLeads)
    setImportStatus('success')
 
+   const importedCount = rawLeads.length
+
    toast.success('Importação Concluída', {
-    description: `${rawLeads.length} leads importados!`,
+    description:
+     importedCount === 1
+      ? `${importedCount} lead importado!`
+      : `${importedCount} leads importados!`,
     duration: 3000
    })
 
    await new Promise(resolve => setTimeout(resolve, 3000))
 
+   const count = leadRequests.length
+
    toast.success(
-    `Todos os ${savedLeads.length} leads foram salvos com sucesso!`
+    count === 1
+     ? '1 lead foi salvo com sucesso!'
+     : `Todos os ${count} leads foram salvos com sucesso!`
    )
 
    resetImportStateAfterDelay()

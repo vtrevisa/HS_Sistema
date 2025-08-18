@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import type { ModalLeads } from '@/http/types/modal-leads'
+import type { LeadRequest } from '@/http/types/leads'
 
 import {
  Building,
@@ -20,7 +20,7 @@ import { Input } from '../ui/input'
 interface LeadDetailsModalProps {
  isOpen: boolean
  onClose: () => void
- lead: ModalLeads | null
+ lead: LeadRequest | null
 }
 
 export function LeadDetailsModal({
@@ -29,7 +29,7 @@ export function LeadDetailsModal({
  lead
 }: LeadDetailsModalProps) {
  const [isEditing, setIsEditing] = useState(false)
- const [editedLead, setEditedLead] = useState<ModalLeads | null>(null)
+ const [editedLead, setEditedLead] = useState<LeadRequest | null>(null)
 
  if (!lead) return null
 
@@ -89,17 +89,14 @@ export function LeadDetailsModal({
  }
 
  function getCompleteAddress() {
-  const parts = []
-  if (currentLead.address) parts.push(currentLead.address)
+  const parts: string[] = []
+  if (currentLead.endereco) parts.push(currentLead.endereco)
   if (currentLead.numero) parts.push(currentLead.numero)
   if (currentLead.complemento) parts.push(currentLead.complemento)
   if (currentLead.bairro) parts.push(currentLead.bairro)
   if (currentLead.municipio) parts.push(currentLead.municipio)
 
-  const addressLine = parts.join(', ')
-  return currentLead.cep
-   ? `${addressLine} - CEP: ${currentLead.cep}`
-   : addressLine
+  return parts.join(', ')
  }
 
  const EditableField = ({
@@ -110,7 +107,7 @@ export function LeadDetailsModal({
   icon
  }: {
   label: string
-  value: string
+  value?: string
   field: string
   type?: string
   icon?: React.ReactNode
@@ -141,7 +138,7 @@ export function LeadDetailsModal({
      <DialogTitle className="flex items-center justify-between text-lg sm:text-xl">
       <div className="flex items-center gap-2">
        <Building size={20} />
-       <span className="truncate">{currentLead.company}</span>
+       <span className="truncate">{currentLead.empresa}</span>
       </div>
       <div className="flex gap-2">
        {isEditing ? (
@@ -171,7 +168,7 @@ export function LeadDetailsModal({
        {currentLead.status}
       </Badge>
       <Badge variant="outline" className="bg-red-100 text-red-800">
-       Serviço: {currentLead.type}
+       Serviço: {currentLead.tipo}
       </Badge>
      </div>
      {/* Informações do Serviço */}
@@ -181,10 +178,10 @@ export function LeadDetailsModal({
        Informações do Serviço
       </h3>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 text-sm">
-       <EditableField label="Serviço" value={currentLead.type} field="type" />
+       <EditableField label="Serviço" value={currentLead.tipo} field="type" />
        <EditableField
         label="Licença"
-        value={currentLead.license}
+        value={currentLead.licenca}
         field="license"
        />
        <EditableField
@@ -196,14 +193,14 @@ export function LeadDetailsModal({
        />
        <EditableField
         label="Valor do Serviço"
-        value={currentLead.valorServico || ''}
+        value={currentLead.valor_servico || ''}
         field="valorServico"
         type="number"
        />
        <div className="sm:col-span-2">
         <EditableField
          label="Ocupação"
-         value={currentLead.occupation}
+         value={currentLead.ocupacao}
          field="occupation"
         />
        </div>
@@ -225,7 +222,7 @@ export function LeadDetailsModal({
        />
        <EditableField
         label="Website"
-        value={currentLead.website || ''}
+        value={currentLead.site || ''}
         field="website"
         type="url"
        />
@@ -238,7 +235,7 @@ export function LeadDetailsModal({
          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-1">
           <Input
            placeholder="Endereço"
-           value={editedLead?.address || ''}
+           value={editedLead?.endereco || ''}
            onChange={e => updateField('address', e.target.value)}
           />
           <Input
@@ -286,12 +283,12 @@ export function LeadDetailsModal({
       <div className="space-y-3 text-sm">
        <EditableField
         label="Nome do Contato"
-        value={currentLead.contact}
+        value={currentLead.contato}
         field="contact"
        />
        <EditableField
         label="Telefone/WhatsApp"
-        value={currentLead.phone}
+        value={currentLead.whatsapp}
         field="phone"
         type="tel"
         icon={<Phone size={14} />}
@@ -346,14 +343,14 @@ export function LeadDetailsModal({
         {isEditing ? (
          <Input
           type="date"
-          value={editedLead?.nextAction || ''}
+          value={editedLead?.proxima_acao || ''}
           onChange={e => updateField('nextAction', e.target.value)}
           className="mt-1"
          />
         ) : (
          <p className="text-gray-600">
-          {currentLead.nextAction
-           ? new Date(currentLead.nextAction).toLocaleDateString('pt-BR')
+          {currentLead.proxima_acao
+           ? new Date(currentLead.proxima_acao).toLocaleDateString('pt-BR')
            : 'Não informado'}
          </p>
         )}

@@ -22,6 +22,26 @@ class LeadRequest extends FormRequest
      * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
      */
 
+
+    protected function prepareForValidation()
+    {
+        $this->merge([
+            'empresa' => $this->input('empresa') ?? $this->input('company'),
+            'tipo' => $this->input('tipo') ?? $this->input('type'),
+            'licenca' => $this->input('licenca') ?? $this->input('license'),
+            'vigencia' => $this->input('vigencia') ?? $this->input('vigencia'),
+            'endereco' => $this->input('endereco') ?? $this->input('address'),
+            'ocupacao' => $this->input('ocupacao') ?? $this->input('occupation'),
+            'numero' => $this->input('numero'),
+            'municipio' => $this->input('municipio') ?? $this->input('municipio'),
+            'bairro' => $this->input('bairro') ?? $this->input('bairro'),
+            'cep' => $this->input('cep'),
+            'complemento' => $this->input('complemento'),
+            'vencimento' => $this->input('vencimento'),
+            'proxima_acao' => $this->input('proxima_acao') ?? $this->input('nextAction'),
+        ]);
+    }
+
     protected function failedValidation(Validator $validator)
     {
         throw new HttpResponseException(response()->json([
@@ -48,6 +68,8 @@ class LeadRequest extends FormRequest
             'municipio' => $isUpdate ? 'sometimes|required' : 'required',
             'bairro'    => $isUpdate ? 'sometimes|required' : 'required',
             'ocupacao'  => $isUpdate ? 'sometimes|required' : 'required',
+            'vencimento' => $isUpdate ? 'sometimes|required' : 'required',
+            'proxima_acao' => $isUpdate ? 'sometimes|required' : 'required',
 
             // Campos opcionais no POST e obrigatórios no UPDATE
             // 'complemento' => $isUpdate ? 'required|string' : 'nullable|string',
@@ -67,6 +89,7 @@ class LeadRequest extends FormRequest
             // 'ocupacao'  => 'required',
 
             // Campos opcionais no POST
+            'cep' => 'nullable|string',
             'complemento' => 'nullable|string',
             'cnpj'        => 'nullable|string',
             'site'        => 'nullable|string',

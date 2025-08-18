@@ -1,12 +1,15 @@
-import { createContext, useContext, useState, type ReactNode } from 'react'
-import type { Lead } from '@/http/types/leads'
+import { createContext, useContext, type ReactNode } from 'react'
+import type { LeadRequest } from '@/http/types/leads'
+import { useLead } from '@/http/use-lead'
 
 interface LeadsContextType {
- leads: Lead[]
- addLead: (lead: Omit<Lead, 'id'>) => void
- updateLead: (leadId: number, updatedLead: Partial<Lead>) => void
+ leads: LeadRequest[]
+ isLoading: boolean
+ addLead: (lead: LeadRequest) => void
+ addLeads: (leads: LeadRequest[]) => void
+ updateLead: (leadId: number, updatedLead: Partial<LeadRequest>) => void
  updateLeadStatus: (leadId: number, newStatus: string) => void
- getLeadsByStatus: (status: string) => Lead[]
+ //getLeadsByStatus: (status: string) => LeadResponse[]
 }
 
 interface LeadsProviderProps {
@@ -25,55 +28,40 @@ export const useLeads = () => {
 }
 
 export const LeadsProvider = ({ children }: LeadsProviderProps) => {
- const [leads, setLeads] = useState<Lead[]>([])
+ const { leadsDB, saveLeads } = useLead()
 
- function addLead(leadData: Omit<Lead, 'id'>) {
-  const newLead: Lead = {
-   ...leadData,
-   id: Date.now()
-  }
-  setLeads(prev => [...prev, newLead])
-  console.log('Novo lead adicionado:', newLead)
+ function addLead(lead: LeadRequest) {
+  saveLeads.mutate([lead])
  }
 
- function updateLead(leadId: number, updatedLead: Partial<Lead>) {
-  setLeads(prev =>
-   prev.map(lead => (lead.id === leadId ? { ...lead, ...updatedLead } : lead))
-  )
-  console.log('Lead atualizado:', leadId, updatedLead)
+ function addLeads(leads: LeadRequest[]) {
+  saveLeads.mutate(leads)
+ }
+
+ function updateLead(leadId: number, updatedLead: Partial<LeadRequest>) {
+  console.log('TODO: implementar updateLead mutation', leadId, updatedLead)
+  // updateLeadMutation.mutate({ leadId, updatedLead })
  }
 
  function updateLeadStatus(leadId: number, newStatus: string) {
-  setLeads(prev =>
-   prev.map(lead =>
-    lead.id === leadId ? { ...lead, status: newStatus } : lead
-   )
-  )
-  console.log('Status do lead atualizado:', leadId, newStatus)
+  console.log('TODO: implementar updateLeadStatus mutation', leadId, newStatus)
+  // updateLeadStatusMutation.mutate({ leadId, status: newStatus })
  }
 
- function getLeadsByStatus(status: string) {
-  const statusMap: { [key: string]: string } = {
-   lead: 'Lead',
-   'primeiro-contato': 'Primeiro Contato',
-   'follow-up': 'Follow-up',
-   'proposta-enviada': 'Proposta Enviada',
-   'cliente-fechado': 'Cliente Fechado',
-   arquivado: 'Arquivado'
-  }
-
-  const mappedStatus = statusMap[status] || status
-  return leads.filter(lead => lead.status === mappedStatus)
- }
+ //  function getLeadsByStatus(status: string) {
+ //   if (!leadsDB.data) return []
+ //   return leadsDB.data.filter(lead => lead.status === status)
+ //  }
 
  return (
   <LeadsContext.Provider
    value={{
-    leads,
+    leads: leadsDB.data || [],
+    isLoading: leadsDB.isLoading,
     addLead,
+    addLeads,
     updateLead,
-    updateLeadStatus,
-    getLeadsByStatus
+    updateLeadStatus
    }}
   >
    {children}

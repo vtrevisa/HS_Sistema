@@ -43,22 +43,42 @@ export interface ExcelLead {
   [key: string]: any
 }
 
+export type LeadStatus =
+  | "lead"
+  | "primeiro-contato"
+  | "follow-up"
+  | "proposta-enviada"
+  | "cliente-fechado"
+  | "arquivado"
+
 export interface LeadRequest {
-  empresa: string;
-  tipo: string
-  licenca: string
-  vigencia: string
-  endereco: string
-  numero?: string
-  municipio: string
-  bairro: string
-  ocupacao?: string
-  complemento?: string
-  contato?:string
+  id?: number;
+  empresa?: string;
+  tipo: string;
+  licenca: string;
+  vigencia: string;
+  vencimento: string;
+  proxima_acao: string;
+  valor_servico?: string
+  endereco: string;
+  numero?: string;
+  municipio: string;
+  bairro: string;
+  ocupacao?: string;
+  status: string;
+  complemento?: string;
+  cep?: string;
+  contato?: string;
+  cnpj?: string;
+  whatsapp?: string;
+  email?: string;
+  site?: string;
+  categoria?: string;
+
 }
 
 export interface LeadResponse {
-  status: boolean
-  lead: LeadRequest & { id: number }
+  status: LeadStatus | string
+  lead: LeadRequest
   message: string
 }

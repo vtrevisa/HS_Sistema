@@ -19,25 +19,26 @@ export function useLead() {
   };
 
    // Fn to show all leads
-  const fetchLeads = async (): Promise<LeadResponse[]> => {
-    const { data } = await api.get<{ status: boolean; leads: LeadResponse[] }>("/leads");
+  const fetchLeads = async (): Promise<LeadRequest[]> => {
+    const { data } = await api.get<{ status: boolean; leads: LeadRequest[] }>("/leads");
     return data.leads;
   };
 
   // Hook to salve leads
-  const saveMutation = useMutation<LeadResponse[], AxiosError<{ message: string }>, LeadRequest[]>({
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const saveMutation = useMutation<LeadResponse[], AxiosError<any>, LeadRequest[]>({
     mutationFn: saveLeads,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["leads"] });
     },
     onError: (error) => {
-      const message = error.response?.data?.message || 'Erro ao salvar leads'
-      toast.error(message)
+      const messages = Object.values(error.response?.data.erros).flat() .join("\n"); 
+      toast.error(messages)
     }
   })
 
   // Hook to find leads
-  const leadsDB = useQuery<LeadResponse[], AxiosError>({
+  const leadsDB = useQuery<LeadRequest[], AxiosError>({
     queryKey: ["leads"],
     queryFn: fetchLeads,
   });

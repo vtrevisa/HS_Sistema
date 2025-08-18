@@ -1,27 +1,26 @@
-import type { Lead } from '@/http/types/leads'
+import type { LeadRequest } from '@/http/types/leads'
 import { Calendar, Mail, MapPin, Pencil, Phone, Sparkles } from 'lucide-react'
 
 interface LeadsTableProps {
- leads: Lead[]
+ leads: LeadRequest[]
  onEnrichCompany?: (companyName: string, cnpj?: string) => Promise<unknown>
  isEnriching?: boolean
  hasEnrichmentConfig?: boolean
- onLeadClick?: (lead: Lead) => void
+ onLeadClick?: (lead: LeadRequest) => void
  onEnrichLead?: (leadId: number) => Promise<void>
  onBulkEnrich?: (leadIds: number[]) => Promise<void>
 }
 
 export function LeadsTable({ leads, onLeadClick }: LeadsTableProps) {
- function getCompleteAddress(lead: Lead) {
+ function getCompleteAddress(lead: LeadRequest) {
   const parts: string[] = []
-  if (lead.address) parts.push(lead.address)
+  if (lead.endereco) parts.push(lead.endereco)
   if (lead.numero) parts.push(lead.numero)
   if (lead.complemento) parts.push(lead.complemento)
   if (lead.bairro) parts.push(lead.bairro)
   if (lead.municipio) parts.push(lead.municipio)
 
-  const addressLine = parts.join(', ')
-  return lead.cep ? `${addressLine} - CEP: ${lead.cep}` : addressLine
+  return parts.join(', ')
  }
 
  function getStatusColor(status: string) {
@@ -51,8 +50,6 @@ export function LeadsTable({ leads, onLeadClick }: LeadsTableProps) {
   )
   return diasAteVencimento <= 30
  }
-
- console.log(leads)
 
  return (
   <div className="data-table overflow-hidden">
@@ -84,21 +81,17 @@ export function LeadsTable({ leads, onLeadClick }: LeadsTableProps) {
      <tbody className="divide-y divide-border">
       {leads.map(lead => (
        <tr
-        key={lead.license || lead.id}
+        key={lead.licenca || lead.id}
         className="data-row cursor-pointer"
         onClick={() => onLeadClick?.(lead)}
        >
         <td className="data-cell">
          <div className="space-y-1">
-          <div className="font-semibold text-foreground">
-           {lead.nomeComercial || lead.company}
-          </div>
-          <div className="text-sm text-muted-foreground">{lead.license}</div>
+          <div className="font-semibold text-foreground">{lead.empresa}</div>
+          <div className="text-sm text-muted-foreground">{lead.licenca}</div>
           <div className="text-xs text-muted-foreground flex items-center gap-1">
            <MapPin size={12} />
-           <span className="text-truncate">
-            {lead.enderecoFormatado || getCompleteAddress(lead)}
-           </span>
+           <span className="text-truncate">{getCompleteAddress(lead)}</span>
           </div>
           {lead.categoria && (
            <div className="text-xs text-purple-600 dark:text-purple-400 flex items-center gap-1">
@@ -110,20 +103,20 @@ export function LeadsTable({ leads, onLeadClick }: LeadsTableProps) {
         </td>
         <td className="data-cell">
          <span className="status-badge bg-destructive/10 text-destructive border border-destructive/20">
-          {lead.type}
+          {lead.tipo}
          </span>
          <div className="text-xs text-muted-foreground mt-1">
-          {lead.occupation}
+          {lead.ocupacao}
          </div>
         </td>
         <td className="data-cell">
          <div className="space-y-1">
           <div className="text-sm font-medium text-foreground">
-           {lead.contact}
+           {lead.contato}
           </div>
           <div className="text-sm text-muted-foreground flex items-center gap-1">
            <Phone size={12} />
-           <span>{lead.telefone || lead.phone}</span>
+           <span>{lead.whatsapp}</span>
           </div>
           <div className="text-xs text-muted-foreground flex items-center gap-1">
            <Mail size={12} />
@@ -151,7 +144,7 @@ export function LeadsTable({ leads, onLeadClick }: LeadsTableProps) {
          <div className="text-xs text-muted-foreground mt-1 flex items-center gap-1">
           <Calendar size={12} />
           <span>
-           Próxima: {new Date(lead.nextAction).toLocaleDateString('pt-BR')}
+           Próxima: {new Date(lead.proxima_acao).toLocaleDateString('pt-BR')}
           </span>
          </div>
         </td>
@@ -163,7 +156,7 @@ export function LeadsTable({ leads, onLeadClick }: LeadsTableProps) {
             : 'text-foreground'
           }`}
          >
-          {new Date(lead.vencimento).toLocaleDateString('pt-BR')}
+          {new Date(lead.vigencia).toLocaleDateString('pt-BR')}
          </div>
          {isVencimentoProximo(lead.vencimento) && (
           <div className="text-xs text-destructive flex items-center gap-1">
@@ -213,7 +206,7 @@ export function LeadsTable({ leads, onLeadClick }: LeadsTableProps) {
    <div className="lg:hidden divide-y divide-border">
     {leads.map(lead => (
      <div
-      key={lead.license || lead.id}
+      key={lead.licenca || lead.id}
       className="p-4 hover:bg-muted/30 transition-colors cursor-pointer"
       onClick={() => onLeadClick?.(lead)}
      >
@@ -221,17 +214,17 @@ export function LeadsTable({ leads, onLeadClick }: LeadsTableProps) {
        <div className="flex items-center gap-3 flex-1 min-w-0">
         <div className="flex-1 min-w-0">
          <h3 className="font-semibold text-foreground truncate">
-          {lead.nomeComercial || lead.company}
+          {lead.empresa}
          </h3>
          <p className="text-sm text-muted-foreground truncate">
-          {lead.contact}
+          {lead.contato}
          </p>
-         {lead.categoria && (
+         {/* {lead.categoria && (
           <p className="text-xs text-purple-600 dark:text-purple-400 mt-1 flex items-center gap-1">
            <span>📍</span>
            <span>{lead.categoria.replace(/_/g, ' ')}</span>
           </p>
-         )}
+         )} */}
         </div>
        </div>
        <div className="flex gap-2 ml-2">
@@ -243,7 +236,7 @@ export function LeadsTable({ leads, onLeadClick }: LeadsTableProps) {
       <div className="space-y-2 text-sm">
        <div className="flex items-center gap-2 text-muted-foreground">
         <Phone size={14} className="flex-shrink-0" />
-        <span className="truncate">{lead.telefone || lead.phone}</span>
+        <span className="truncate">{lead.whatsapp}</span>
        </div>
        <div className="flex items-center gap-2 text-muted-foreground">
         <Mail size={14} className="flex-shrink-0" />
@@ -264,9 +257,7 @@ export function LeadsTable({ leads, onLeadClick }: LeadsTableProps) {
        )}
        <div className="flex items-start gap-2 text-muted-foreground">
         <MapPin size={14} className="flex-shrink-0 mt-0.5" />
-        <span className="text-xs line-clamp-2">
-         {lead.enderecoFormatado || getCompleteAddress(lead)}
-        </span>
+        <span className="text-xs line-clamp-2">{getCompleteAddress(lead)}</span>
        </div>
       </div>
       <div className="flex justify-between items-center mt-3 pt-3 border-t border-border">
