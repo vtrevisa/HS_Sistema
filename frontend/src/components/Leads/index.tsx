@@ -6,6 +6,7 @@ import { LeadsTable } from './leads-table'
 import { NewLeadModal } from '../Modals/new-leads'
 import { LeadDetailsModal } from '../Modals/lead-details'
 import { ImportLeadsModal } from '../Modals/import-leads'
+import type { LeadRequest } from '@/http/types/leads'
 
 export function Leads() {
  const [searchTerm, setSearchTerm] = useState('')
@@ -16,7 +17,7 @@ export function Leads() {
  // eslint-disable-next-line @typescript-eslint/no-explicit-any
  const [selectedLead, setSelectedLead] = useState<any>(null)
 
- const { leads, addLead } = useLeads()
+ const { leads, addLead, addLeads } = useLeads()
 
  // Filter leads from context
  const filteredLeads = leads.filter(lead => {
@@ -31,15 +32,14 @@ export function Leads() {
   return matchesSearch && lead.tipo === selectedFilter
  })
 
- // eslint-disable-next-line @typescript-eslint/no-explicit-any
- function handleImportComplete(importedLeads: any[]) {
-  const processedLeads = importedLeads.map(lead => {
+ function handleImportComplete(importedLeads: LeadRequest[]) {
+  const processedLeads: LeadRequest[] = importedLeads.map(lead => {
    const completeAddress = [
-    lead.address || lead.endereco,
+    lead.endereco || lead['address' as keyof LeadRequest],
     lead.numero,
     lead.complemento,
     lead.bairro,
-    lead.municipio || lead.cidade
+    lead.municipio || lead['cidade' as keyof LeadRequest]
    ]
     .filter(Boolean)
     .join(', ')
@@ -50,18 +50,18 @@ export function Leads() {
     // Manter os campos originais para referência
     numero: lead.numero,
     complemento: lead.complemento,
-    municipio: lead.municipio || lead.cidade,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    municipio: lead.municipio || (lead as any).cidade,
     bairro: lead.bairro
    }
   })
 
-  processedLeads.forEach(lead => addLead(lead))
+  addLeads(processedLeads)
  }
 
- // eslint-disable-next-line @typescript-eslint/no-explicit-any
- function handleNewLead(leadData: any) {
+ function handleNewLead(leadData: Omit<LeadRequest, 'id'>) {
   const completeAddress = [
-   leadData.address,
+   leadData.endereco,
    leadData.numero,
    leadData.complemento,
    leadData.bairro,

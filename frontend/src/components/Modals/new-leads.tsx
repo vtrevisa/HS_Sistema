@@ -1,13 +1,16 @@
-import { useState } from 'react'
-import type { Lead } from '@/http/types/leads'
+/* eslint-disable react-hooks/exhaustive-deps */
+import { useForm, Controller } from 'react-hook-form'
+import type { LeadRequest } from '@/http/types/leads'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../ui/dialog'
 import { Button } from '../ui/button'
 import { Calendar } from 'lucide-react'
+import { IMaskInput } from 'react-imask'
+import { useEffect } from 'react'
 
 interface NewLeadModalProps {
  isOpen: boolean
  onClose: () => void
- onLeadCreate: (lead: Omit<Lead, 'id'>) => void
+ onLeadCreate: (lead: Omit<LeadRequest, 'id'>) => void
 }
 
 export function NewLeadModal({
@@ -15,59 +18,84 @@ export function NewLeadModal({
  onClose,
  onLeadCreate
 }: NewLeadModalProps) {
- const [formData, setFormData] = useState({
-  company: '',
-  type: 'AVCB',
-  license: '',
-  contact: '',
-  phone: '',
-  email: '',
-  address: '',
-  cep: '',
-  occupation: '',
-  status: 'Lead',
-  vencimento: '',
-  nextAction: '',
-  website: '',
-  cnpj: ''
+ const {
+  register,
+  handleSubmit,
+  watch,
+  setValue,
+  control,
+  reset,
+  formState: { errors }
+ } = useForm<Omit<LeadRequest, 'id'>>({
+  defaultValues: {
+   empresa: '',
+   tipo: 'AVCB',
+   licenca: '',
+   contato: '',
+   whatsapp: '',
+   email: '',
+   cep: '',
+   endereco: '',
+   numero: '',
+   bairro: '',
+   municipio: '',
+   ocupacao: '',
+   status: 'Lead',
+   vigencia: '',
+   vencimento: '',
+   proxima_acao: '',
+   site: '',
+   cnpj: ''
+  }
  })
 
- function handleSubmit(e: React.FormEvent) {
-  e.preventDefault()
+ async function searchCEP(cep: string) {
+  const inputCEP = cep.replace(/\D/g, '')
+  if (inputCEP.length !== 8) return
 
-  if (!formData.company || !formData.contact || !formData.vencimento) {
-   alert('Preencha os campos obrigatórios: Empresa, Contato e Vencimento')
-   return
+  try {
+   const response = await fetch(`https://viacep.com.br/ws/${inputCEP}/json/`)
+   const data = await response.json()
+
+   if (!data.erro) {
+    setValue('endereco', data.logradouro || '')
+    setValue('bairro', data.bairro || '')
+    setValue('municipio', data.localidade || '')
+   }
+  } catch (error) {
+   console.error('Erro ao buscar CEP:', error)
   }
+ }
 
-  onLeadCreate(formData)
-  setFormData({
-   company: '',
-   type: 'AVCB',
-   license: '',
-   contact: '',
-   phone: '',
-   email: '',
-   address: '',
-   cep: '',
-   occupation: '',
-   status: 'Lead',
-   vencimento: '',
-   nextAction: '',
-   website: '',
-   cnpj: ''
-  })
+ const vencimento = watch('vencimento')
+ const cep = watch('cep')
+
+ function handleSaveLead(data: Omit<LeadRequest, 'id'>) {
+  onLeadCreate(data)
+  reset()
   onClose()
  }
 
- function handleChange(
-  e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
- ) {
-  setFormData(prev => ({
-   ...prev,
-   [e.target.name]: e.target.value
-  }))
- }
+ useEffect(() => {
+  setValue('vigencia', vencimento)
+ }, [vencimento, setValue])
+
+ useEffect(() => {
+  if (cep?.length === 9) {
+   ;(async () => {
+    await searchCEP(cep)
+   })()
+  }
+ }, [cep])
+
+ //  function handleChange(
+ //   e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+ //  ) {
+ //   setFormData(prev => ({
+ //    ...prev,
+ //    [e.target.name]: e.target.value
+ //   }))
+ //  }
 
  return (
   <Dialog open={isOpen} onOpenChange={onClose}>
@@ -76,33 +104,39 @@ export function NewLeadModal({
      <DialogTitle>Novo Lead</DialogTitle>
     </DialogHeader>
 
-    <form onSubmit={handleSubmit} className="space-y-4">
+    <form onSubmit={handleSubmit(handleSaveLead)} className="space-y-4">
      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-      <div>
+      <div className="md:col-span-2">
        <label className="block text-sm font-medium text-foreground mb-1">
         Empresa *
        </label>
        <input
         type="text"
-        name="company"
-        value={formData.company}
-        onChange={handleChange}
-        className="w-full border border-gray-300 bg-background text-foreground rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-red-500 outline-none"
+        {...register('empresa', { required: true })}
+        className="w-full border border-gray-300 bg-background text-foreground rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 outline-none"
         required
        />
+       {errors.empresa && (
+        <span className="text-red-500 text-sm">Campo obrigatório</span>
+       )}
       </div>
 
       <div>
        <label className="block text-sm font-medium text-foreground mb-1">
         CNPJ
        </label>
-       <input
-        type="text"
+
+       <Controller
+        control={control}
         name="cnpj"
-        value={formData.cnpj}
-        onChange={handleChange}
-        placeholder="00.000.000/0000-00"
-        className="w-full border border-gray-300 bg-background text-foreground placeholder:text-foreground rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-red-500 outline-none"
+        render={({ field }) => (
+         <IMaskInput
+          {...field}
+          mask="00.000.000/0000-00"
+          placeholder="00.000.000/0000-00"
+          className="w-full border border-gray-300 bg-background text-foreground placeholder:text-foreground rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 outline-none"
+         />
+        )}
        />
       </div>
 
@@ -111,10 +145,8 @@ export function NewLeadModal({
         Tipo
        </label>
        <select
-        name="type"
-        value={formData.type}
-        onChange={handleChange}
-        className="w-full border border-gray-300 bg-background text-foreground rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-red-500 outline-none"
+        {...register('tipo')}
+        className="w-full border border-gray-300 bg-background text-foreground rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 outline-none"
        >
         <option value="AVCB">AVCB</option>
         <option value="CLCB">CLCB</option>
@@ -128,10 +160,8 @@ export function NewLeadModal({
        </label>
        <input
         type="text"
-        name="license"
-        value={formData.license}
-        onChange={handleChange}
-        className="w-full border border-gray-300 bg-background text-foreground rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-red-500 outline-none"
+        {...register('licenca')}
+        className="w-full border border-gray-300 bg-background text-foreground rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 outline-none"
        />
       </div>
 
@@ -141,25 +171,31 @@ export function NewLeadModal({
        </label>
        <input
         type="text"
-        name="contact"
-        value={formData.contact}
-        onChange={handleChange}
-        className="w-full border border-gray-300 bg-background text-foreground rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-red-500 outline-none"
+        {...register('contato', { required: true })}
+        className="w-full border border-gray-300 bg-background text-foreground rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 outline-none"
         required
        />
+       {errors.contato && (
+        <span className="text-red-500 text-sm">Campo obrigatório</span>
+       )}
       </div>
 
       <div>
        <label className="block text-sm font-medium text-foreground mb-1">
         WhatsApp
        </label>
-       <input
-        type="text"
-        name="phone"
-        value={formData.phone}
-        onChange={handleChange}
-        placeholder="(11) 99999-9999"
-        className="w-full border border-gray-300 bg-background text-foreground placeholder:text-foreground rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-red-500 outline-none"
+
+       <Controller
+        control={control}
+        name="whatsapp"
+        render={({ field }) => (
+         <IMaskInput
+          {...field}
+          mask="(00) 00000-0000"
+          placeholder="(11) 99999-9999"
+          className="w-full border border-gray-300 bg-background text-foreground placeholder:text-foreground rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 outline-none"
+         />
+        )}
        />
       </div>
 
@@ -169,10 +205,8 @@ export function NewLeadModal({
        </label>
        <input
         type="email"
-        name="email"
-        value={formData.email}
-        onChange={handleChange}
-        className="w-full border border-gray-300 bg-background text-foreground rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-red-500 outline-none"
+        {...register('email')}
+        className="w-full border border-gray-300 bg-background text-foreground rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 outline-none"
        />
       </div>
 
@@ -182,11 +216,9 @@ export function NewLeadModal({
        </label>
        <input
         type="url"
-        name="website"
-        value={formData.website}
-        onChange={handleChange}
+        {...register('site')}
         placeholder="www.empresa.com.br"
-        className="w-full border border-gray-300 bg-background text-foreground placeholder:text-foreground rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-red-500 outline-none"
+        className="w-full border border-gray-300 bg-background text-foreground placeholder:text-foreground rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 outline-none"
        />
       </div>
 
@@ -194,14 +226,24 @@ export function NewLeadModal({
        <label className="block text-sm font-medium text-foreground mb-1">
         CEP
        </label>
-       <input
-        type="text"
+
+       <Controller
+        control={control}
         name="cep"
-        value={formData.cep}
-        onChange={handleChange}
-        placeholder="00000-000"
-        className="w-full border border-gray-300 bg-background text-foreground placeholder:text-foreground rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-red-500 outline-none"
+        render={({ field }) => (
+         <IMaskInput
+          {...field}
+          mask="00000-000"
+          placeholder="00000-000"
+          className="w-full border border-gray-300 bg-background text-foreground placeholder:text-foreground rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 outline-none"
+         />
+        )}
        />
+      </div>
+
+      <div className="hidden">
+       <input {...register('bairro')} placeholder="Bairro" />
+       <input {...register('municipio')} placeholder="Município" />
       </div>
 
       <div>
@@ -210,10 +252,19 @@ export function NewLeadModal({
        </label>
        <input
         type="text"
-        name="address"
-        value={formData.address}
-        onChange={handleChange}
-        className="w-full border border-gray-300 bg-background text-foreground rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-red-500 outline-none"
+        {...register('endereco')}
+        className="w-full border border-gray-300 bg-background text-foreground rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 outline-none"
+       />
+      </div>
+
+      <div>
+       <label className="block text-sm font-medium text-foreground mb-1">
+        Número
+       </label>
+       <input
+        type="tel"
+        {...register('numero')}
+        className="w-full border border-gray-300 bg-background text-foreground rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 outline-none"
        />
       </div>
 
@@ -223,10 +274,8 @@ export function NewLeadModal({
        </label>
        <input
         type="text"
-        name="occupation"
-        value={formData.occupation}
-        onChange={handleChange}
-        className="w-full border border-gray-300 bg-background text-foreground rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-red-500 outline-none"
+        {...register('ocupacao')}
+        className="w-full border border-gray-300 bg-background text-foreground rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 outline-none"
        />
       </div>
 
@@ -235,16 +284,14 @@ export function NewLeadModal({
         Status
        </label>
        <select
-        name="status"
-        value={formData.status}
-        onChange={handleChange}
-        className="w-full border border-gray-300 bg-background text-foreground rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-red-500 outline-none"
+        {...register('status')}
+        className="w-full border border-gray-300 bg-background text-foreground rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 outline-none"
        >
         <option value="Lead">Lead</option>
-        <option value="Primeiro Contato">Primeiro Contato</option>
+        <option value="Primeiro contato">Primeiro Contato</option>
         <option value="Follow-up">Follow-up</option>
-        <option value="Proposta Enviada">Proposta Enviada</option>
-        <option value="Cliente Fechado">Cliente Fechado</option>
+        <option value="Proposta enviada">Proposta Enviada</option>
+        <option value="Cliente fechado">Cliente Fechado</option>
         <option value="Arquivado">Arquivado</option>
        </select>
       </div>
@@ -256,14 +303,15 @@ export function NewLeadModal({
        <div className="relative">
         <input
          type="date"
-         name="vencimento"
-         value={formData.vencimento}
-         onChange={handleChange}
-         className="w-full border border-gray-300 bg-background text-foreground rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-red-500 outline-none appearance-none [&::-webkit-calendar-picker-indicator]:opacity-0 [&::-webkit-calendar-picker-indicator]:cursor-pointer"
+         {...register('vencimento', { required: true })}
+         className="w-full border border-gray-300 bg-background text-foreground rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 outline-none appearance-none [&::-webkit-calendar-picker-indicator]:opacity-0 [&::-webkit-calendar-picker-indicator]:cursor-pointer"
          required
         />
         <Calendar className="absolute right-3 top-3 h-4 w-4 text-foreground pointer-events-none" />
        </div>
+       {errors.vencimento && (
+        <span className="text-red-500 text-sm">Campo obrigatório</span>
+       )}
       </div>
 
       <div>
@@ -273,10 +321,8 @@ export function NewLeadModal({
        <div className="relative">
         <input
          type="date"
-         name="nextAction"
-         value={formData.nextAction}
-         onChange={handleChange}
-         className="w-full border border-gray-300 bg-background text-foreground rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-red-500 outline-none appearance-none [&::-webkit-calendar-picker-indicator]:opacity-0 [&::-webkit-calendar-picker-indicator]:cursor-pointer"
+         {...register('proxima_acao')}
+         className="w-full border border-gray-300 bg-background text-foreground rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 outline-none appearance-none [&::-webkit-calendar-picker-indicator]:opacity-0 [&::-webkit-calendar-picker-indicator]:cursor-pointer"
         />
         <Calendar className="absolute right-3 top-3 h-4 w-4 text-foreground pointer-events-none" />
        </div>

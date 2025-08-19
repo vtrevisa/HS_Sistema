@@ -102,16 +102,16 @@ class LeadRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'tipo.required' => 'Tipo é obrigatório!',
-            'licenca.required' => 'Licença é obrigatório!',
-            'licenca.string' => 'Necessário licença válida!',
-            'licenca.unique' => 'Está licença já está cadastrada!',
-            'vigencia.required' => 'Vigência é obrigatória!',
-            'endereco.required' => 'Endereço é obrigatório!',
-            'numero.required' => 'Número é obrigatório!',
-            'municipio.required' => 'Município é obrigatório!',
-            'bairro.required' => 'Bairro é obrigatório!',
-            'ocupacao.required' => 'Ocupação é obrigatório!',
+            'tipo.required' => 'Tipo é obrigatório..',
+            'licenca.required' => 'Licença é obrigatório..',
+            'licenca.string' => 'Necessário licença válida..',
+            'licenca.unique' => 'Está licença já está cadastrada..',
+            'vigencia.required' => 'Vigência é obrigatória..',
+            'endereco.required' => 'Endereço é obrigatório..',
+            'numero.required' => 'Número é obrigatório..',
+            'municipio.required' => 'Município é obrigatório..',
+            'bairro.required' => 'Bairro é obrigatório..',
+            'ocupacao.required' => 'Ocupação é obrigatório..',
 
         ];
     }

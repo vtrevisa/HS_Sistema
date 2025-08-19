@@ -136,21 +136,13 @@ export function ImportLeadsModal({
 
    setImportStatus('success')
 
-   toast.success('Importação Concluída', {
+   toast.success('Importação concluída!', {
     description:
      processedLeads.length === 1
-      ? '1 lead importado com sucesso!'
-      : `${rawLeads.length} leads importados com sucesso!`,
+      ? '1 lead importado, salvando no sistema...'
+      : `${processedLeads.length} leads importados, salvando no sistema...`,
     duration: 3000
    })
-
-   setTimeout(() => {
-    toast.success(
-     processedLeads.length === 1
-      ? '1 lead foi salvo com sucesso!'
-      : `Todos os ${processedLeads.length} leads foram salvos com sucesso!`
-    )
-   }, 3200)
 
    resetImportStateAfterDelay()
   } catch (error) {
