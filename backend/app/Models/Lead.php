@@ -23,6 +23,7 @@ class Lead extends Model
 		'status',
 		'cnpj',
 		'site',
+		'cep',
 		'contato',
 		'whatsapp',
 		'email'

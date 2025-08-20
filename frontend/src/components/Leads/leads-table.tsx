@@ -123,7 +123,7 @@ export function LeadsTable({ leads, onLeadClick }: LeadsTableProps) {
            <span className="text-truncate">{lead.email}</span>
           </div>
           {lead.site && (
-           <div className="text-xs text-primary flex items-center gap-1">
+           <div className="text-xs text-muted-foreground flex items-center gap-1">
             <span>🌐</span>
             <a
              href={lead.site}
@@ -138,7 +138,9 @@ export function LeadsTable({ leads, onLeadClick }: LeadsTableProps) {
          </div>
         </td>
         <td className="data-cell">
-         <span className={`status-badge ${getStatusColor(lead.status)}`}>
+         <span
+          className={`status-badge ${getStatusColor(lead.status)} capitalize`}
+         >
           {lead.status}
          </span>
          <div className="text-xs text-muted-foreground mt-1 flex items-center gap-1">

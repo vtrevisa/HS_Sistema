@@ -96,7 +96,10 @@ export function LeadDetailsModal({
   if (currentLead.bairro) parts.push(currentLead.bairro)
   if (currentLead.municipio) parts.push(currentLead.municipio)
 
-  return parts.join(', ')
+  const addressLine = parts.join(', ')
+  return currentLead.cep
+   ? `${addressLine} - CEP: ${currentLead.cep}`
+   : addressLine
  }
 
  const EditableField = ({

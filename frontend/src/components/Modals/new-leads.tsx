@@ -25,7 +25,7 @@ export function NewLeadModal({
   setValue,
   control,
   reset,
-  formState: { errors }
+  formState: { errors, isSubmitting }
  } = useForm<Omit<LeadRequest, 'id'>>({
   defaultValues: {
    empresa: '',
@@ -70,8 +70,10 @@ export function NewLeadModal({
  const vencimento = watch('vencimento')
  const cep = watch('cep')
 
- function handleSaveLead(data: Omit<LeadRequest, 'id'>) {
+ async function handleSaveLead(data: Omit<LeadRequest, 'id'>) {
   onLeadCreate(data)
+
+  await new Promise(resolve => setTimeout(resolve, 1500))
   reset()
   onClose()
  }
@@ -112,12 +114,13 @@ export function NewLeadModal({
        </label>
        <input
         type="text"
-        {...register('empresa', { required: true })}
-        className="w-full border border-gray-300 bg-background text-foreground rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 outline-none"
-        required
+        {...register('empresa', { required: 'Empresa é obrigatório' })}
+        className={`w-full border bg-background text-foreground placeholder:text-foreground rounded-lg px-3 py-2 focus:ring-blue-500 focus:outline-none focus:ring-2 outline-none ${
+         errors.empresa ? 'border-red-500' : 'border-gray-300'
+        }`}
        />
        {errors.empresa && (
-        <span className="text-red-500 text-sm">Campo obrigatório</span>
+        <span className="text-red-500 text-sm">{errors.empresa.message}</span>
        )}
       </div>
 
@@ -171,12 +174,13 @@ export function NewLeadModal({
        </label>
        <input
         type="text"
-        {...register('contato', { required: true })}
-        className="w-full border border-gray-300 bg-background text-foreground rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 outline-none"
-        required
+        {...register('contato', { required: 'Contato é obrigatório' })}
+        className={`w-full border bg-background text-foreground placeholder:text-foreground rounded-lg px-3 py-2 focus:ring-blue-500 focus:outline-none focus:ring-2 outline-none ${
+         errors.contato ? 'border-red-500' : 'border-gray-300'
+        }`}
        />
        {errors.contato && (
-        <span className="text-red-500 text-sm">Campo obrigatório</span>
+        <span className="text-red-500 text-sm">{errors.contato.message}</span>
        )}
       </div>
 
@@ -219,6 +223,15 @@ export function NewLeadModal({
         {...register('site')}
         placeholder="www.empresa.com.br"
         className="w-full border border-gray-300 bg-background text-foreground placeholder:text-foreground rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 outline-none"
+        onBlur={e => {
+         if (
+          e.target.value &&
+          !e.target.value.startsWith('http://') &&
+          !e.target.value.startsWith('https://')
+         ) {
+          e.target.value = `http://${e.target.value}`
+         }
+        }}
        />
       </div>
 
@@ -303,14 +316,17 @@ export function NewLeadModal({
        <div className="relative">
         <input
          type="date"
-         {...register('vencimento', { required: true })}
-         className="w-full border border-gray-300 bg-background text-foreground rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 outline-none appearance-none [&::-webkit-calendar-picker-indicator]:opacity-0 [&::-webkit-calendar-picker-indicator]:cursor-pointer"
-         required
+         {...register('vencimento', { required: 'Vencimento é obrigatório' })}
+         className={`w-full border bg-background text-foreground rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 outline-none appearance-none [&::-webkit-calendar-picker-indicator]:opacity-0 [&::-webkit-calendar-picker-indicator]:cursor-pointer ${
+          errors.vencimento ? 'border-red-500' : 'border-gray-300'
+         }`}
         />
         <Calendar className="absolute right-3 top-3 h-4 w-4 text-foreground pointer-events-none" />
        </div>
        {errors.vencimento && (
-        <span className="text-red-500 text-sm">Campo obrigatório</span>
+        <span className="text-red-500 text-sm">
+         {errors.vencimento.message}
+        </span>
        )}
       </div>
 
@@ -330,8 +346,12 @@ export function NewLeadModal({
      </div>
 
      <div className="flex gap-3 pt-4">
-      <Button type="submit" className="bg-red-600 hover:bg-red-700 text-white">
-       Criar Lead
+      <Button
+       type="submit"
+       className="bg-red-600 hover:bg-red-700 text-white"
+       disabled={isSubmitting}
+      >
+       {isSubmitting ? 'Criando Lead...' : 'Criar Lead'}
       </Button>
       <Button type="button" variant="outline" onClick={onClose}>
        Cancelar
