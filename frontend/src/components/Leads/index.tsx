@@ -7,6 +7,7 @@ import { NewLeadModal } from '../Modals/new-leads'
 import { LeadDetailsModal } from '../Modals/lead-details'
 import { ImportLeadsModal } from '../Modals/import-leads'
 import type { LeadRequest } from '@/http/types/leads'
+import { DeleteLeadsModal } from '../Modals/delete-leads'
 
 export function Leads() {
  const [searchTerm, setSearchTerm] = useState('')
@@ -14,6 +15,7 @@ export function Leads() {
  const [isNewLeadModalOpen, setIsNewLeadModalOpen] = useState(false)
  const [isImportModalOpen, setIsImportModalOpen] = useState(false)
  const [isLeadDetailsModalOpen, setIsLeadDetailsModalOpen] = useState(false)
+ const [isDeleteLeadModalOpen, setIsDeleteLeadModalOpen] = useState(false)
  // eslint-disable-next-line @typescript-eslint/no-explicit-any
  const [selectedLead, setSelectedLead] = useState<any>(null)
 
@@ -107,6 +109,10 @@ export function Leads() {
      setSelectedLead(lead)
      setIsLeadDetailsModalOpen(true)
     }}
+    onDeleteClick={lead => {
+     setSelectedLead(lead)
+     setIsDeleteLeadModalOpen(true)
+    }}
    />
 
    <ImportLeadsModal
@@ -124,6 +130,12 @@ export function Leads() {
    <LeadDetailsModal
     isOpen={isLeadDetailsModalOpen}
     onClose={() => setIsLeadDetailsModalOpen(false)}
+    lead={selectedLead}
+   />
+
+   <DeleteLeadsModal
+    isOpen={isDeleteLeadModalOpen}
+    onClose={() => setIsDeleteLeadModalOpen(false)}
     lead={selectedLead}
    />
   </div>

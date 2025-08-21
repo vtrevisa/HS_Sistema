@@ -5,7 +5,6 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\LeadRequest;
 use App\Models\Lead;
-use App\Services\DateService;
 use Exception;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\DB;
@@ -127,20 +126,25 @@ class LeadController extends Controller
             // Edit lead on DB
 
             $lead->update([
-                'tipo' => strtoupper($request->tipo),
-                'licenca' => $request->licenca,
-                'vigencia' => DateService::convertToDatabaseFormat($request->vigencia),
-                'endereco' => ucwords(strtolower($request->endereco)),
-                'numero' => $request->numero,
-                'municipio' => ucwords(strtolower($request->municipio)),
-                'bairro' => ucwords(strtolower($request->bairro)),
-                'ocupacao' => $request->ocupacao,
-                'complemento' => ucwords(strtolower($request->complemento)),
-                'cnpj'        => $request->cnpj,
-                'site'        => strtolower($request->site),
-                'contato'     => ucwords(strtolower($request->contato)),
-                'whatsapp'    => $request->whatsapp,
-                'email'       => strtolower($request->email),
+                'empresa' => strtoupper($request->input('empresa', '')),
+                'tipo' => strtoupper($request->input('tipo', '')),
+                'licenca' => $request->input('licenca', ''),
+                'vigencia' => $request->input('vigencia', ''),
+                'vencimento' => $request->input('vencimento', ''),
+                'proxima_acao' => $request->input('proxima_acao', ''),
+                'cep' => $request->input('cep', ''),
+                'endereco' => ucwords(strtolower($request->input('endereco', ''))),
+                'numero' => $request->input('numero', ''),
+                'complemento' => ucwords(strtolower($request->input('complemento', ''))),
+                'municipio' => ucwords(strtolower($request->input('municipio', ''))),
+                'bairro' => ucwords(strtolower($request->input('bairro', ''))),
+                'ocupacao' => $request->input('ocupacao', ''),
+                'status' => $request->input('status', ''),
+                'cnpj' => $request->input('cnpj', ''),
+                'site' => $request->input('site', ''),
+                'contato' => $request->input('contato', ''),
+                'whatsapp' => $request->input('whatsapp', ''),
+                'email' => $request->input('email', ''),
             ]);
 
             // Success Operation

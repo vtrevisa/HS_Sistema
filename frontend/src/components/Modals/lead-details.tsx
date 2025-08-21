@@ -16,6 +16,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../ui/dialog'
 import { Button } from '../ui/button'
 import { Badge } from '../ui/badge'
 import { Input } from '../ui/input'
+import { useLead } from '@/http/use-lead'
+import { Loading } from '../Login/loading'
 
 interface LeadDetailsModalProps {
  isOpen: boolean
@@ -31,6 +33,8 @@ export function LeadDetailsModal({
  const [isEditing, setIsEditing] = useState(false)
  const [editedLead, setEditedLead] = useState<LeadRequest | null>(null)
 
+ const { updateLead } = useLead()
+
  if (!lead) return null
 
  const currentLead = editedLead || lead
@@ -42,10 +46,14 @@ export function LeadDetailsModal({
  }
 
  function handleSave() {
-  // Aqui você implementaria a lógica para salvar as alterações
-  console.log('Salvando alterações:', editedLead)
-  setIsEditing(false)
-  setEditedLead(null)
+  if (!editedLead) return
+  updateLead.mutate(editedLead, {
+   onSuccess: () => {
+    setIsEditing(false)
+    setEditedLead(null)
+    onClose()
+   }
+  })
  }
 
  function handleCancel() {
@@ -53,7 +61,10 @@ export function LeadDetailsModal({
   setIsEditing(false)
  }
 
- function updateField(field: string, value: string) {
+ function updateField<K extends keyof LeadRequest>(
+  field: K,
+  value: LeadRequest[K]
+ ) {
   if (editedLead) {
    setEditedLead({ ...editedLead, [field]: value })
   }
@@ -111,7 +122,7 @@ export function LeadDetailsModal({
  }: {
   label: string
   value?: string
-  field: string
+  field: keyof LeadRequest
   type?: string
   icon?: React.ReactNode
  }) => (
@@ -124,7 +135,8 @@ export function LeadDetailsModal({
     <Input
      type={type}
      value={value || ''}
-     onChange={e => updateField(field, e.target.value)}
+     // eslint-disable-next-line @typescript-eslint/no-explicit-any
+     onChange={e => updateField(field, e.target.value as any)}
      className="mt-1"
      placeholder={`Digite ${label.toLowerCase()}`}
     />
@@ -141,7 +153,7 @@ export function LeadDetailsModal({
      <DialogTitle className="flex items-center justify-between text-lg sm:text-xl">
       <div className="flex items-center gap-2">
        <Building size={20} />
-       <span className="truncate">{currentLead.empresa}</span>
+       <span className="truncate max-w-80">{currentLead.empresa}</span>
       </div>
       <div className="flex gap-2">
        {isEditing ? (
@@ -149,9 +161,18 @@ export function LeadDetailsModal({
          <Button size="sm" variant="outline" onClick={handleCancel}>
           Cancelar
          </Button>
-         <Button size="sm" onClick={handleSave}>
-          <Save size={16} className="mr-1" />
-          Salvar
+         <Button size="sm" onClick={handleSave} disabled={updateLead.isPending}>
+          {updateLead.isPending ? (
+           <>
+            <Loading size={16} />
+            Salvando...
+           </>
+          ) : (
+           <>
+            <Save size={16} className="mr-1" />
+            Salvar
+           </>
+          )}
          </Button>
         </>
        ) : (
@@ -167,7 +188,7 @@ export function LeadDetailsModal({
     <div className="space-y-4 sm:space-y-6">
      {/* Status e Serviço */}
      <div className="flex gap-2 sm:gap-3 flex-wrap">
-      <Badge className={getStatusColor(currentLead.status)}>
+      <Badge className={`${getStatusColor(currentLead.status)} capitalize`}>
        {currentLead.status}
       </Badge>
       <Badge variant="outline" className="bg-red-100 text-red-800">
@@ -181,11 +202,11 @@ export function LeadDetailsModal({
        Informações do Serviço
       </h3>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 text-sm">
-       <EditableField label="Serviço" value={currentLead.tipo} field="type" />
+       <EditableField label="Serviço" value={currentLead.tipo} field="tipo" />
        <EditableField
         label="Licença"
         value={currentLead.licenca}
-        field="license"
+        field="licenca"
        />
        <EditableField
         label="Validade"
@@ -197,14 +218,14 @@ export function LeadDetailsModal({
        <EditableField
         label="Valor do Serviço"
         value={currentLead.valor_servico || ''}
-        field="valorServico"
+        field="valor_servico"
         type="number"
        />
        <div className="sm:col-span-2">
         <EditableField
          label="Ocupação"
          value={currentLead.ocupacao}
-         field="occupation"
+         field="ocupacao"
         />
        </div>
       </div>
@@ -226,7 +247,7 @@ export function LeadDetailsModal({
        <EditableField
         label="Website"
         value={currentLead.site || ''}
-        field="website"
+        field="site"
         type="url"
        />
        <div>
@@ -239,7 +260,7 @@ export function LeadDetailsModal({
           <Input
            placeholder="Endereço"
            value={editedLead?.endereco || ''}
-           onChange={e => updateField('address', e.target.value)}
+           onChange={e => updateField('endereco', e.target.value)}
           />
           <Input
            placeholder="Número"
@@ -287,12 +308,12 @@ export function LeadDetailsModal({
        <EditableField
         label="Nome do Contato"
         value={currentLead.contato}
-        field="contact"
+        field="contato"
        />
        <EditableField
         label="Telefone/WhatsApp"
         value={currentLead.whatsapp}
-        field="phone"
+        field="whatsapp"
         type="tel"
         icon={<Phone size={14} />}
        />
@@ -347,7 +368,7 @@ export function LeadDetailsModal({
          <Input
           type="date"
           value={editedLead?.proxima_acao || ''}
-          onChange={e => updateField('nextAction', e.target.value)}
+          onChange={e => updateField('proxima_acao', e.target.value)}
           className="mt-1"
          />
         ) : (

@@ -90,15 +90,6 @@ export function NewLeadModal({
   }
  }, [cep])
 
- //  function handleChange(
- //   e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
- //  ) {
- //   setFormData(prev => ({
- //    ...prev,
- //    [e.target.name]: e.target.value
- //   }))
- //  }
-
  return (
   <Dialog open={isOpen} onOpenChange={onClose}>
    <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
@@ -108,7 +99,7 @@ export function NewLeadModal({
 
     <form onSubmit={handleSubmit(handleSaveLead)} className="space-y-4">
      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-      <div className="md:col-span-2">
+      <div>
        <label className="block text-sm font-medium text-foreground mb-1">
         Empresa *
        </label>
@@ -235,7 +226,7 @@ export function NewLeadModal({
        />
       </div>
 
-      <div>
+      <div className="md:col-span-2">
        <label className="block text-sm font-medium text-foreground mb-1">
         CEP
        </label>
