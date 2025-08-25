@@ -1,5 +1,7 @@
-import type { Lead } from "@/http/types/leads";
+import type { Lead, LeadRequest } from "@/http/types/leads";
 import * as XLSX from "xlsx";
+import { saveAs } from "file-saver";
+import { toast } from "sonner";
 
 export function extractSheetId(url: string): string | null {
   const match = url.match(/\/spreadsheets\/d\/([a-zA-Z0-9-_]+)/);
@@ -23,11 +25,11 @@ export async function fetchGoogleSheetData(sheetId: string) {
   }
 }
 
-  function parseCsvToLeads(csvText: string){
-    const lines = csvText.split('\n');
-    const csvData = lines.map(line => line.split(',').map(cell => cell.trim().replace(/"/g, '')));
-    return parseDataToLeads(csvData);
-  };
+function parseCsvToLeads(csvText: string){
+  const lines = csvText.split('\n');
+  const csvData = lines.map(line => line.split(',').map(cell => cell.trim().replace(/"/g, '')));
+  return parseDataToLeads(csvData);
+};
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export async function readExcelFile(file: File): Promise<any[]>  {
@@ -182,4 +184,140 @@ function parseDataToLeads(data: any[][], debug = false): Lead[] {
 
   if (debug) console.log(`Total de leads parseados: ${leads.length}`);
   return leads;
+}
+
+export async function exportLeadsToExcel(leads: LeadRequest[]) {
+  if (!leads || leads.length === 0) {
+    toast.error("Nenhum lead para exportar")
+    console.warn("Nenhum lead para exportar");
+    return;
+  }
+
+  const today = new Date()
+  const formattedDate = today.toISOString().split("T")[0].replace(/-/g, "")
+  const filename = `leads_${formattedDate}.xlsx`
+
+  const ExcelJS = await import("exceljs")
+  const workbook = new ExcelJS.Workbook()
+  const sheet = workbook.addWorksheet("Leads")
+
+  const headers = [
+    "Empresa",
+    "Tipo",
+    "Licença",
+    "Vigência",
+    "Vencimento",
+    "Próxima Ação",
+    "Valor Serviço",
+    "Endereço",
+    "Número",
+    "Complemento",
+    "Município",
+    "CEP",
+    "Bairro",
+    "Ocupação",
+    "Status",
+    "CNPJ",
+    "Website",
+    "Contato",
+    "WhatsApp",
+    "Email",
+    "Data de criação do lead"
+  ]
+
+  sheet.addRow(headers)
+
+  leads.forEach(lead => {
+
+    const formattedDateLead = lead.created_at ? new Date(lead.created_at).toLocaleDateString("pt-BR") : ""
+    const formattedVigencia = lead.vigencia ? new Date(lead.vigencia).toLocaleDateString("pt-BR") : ""
+    const formattedVencimento = lead.vencimento ? new Date(lead.vencimento).toLocaleDateString("pt-BR") : ""
+    const formattedProximaAcao = lead.proxima_acao ? new Date(lead.proxima_acao).toLocaleDateString("pt-BR") : ""
+
+
+    sheet.addRow([
+      lead.empresa,
+      lead.tipo,
+      lead.licenca,
+      formattedVigencia,
+      formattedVencimento,
+      formattedProximaAcao,
+      lead.valor_servico ?? "",
+      lead.endereco,
+      lead.numero,
+      lead.complemento,
+      lead.municipio,
+      lead.cep ?? "",
+      lead.bairro,
+      lead.ocupacao,
+      lead.status,
+      lead.cnpj ?? "",
+      lead.site,
+      lead.contato,
+      lead.whatsapp,
+      lead.email ?? "",
+      formattedDateLead
+    ])
+  })
+
+  sheet.getRow(1).eachCell?.(cell => {
+    cell.fill = {
+      type: "pattern",
+      pattern: "solid",
+      fgColor: { argb: "5A80B7" }
+    }
+    cell.font = { bold: true, color: { argb: "FFFFFF" } }
+    cell.alignment = { vertical: "middle", horizontal: "left" }
+    cell.border = {
+      top: { style: "thin", color: { argb: "FFFFFF" } },
+      left: { style: "thin", color: { argb: "FFFFFF" } },
+      bottom: { style: "thin", color: { argb: "FFFFFF" } },
+      right: { style: "thin", color: { argb: "FFFFFF" } },
+    }
+  })
+
+  sheet.eachRow((row, rowNumber) => {
+    if (rowNumber === 1) return 
+
+    const isEven = rowNumber % 2 === 0
+    row.eachCell(cell => {
+
+      if (cell.value) {
+        cell.value = cell.value.toString().toUpperCase()
+      }
+
+      cell.fill = {
+        type: "pattern",
+        pattern: "solid",
+        fgColor: { argb: isEven ? "BCCCE2" : "DEE6F0" } 
+      }
+
+      cell.alignment = { vertical: "middle", horizontal: "left" }
+
+      cell.border = {
+        top: { style: "thin", color: { argb: "FFFFFF" } },
+        left: { style: "thin", color: { argb: "FFFFFF" } },
+        bottom: { style: "thin", color: { argb: "FFFFFF" } },
+        right: { style: "thin", color: { argb: "FFFFFF" } },
+      }
+    })
+  })
+
+  sheet.columns.forEach(column => {
+    let maxLength = 0
+    column.eachCell?.({ includeEmpty: true }, cell => {
+      const value = cell.value ? cell.value.toString() : ""
+      maxLength = Math.max(maxLength, value.length)
+    })
+    column.width = maxLength < 15 ? 15 : maxLength
+  })
+
+  const buffer = await workbook.xlsx.writeBuffer()
+  const blob = new Blob([buffer], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" })
+  saveAs(blob, filename)
+
+  toast.success('Exportação concluída!', {
+    description: `Leads exportados com sucesso!`
+  })
+
 }

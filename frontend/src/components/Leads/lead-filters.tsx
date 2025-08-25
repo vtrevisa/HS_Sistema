@@ -3,15 +3,22 @@ import { Search } from 'lucide-react'
 interface LeadsFiltersProps {
  searchTerm: string
  setSearchTerm: (term: string) => void
- selectedFilter: string
- setSelectedFilter: (filter: string) => void
+ selectedStatus: string
+ setSelectedStatus: (status: string) => void
+
+ //selectedFilter: string
+ // setSelectedFilter: (filter: string) => void
+ selectedType: string
+ setSelectedType: (type: string) => void
 }
 
 export function LeadsFilters({
  searchTerm,
  setSearchTerm,
- selectedFilter,
- setSelectedFilter
+ selectedStatus,
+ setSelectedStatus,
+ selectedType,
+ setSelectedType
 }: LeadsFiltersProps) {
  return (
   <div className="bg-background dark:data-table rounded-lg shadow-md p-6 mb-6">
@@ -27,23 +34,28 @@ export function LeadsFilters({
      />
     </div>
     <select
-     value={selectedFilter}
-     onChange={e => setSelectedFilter(e.target.value)}
+     value={selectedStatus}
+     onChange={e => setSelectedStatus(e.target.value)}
      className="border border-gray-300 bg-background rounded-lg px-4 py-2 focus:ring-2 focus:ring-red-500 focus:border-transparent outline-none"
     >
      <option value="todos">Todos os Status</option>
-     <option value="lead">Lead</option>
-     <option value="primeiro-contato">Primeiro Contato</option>
-     <option value="follow-up">Follow-up</option>
-     <option value="proposta-enviada">Proposta Enviada</option>
-     <option value="cliente-fechado">Cliente Fechado</option>
+     <option value="Lead">Lead</option>
+     <option value="Primeiro contato">Primeiro Contato</option>
+     <option value="Follow-up">Follow-up</option>
+     <option value="Proposta enviada">Proposta Enviada</option>
+     <option value="Cliente fechado">Cliente Fechado</option>
+     <option value="Arquivado">Arquivado</option>
     </select>
 
-    <select className="border border-gray-300 bg-background rounded-lg px-4 py-2 focus:ring-2 focus:ring-red-500 focus:border-transparent outline-none">
+    <select
+     value={selectedType}
+     onChange={e => setSelectedType(e.target.value)}
+     className="border border-gray-300 bg-background rounded-lg px-4 py-2 focus:ring-2 focus:ring-red-500 focus:border-transparent outline-none"
+    >
      <option value="todos">Todos os Tipos</option>
-     <option value="avcb">AVCB</option>
-     <option value="clcb">CLCB</option>
-     <option value="laudo">Laudo Técnico</option>
+     <option value="AVCB">AVCB</option>
+     <option value="CLCB">CLCB</option>
+     <option value="Laudo Técnico">Laudo Técnico</option>
     </select>
    </div>
   </div>

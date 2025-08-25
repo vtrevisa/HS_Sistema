@@ -4,11 +4,13 @@ interface LeadsActionsProps {
  onImportClick: () => void
  //onEnrichmentConfigClick: () => void;
  onNewLeadClick: () => void
+ onExportClick: () => void
 }
 
 export function LeadsActions({
  onImportClick,
- onNewLeadClick
+ onNewLeadClick,
+ onExportClick
 }: LeadsActionsProps) {
  return (
   <div className="flex gap-3">
@@ -19,7 +21,10 @@ export function LeadsActions({
     <Upload size={20} />
     Importar Planilha
    </button>
-   <button className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-colors">
+   <button
+    onClick={onExportClick}
+    className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-colors"
+   >
     <Download size={20} />
     Exportar
    </button>

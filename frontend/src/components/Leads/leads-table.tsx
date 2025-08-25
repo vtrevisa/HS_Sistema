@@ -19,7 +19,7 @@ export function LeadsTable({
 }: LeadsTableProps) {
  function getCompleteAddress(lead: LeadRequest) {
   const parts: string[] = []
-  if (lead.endereco) parts.push(lead.endereco)
+  if (lead.endereco?.trim()) parts.push(lead.endereco.trim())
   if (lead.numero) parts.push(lead.numero)
   if (lead.complemento) parts.push(lead.complemento)
   if (lead.bairro) parts.push(lead.bairro)
@@ -94,7 +94,9 @@ export function LeadsTable({
          <td className="data-cell">
           <div className="space-y-1">
            <div className="font-semibold text-foreground">{lead.empresa}</div>
-           <div className="text-sm text-muted-foreground">{lead.licenca}</div>
+           <div className="text-sm text-muted-foreground">
+            {lead.tipo}-{lead.licenca}
+           </div>
            <div className="text-xs text-muted-foreground flex items-center gap-1">
             <MapPin size={12} />
             <span className="text-truncate">{getCompleteAddress(lead)}</span>

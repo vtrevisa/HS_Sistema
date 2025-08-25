@@ -74,6 +74,7 @@ export interface LeadRequest {
   email?: string;
   site?: string;
   categoria?: string;
+  created_at?: string
 
 }
 

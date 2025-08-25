@@ -7,8 +7,9 @@ interface LeadsContextType {
  isLoading: boolean
  addLead: (lead: LeadRequest) => void
  addLeads: (leads: LeadRequest[]) => void
- updateLead: (leadId: number, updatedLead: Partial<LeadRequest>) => void
- updateLeadStatus: (leadId: number, newStatus: string) => void
+ updateLead: (lead: LeadRequest) => void
+ deleteLead: (leadId: number) => void
+ //updateLeadStatus: (leadId: number, newStatus: string) => void
  //getLeadsByStatus: (status: string) => LeadResponse[]
 }
 
@@ -28,7 +29,7 @@ export const useLeads = () => {
 }
 
 export const LeadsProvider = ({ children }: LeadsProviderProps) => {
- const { leadsDB, saveLeads } = useLead()
+ const { leadsDB, saveLeads, updateLead, deleteLead } = useLead()
 
  function addLead(lead: LeadRequest) {
   saveLeads.mutate([lead])
@@ -38,15 +39,15 @@ export const LeadsProvider = ({ children }: LeadsProviderProps) => {
   saveLeads.mutate(leads)
  }
 
- function updateLead(leadId: number, updatedLead: Partial<LeadRequest>) {
-  console.log('TODO: implementar updateLead mutation', leadId, updatedLead)
-  // updateLeadMutation.mutate({ leadId, updatedLead })
- }
+ //  function updateLead(leadId: number, updatedLead: Partial<LeadRequest>) {
+ //   console.log('TODO: implementar updateLead mutation', leadId, updatedLead)
+ //   // updateLeadMutation.mutate({ leadId, updatedLead })
+ //  }
 
- function updateLeadStatus(leadId: number, newStatus: string) {
-  console.log('TODO: implementar updateLeadStatus mutation', leadId, newStatus)
-  // updateLeadStatusMutation.mutate({ leadId, status: newStatus })
- }
+ //  function updateLeadStatus(leadId: number, newStatus: string) {
+ //   console.log('TODO: implementar updateLeadStatus mutation', leadId, newStatus)
+ //   // updateLeadStatusMutation.mutate({ leadId, status: newStatus })
+ //  }
 
  //  function getLeadsByStatus(status: string) {
  //   if (!leadsDB.data) return []
@@ -60,8 +61,8 @@ export const LeadsProvider = ({ children }: LeadsProviderProps) => {
     isLoading: leadsDB.isLoading,
     addLead,
     addLeads,
-    updateLead,
-    updateLeadStatus
+    updateLead: (lead: LeadRequest) => updateLead.mutate(lead),
+    deleteLead: (leadId: number) => deleteLead.mutate(leadId)
    }}
   >
    {children}

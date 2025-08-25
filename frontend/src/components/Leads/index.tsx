@@ -8,10 +8,12 @@ import { LeadDetailsModal } from '../Modals/lead-details'
 import { ImportLeadsModal } from '../Modals/import-leads'
 import type { LeadRequest } from '@/http/types/leads'
 import { DeleteLeadsModal } from '../Modals/delete-leads'
+import { exportLeadsToExcel } from '@/services/leads'
 
 export function Leads() {
  const [searchTerm, setSearchTerm] = useState('')
  const [selectedFilter, setSelectedFilter] = useState('todos')
+ const [selectedType, setSelectedType] = useState('todos')
  const [isNewLeadModalOpen, setIsNewLeadModalOpen] = useState(false)
  const [isImportModalOpen, setIsImportModalOpen] = useState(false)
  const [isLeadDetailsModalOpen, setIsLeadDetailsModalOpen] = useState(false)
@@ -29,10 +31,27 @@ export function Leads() {
 
   const matchesSearch = company.includes(search) || contact.includes(search)
 
-  if (selectedFilter === 'todos') return matchesSearch
+  const matchesStatus =
+   selectedFilter === 'todos' ? true : lead.status === selectedFilter
+  const matchesType =
+   selectedType === 'todos' ? true : lead.tipo === selectedType
 
-  return matchesSearch && lead.tipo === selectedFilter
+  return matchesSearch && matchesStatus && matchesType
  })
+
+ //  const filteredLeads = leads.filter(({ empresa, contato, tipo, tipoLead }) => {
+ //   const search = searchTerm.toLowerCase()
+ //   const matchesSearch =
+ //    (empresa?.toLowerCase() ?? '').includes(search) ||
+ //    (contato?.toLowerCase() ?? '').includes(search)
+
+ //   const matchesStatus =
+ //    selectedFilter === 'todos' ? true : tipo === selectedFilter
+ //   const matchesType =
+ //    selectedType === 'todos' ? true : tipoLead === selectedType
+
+ //   return matchesSearch && matchesStatus && matchesType
+ //  })
 
  function handleImportComplete(importedLeads: LeadRequest[]) {
   const processedLeads: LeadRequest[] = importedLeads.map(lead => {
@@ -90,6 +109,7 @@ export function Leads() {
      <LeadsActions
       onImportClick={() => setIsImportModalOpen(true)}
       onNewLeadClick={() => setIsNewLeadModalOpen(true)}
+      onExportClick={() => exportLeadsToExcel(leads)}
      />
     </div>
    </div>
@@ -98,8 +118,10 @@ export function Leads() {
     <LeadsFilters
      searchTerm={searchTerm}
      setSearchTerm={setSearchTerm}
-     selectedFilter={selectedFilter}
-     setSelectedFilter={setSelectedFilter}
+     selectedStatus={selectedFilter}
+     setSelectedStatus={setSelectedFilter}
+     selectedType={selectedType}
+     setSelectedType={setSelectedType}
     />
    </div>
 
