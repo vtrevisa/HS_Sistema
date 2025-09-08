@@ -1,4 +1,4 @@
-import { Link } from 'react-router-dom'
+import { Link, useLocation } from 'react-router-dom'
 import {
  LayoutDashboard,
  LogOut,
@@ -30,15 +30,23 @@ import {
 import { useLogout } from '@/http/use-logout'
 
 interface AppSidebarProps {
- activeTab: string
  onTabChange: (tab: string) => void
 }
 
-export function Header({ activeTab, onTabChange }: AppSidebarProps) {
+interface MenuItemProps {
+ id: string
+ label: string
+ icon: React.ComponentType<React.SVGProps<SVGSVGElement>>
+ href: string
+}
+
+export function Header({ onTabChange }: AppSidebarProps) {
  const { state } = useSidebar()
  const isCollapsed = state === 'collapsed'
+ const location = useLocation()
+ const { mutateAsync: logout } = useLogout()
 
- const comercialItems = [
+ const comercialItems: MenuItemProps[] = [
   {
    id: 'dashboard',
    label: 'Dashboard CRM',
@@ -46,10 +54,16 @@ export function Header({ activeTab, onTabChange }: AppSidebarProps) {
    href: '/dashboard'
   },
   {
-   id: 'leads',
+   id: 'captacao-alvaras',
+   label: 'Captação de Alvarás',
+   icon: Target,
+   href: '/dashboard/captacao-alvaras'
+  },
+  {
+   id: 'gestao-leads',
    label: 'Gestão de Leads',
    icon: Users,
-   href: '/dashboard/leads'
+   href: '/dashboard/gestao-leads'
   }
   // { id: 'kanban', label: 'Kanban', icon: Trello },
   // { id: 'clcb', label: 'CLCB', icon: Shield },
@@ -62,7 +76,9 @@ export function Header({ activeTab, onTabChange }: AppSidebarProps) {
   // { id: 'settings', label: 'Configurações', icon: Cog }
  ]
 
- const { mutateAsync: logout } = useLogout()
+ const activeTab = comercialItems.find(
+  item => item.href === location.pathname
+ )?.id
 
  async function handleLogout() {
   await logout()
@@ -94,9 +110,8 @@ export function Header({ activeTab, onTabChange }: AppSidebarProps) {
        {comercialItems.map(item => {
         return (
          <SidebarMenuItem key={item.id}>
-          <Link to={item.href}>
+          <Link to={item.href} onClick={() => onTabChange?.(item.id)}>
            <SidebarMenuButton
-            onClick={() => onTabChange(item.id)}
             isActive={activeTab === item.id}
             tooltip={isCollapsed ? item.label : undefined}
             className="data-[active=true]:bg-blue-50 data-[active=true]:text-blue-700 data-[active=true]:border-l-2 data-[active=true]:border-blue-500"

@@ -39,20 +39,6 @@ export function Leads() {
   return matchesSearch && matchesStatus && matchesType
  })
 
- //  const filteredLeads = leads.filter(({ empresa, contato, tipo, tipoLead }) => {
- //   const search = searchTerm.toLowerCase()
- //   const matchesSearch =
- //    (empresa?.toLowerCase() ?? '').includes(search) ||
- //    (contato?.toLowerCase() ?? '').includes(search)
-
- //   const matchesStatus =
- //    selectedFilter === 'todos' ? true : tipo === selectedFilter
- //   const matchesType =
- //    selectedType === 'todos' ? true : tipoLead === selectedType
-
- //   return matchesSearch && matchesStatus && matchesType
- //  })
-
  function handleImportComplete(importedLeads: LeadRequest[]) {
   const processedLeads: LeadRequest[] = importedLeads.map(lead => {
    const completeAddress = [
