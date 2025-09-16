@@ -3,7 +3,8 @@ import {
  LayoutDashboard,
  LogOut,
  Target,
- Users
+ Users,
+ Search
  //  Trello,
  //  Shield,
  //  Calculator,
@@ -60,11 +61,18 @@ export function Header({ onTabChange }: AppSidebarProps) {
    href: '/dashboard/captacao-alvaras'
   },
   {
+   id: 'busca-dados',
+   label: 'Busca de Dados da Empresa',
+   icon: Search,
+   href: '/dashboard/busca-empresa'
+  },
+  {
    id: 'gestao-leads',
    label: 'Gestão de Leads',
    icon: Users,
    href: '/dashboard/gestao-leads'
   }
+
   // { id: 'kanban', label: 'Kanban', icon: Trello },
   // { id: 'clcb', label: 'CLCB', icon: Shield },
   // { id: 'orcamentos', label: 'Orçamentos', icon: Calculator },

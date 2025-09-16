@@ -8,6 +8,7 @@ import { AppLayout } from './pages/_layouts/app'
 import { Login } from './pages/app/login'
 import { Home } from './pages/app/home'
 import { Alvaras } from './pages/app/captacao-alvaras'
+import { Empresas } from './pages/app/busca-dados'
 import { Leads } from './pages/app/gestao-leads'
 
 const queryClient = new QueryClient()
@@ -24,6 +25,7 @@ export function App() {
        <Route element={<AppLayout />}>
         <Route path="/dashboard" element={<Home />} />
         <Route path="/dashboard/captacao-alvaras" element={<Alvaras />} />
+        <Route path="/dashboard/busca-empresa" element={<Empresas />} />
         <Route path="/dashboard/gestao-leads" element={<Leads />} />
        </Route>
       </Route>

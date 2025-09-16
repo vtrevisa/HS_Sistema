@@ -14,7 +14,7 @@ export function Dashboard({ sectionType = 'comercial' }: DashboardProps) {
    <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
     <div className="flex items-center gap-3">
      {sectionType === 'comercial' ? (
-      <div className="flex items-center gap-2 text-blue-600">
+      <div className="flex items-center gap-2 text-blue-600 dark:text-white">
        <Target className="h-6 w-6" />
        <h1 className="text-2xl lg:text-3xl font-bold">Dashboard Comercial</h1>
       </div>

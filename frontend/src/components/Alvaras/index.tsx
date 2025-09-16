@@ -46,7 +46,9 @@ export function Alvaras() {
  return (
   <div className="p-6 space-y-6">
    <div className="flex items-center justify-between">
-    <h1 className="text-3xl font-bold text-primary">Captação de Alvarás</h1>
+    <h1 className="text-3xl font-bold text-blue-600 dark:text-white">
+     Captação de Alvarás
+    </h1>
    </div>
 
    {/* Filtros */}
