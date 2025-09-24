@@ -220,7 +220,7 @@ export async function exportLeadsToExcel(leads: LeadRequest[]) {
     "CNPJ",
     "Website",
     "Contato",
-    "WhatsApp",
+    "Telefone/WhatsApp",
     "Email",
     "Data de criação do lead"
   ]
@@ -230,31 +230,31 @@ export async function exportLeadsToExcel(leads: LeadRequest[]) {
   leads.forEach(lead => {
 
     const formattedDateLead = lead.created_at ? new Date(lead.created_at).toLocaleDateString("pt-BR") : ""
-    const formattedVigencia = lead.vigencia ? new Date(lead.vigencia).toLocaleDateString("pt-BR") : ""
-    const formattedVencimento = lead.vencimento ? new Date(lead.vencimento).toLocaleDateString("pt-BR") : ""
-    const formattedProximaAcao = lead.proxima_acao ? new Date(lead.proxima_acao).toLocaleDateString("pt-BR") : ""
+    const formattedVigencia = lead.validity ? new Date(lead.validity).toLocaleDateString("pt-BR") : ""
+    const formattedVencimento = lead.expiration_date ? new Date(lead.expiration_date).toLocaleDateString("pt-BR") : ""
+    const formattedProximaAcao = lead.next_action ? new Date(lead.next_action).toLocaleDateString("pt-BR") : ""
 
 
     sheet.addRow([
-      lead.empresa,
-      lead.tipo,
-      lead.licenca,
+      lead.company,
+      lead.service,
+      lead.license,
       formattedVigencia,
       formattedVencimento,
       formattedProximaAcao,
-      lead.valor_servico ?? "",
-      lead.endereco,
-      lead.numero,
-      lead.complemento,
-      lead.municipio,
+      lead.service_value ?? "",
+      lead.address,
+      lead.number,
+      lead.complement,
+      lead.city,
       lead.cep ?? "",
-      lead.bairro,
-      lead.ocupacao,
+      lead.district,
+      lead.occupation,
       lead.status,
       lead.cnpj ?? "",
-      lead.site,
-      lead.contato,
-      lead.whatsapp,
+      lead.website,
+      lead.contact,
+      lead.phone,
       lead.email ?? "",
       formattedDateLead
     ])

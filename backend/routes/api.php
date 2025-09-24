@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\LeadController;
+use App\Http\Controllers\Api\CompanyController;
 use App\Http\Controllers\Api\UserController;
 
 use Illuminate\Support\Facades\Route;
@@ -21,6 +22,10 @@ Route::get('/leads/{lead}', [LeadController::class, 'show']); //GET
 Route::post('/leads', [LeadController::class, 'store']); //POST
 Route::put('/leads/{lead}', [LeadController::class, 'update']); //PUT
 Route::delete('/leads/{lead}', [LeadController::class, 'destroy']); //DELETE
+
+
+// Companies
+Route::get('/companies', [CompanyController::class, 'index']); //GET
 
 
 // Users

@@ -33,12 +33,20 @@ export interface Lead {
 export interface ExcelLead {
   id?: number
   company?: string
+  service?: string
   cnpj?: string
   phone?: string
   email?: string
   website?: string
   address?: string
+  municipio?: string
+  numero?: string
+  complemento?: string
   enderecoParaBusca?: string
+  nextAction?: string
+  vigencia?: string
+  vencimento?: string
+  
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   [key: string]: any
 }
@@ -53,26 +61,26 @@ export type LeadStatus =
 
 export interface LeadRequest {
   id?: number;
-  empresa?: string;
-  tipo: string;
-  licenca: string;
-  vigencia: string;
-  vencimento: string;
-  proxima_acao: string;
-  valor_servico?: string
-  endereco: string;
-  numero?: string;
-  municipio: string;
-  bairro: string;
-  ocupacao?: string;
+  company?: string;
+  service: string;
+  license: string;
+  validity: string;
+  expiration_date: string;
+  next_action: string;
+  service_value?: string
+  address: string;
+  number?: string;
+  city: string;
+  district: string;
+  occupation?: string;
   status: string;
-  complemento?: string;
+  complement?: string;
   cep?: string;
-  contato?: string;
+  contact?: string;
   cnpj?: string;
-  whatsapp?: string;
+  phone?: string;
   email?: string;
-  site?: string;
+  website?: string;
   categoria?: string;
   created_at?: string
 

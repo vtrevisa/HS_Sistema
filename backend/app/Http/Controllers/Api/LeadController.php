@@ -41,7 +41,7 @@ class LeadController extends Controller
     public function store(LeadRequest $request): JsonResponse
     {
 
-        $token = $request->cookie('auth-token');
+        $token = $request->bearerToken() ?? $request->cookie('auth-token');
 
         if (!$token) {
             return response()->json([
@@ -70,24 +70,24 @@ class LeadController extends Controller
             // Add lead on DB
 
             $lead = Lead::create([
-                'empresa' => strtoupper($request->input('empresa', '')),
-                'tipo' => strtoupper($request->input('tipo', '')),
-                'licenca' => $request->input('licenca', ''),
-                'vigencia' => $request->input('vigencia', ''),
-                'vencimento' => $request->input('vencimento', ''),
-                'proxima_acao' => $request->input('proxima_acao', ''),
+                'company' => strtoupper($request->input('company', '')),
+                'service' => strtoupper($request->input('service', '')),
+                'license' => $request->input('license', ''),
+                'validity' => $request->input('validity', ''),
+                'expiration_date' => $request->input('expiration_date', ''),
+                'next_action' => $request->input('next_action', ''),
                 'cep' => $request->input('cep', ''),
-                'endereco' => ucwords(strtolower($request->input('endereco', ''))),
-                'numero' => $request->input('numero', ''),
-                'complemento' => ucwords(strtolower($request->input('complemento', ''))),
-                'municipio' => ucwords(strtolower($request->input('municipio', ''))),
-                'bairro' => ucwords(strtolower($request->input('bairro', ''))),
-                'ocupacao' => $request->input('ocupacao', ''),
+                'address' => ucwords(strtolower($request->input('address', ''))),
+                'number' => $request->input('number', ''),
+                'complement' => ucwords(strtolower($request->input('complement', ''))),
+                'city' => ucwords(strtolower($request->input('city', ''))),
+                'district' => ucwords(strtolower($request->input('district', ''))),
+                'occupation' => $request->input('occupation', ''),
                 'status' => $request->input('status', ''),
                 'cnpj' => $request->input('cnpj', ''),
-                'site' => $request->input('site', ''),
-                'contato' => $request->input('contato', ''),
-                'whatsapp' => $request->input('whatsapp', ''),
+                'website' => $request->input('website', ''),
+                'contact' => $request->input('contact', ''),
+                'phone' => $request->input('phone', ''),
                 'email' => $request->input('email', ''),
 
             ]);
@@ -126,24 +126,24 @@ class LeadController extends Controller
             // Edit lead on DB
 
             $lead->update([
-                'empresa' => strtoupper($request->input('empresa', '')),
-                'tipo' => strtoupper($request->input('tipo', '')),
-                'licenca' => $request->input('licenca', ''),
-                'vigencia' => $request->input('vigencia', ''),
-                'vencimento' => $request->input('vencimento', ''),
-                'proxima_acao' => $request->input('proxima_acao', ''),
+                'company' => strtoupper($request->input('company', '')),
+                'service' => strtoupper($request->input('service', '')),
+                'license' => $request->input('license', ''),
+                'validity' => $request->input('validity', ''),
+                'expiration_date' => $request->input('expiration_date', ''),
+                'next_action' => $request->input('next_action', ''),
                 'cep' => $request->input('cep', ''),
-                'endereco' => ucwords(strtolower($request->input('endereco', ''))),
-                'numero' => $request->input('numero', ''),
-                'complemento' => ucwords(strtolower($request->input('complemento', ''))),
-                'municipio' => ucwords(strtolower($request->input('municipio', ''))),
-                'bairro' => ucwords(strtolower($request->input('bairro', ''))),
-                'ocupacao' => $request->input('ocupacao', ''),
+                'address' => ucwords(strtolower($request->input('address', ''))),
+                'number' => $request->input('number', ''),
+                'complement' => ucwords(strtolower($request->input('complement', ''))),
+                'city' => ucwords(strtolower($request->input('city', ''))),
+                'district' => ucwords(strtolower($request->input('district', ''))),
+                'occupation' => $request->input('occupation', ''),
                 'status' => $request->input('status', ''),
                 'cnpj' => $request->input('cnpj', ''),
-                'site' => $request->input('site', ''),
-                'contato' => $request->input('contato', ''),
-                'whatsapp' => $request->input('whatsapp', ''),
+                'website' => $request->input('website', ''),
+                'contact' => $request->input('contact', ''),
+                'phone' => $request->input('phone', ''),
                 'email' => $request->input('email', ''),
             ]);
 

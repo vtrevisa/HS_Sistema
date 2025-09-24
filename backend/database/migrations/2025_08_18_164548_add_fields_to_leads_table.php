@@ -12,10 +12,10 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('leads', function (Blueprint $table) {
-            $table->string('status')->default('Lead')->after('ocupacao');
-            $table->date('vencimento')->after('vigencia');
-            $table->date('proxima_acao')->after('vencimento');
-            $table->string('valor_servico')->nullable()->after('proxima_acao');
+            $table->string('status')->default('Lead')->after('occupation');
+            $table->date('expiration_date')->after('validity');
+            $table->date('next_action')->after('expiration_date');
+            $table->string('service_value')->nullable()->after('next_action');
         });
     }
 
@@ -27,9 +27,9 @@ return new class extends Migration
         Schema::table('leads', function (Blueprint $table) {
             $table->dropColumn([
                 'status',
-                'vencimento',
-                'proxima_acao',
-                'valor_servico',
+                'expiration_date',
+                'next_action',
+                'service_value',
             ]);
         });
     }

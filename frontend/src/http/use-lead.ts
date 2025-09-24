@@ -65,7 +65,7 @@ export function useLead() {
       queryClient.invalidateQueries({ queryKey: ["leads"] });
 
       setTimeout(() => {
-        toast.success(`Lead ${updatedLead.empresa} atualizado com sucesso!`)
+        toast.success(`Lead ${updatedLead.company} atualizado com sucesso!`)
       }, 1200)
     },
     onError: (error) => {

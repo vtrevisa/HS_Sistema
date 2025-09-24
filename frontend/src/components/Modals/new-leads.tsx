@@ -28,23 +28,23 @@ export function NewLeadModal({
   formState: { errors, isSubmitting }
  } = useForm<Omit<LeadRequest, 'id'>>({
   defaultValues: {
-   empresa: '',
-   tipo: 'AVCB',
-   licenca: '',
-   contato: '',
-   whatsapp: '',
+   company: '',
+   service: 'AVCB',
+   license: '',
+   contact: '',
+   phone: '',
    email: '',
    cep: '',
-   endereco: '',
-   numero: '',
-   bairro: '',
-   municipio: '',
-   ocupacao: '',
+   address: '',
+   number: '',
+   district: '',
+   city: '',
+   occupation: '',
    status: 'Lead',
-   vigencia: '',
-   vencimento: '',
-   proxima_acao: '',
-   site: '',
+   validity: '',
+   expiration_date: '',
+   next_action: '',
+   website: '',
    cnpj: ''
   }
  })
@@ -58,16 +58,16 @@ export function NewLeadModal({
    const data = await response.json()
 
    if (!data.erro) {
-    setValue('endereco', data.logradouro || '')
-    setValue('bairro', data.bairro || '')
-    setValue('municipio', data.localidade || '')
+    setValue('address', data.logradouro || '')
+    setValue('district', data.bairro || '')
+    setValue('city', data.localidade || '')
    }
   } catch (error) {
    console.error('Erro ao buscar CEP:', error)
   }
  }
 
- const vencimento = watch('vencimento')
+ const vencimento = watch('expiration_date')
  const cep = watch('cep')
 
  async function handleSaveLead(data: Omit<LeadRequest, 'id'>) {
@@ -79,7 +79,7 @@ export function NewLeadModal({
  }
 
  useEffect(() => {
-  setValue('vigencia', vencimento)
+  setValue('validity', vencimento)
  }, [vencimento, setValue])
 
  useEffect(() => {
@@ -105,13 +105,13 @@ export function NewLeadModal({
        </label>
        <input
         type="text"
-        {...register('empresa', { required: 'Empresa é obrigatório' })}
+        {...register('company', { required: 'Empresa é obrigatório' })}
         className={`w-full border bg-background text-foreground placeholder:text-foreground rounded-lg px-3 py-2 focus:ring-blue-500 focus:outline-none focus:ring-2 outline-none ${
-         errors.empresa ? 'border-red-500' : 'border-gray-300'
+         errors.company ? 'border-red-500' : 'border-gray-300'
         }`}
        />
-       {errors.empresa && (
-        <span className="text-red-500 text-sm">{errors.empresa.message}</span>
+       {errors.company && (
+        <span className="text-red-500 text-sm">{errors.company.message}</span>
        )}
       </div>
 
@@ -139,7 +139,7 @@ export function NewLeadModal({
         Tipo
        </label>
        <select
-        {...register('tipo')}
+        {...register('service')}
         className="w-full border border-gray-300 bg-background text-foreground rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 outline-none"
        >
         <option value="AVCB">AVCB</option>
@@ -154,7 +154,7 @@ export function NewLeadModal({
        </label>
        <input
         type="text"
-        {...register('licenca')}
+        {...register('license')}
         className="w-full border border-gray-300 bg-background text-foreground rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 outline-none"
        />
       </div>
@@ -165,13 +165,13 @@ export function NewLeadModal({
        </label>
        <input
         type="text"
-        {...register('contato', { required: 'Contato é obrigatório' })}
+        {...register('contact', { required: 'Contato é obrigatório' })}
         className={`w-full border bg-background text-foreground placeholder:text-foreground rounded-lg px-3 py-2 focus:ring-blue-500 focus:outline-none focus:ring-2 outline-none ${
-         errors.contato ? 'border-red-500' : 'border-gray-300'
+         errors.contact ? 'border-red-500' : 'border-gray-300'
         }`}
        />
-       {errors.contato && (
-        <span className="text-red-500 text-sm">{errors.contato.message}</span>
+       {errors.contact && (
+        <span className="text-red-500 text-sm">{errors.contact.message}</span>
        )}
       </div>
 
@@ -182,7 +182,7 @@ export function NewLeadModal({
 
        <Controller
         control={control}
-        name="whatsapp"
+        name="phone"
         render={({ field }) => (
          <IMaskInput
           {...field}
@@ -211,7 +211,7 @@ export function NewLeadModal({
        </label>
        <input
         type="url"
-        {...register('site')}
+        {...register('website')}
         placeholder="www.empresa.com.br"
         className="w-full border border-gray-300 bg-background text-foreground placeholder:text-foreground rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 outline-none"
         onBlur={e => {
@@ -246,8 +246,8 @@ export function NewLeadModal({
       </div>
 
       <div className="hidden">
-       <input {...register('bairro')} placeholder="Bairro" />
-       <input {...register('municipio')} placeholder="Município" />
+       <input {...register('district')} placeholder="Bairro" />
+       <input {...register('city')} placeholder="Município" />
       </div>
 
       <div>
@@ -256,7 +256,7 @@ export function NewLeadModal({
        </label>
        <input
         type="text"
-        {...register('endereco')}
+        {...register('address')}
         className="w-full border border-gray-300 bg-background text-foreground rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 outline-none"
        />
       </div>
@@ -267,10 +267,21 @@ export function NewLeadModal({
        </label>
        <input
         type="tel"
-        {...register('numero')}
+        {...register('number')}
         className="w-full border border-gray-300 bg-background text-foreground rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 outline-none"
        />
       </div>
+
+      {/* <div>
+       <label className="block text-sm font-medium text-foreground mb-1">
+        Complemento
+       </label>
+       <input
+        type="tel"
+        {...register('complement')}
+        className="w-full border border-gray-300 bg-background text-foreground rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 outline-none"
+       />
+      </div> */}
 
       <div>
        <label className="block text-sm font-medium text-foreground mb-1">
@@ -278,7 +289,7 @@ export function NewLeadModal({
        </label>
        <input
         type="text"
-        {...register('ocupacao')}
+        {...register('occupation')}
         className="w-full border border-gray-300 bg-background text-foreground rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 outline-none"
        />
       </div>
@@ -307,16 +318,18 @@ export function NewLeadModal({
        <div className="relative">
         <input
          type="date"
-         {...register('vencimento', { required: 'Vencimento é obrigatório' })}
+         {...register('expiration_date', {
+          required: 'Vencimento é obrigatório'
+         })}
          className={`w-full border bg-background text-foreground rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 outline-none appearance-none [&::-webkit-calendar-picker-indicator]:opacity-0 [&::-webkit-calendar-picker-indicator]:cursor-pointer ${
-          errors.vencimento ? 'border-red-500' : 'border-gray-300'
+          errors.expiration_date ? 'border-red-500' : 'border-gray-300'
          }`}
         />
         <Calendar className="absolute right-3 top-3 h-4 w-4 text-foreground pointer-events-none" />
        </div>
-       {errors.vencimento && (
+       {errors.expiration_date && (
         <span className="text-red-500 text-sm">
-         {errors.vencimento.message}
+         {errors.expiration_date.message}
         </span>
        )}
       </div>
@@ -328,7 +341,7 @@ export function NewLeadModal({
        <div className="relative">
         <input
          type="date"
-         {...register('proxima_acao')}
+         {...register('next_action')}
          className="w-full border border-gray-300 bg-background text-foreground rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 outline-none appearance-none [&::-webkit-calendar-picker-indicator]:opacity-0 [&::-webkit-calendar-picker-indicator]:cursor-pointer"
         />
         <Calendar className="absolute right-3 top-3 h-4 w-4 text-foreground pointer-events-none" />

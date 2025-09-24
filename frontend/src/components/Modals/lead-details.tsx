@@ -39,6 +39,10 @@ export function LeadDetailsModal({
 
  const currentLead = editedLead || lead
 
+ const formatedPhone = currentLead.phone
+  ? currentLead.phone.replace(/\D/g, '')
+  : ''
+
  function handleEdit() {
   if (!lead?.id) return
   setEditedLead({ ...lead })
@@ -101,11 +105,11 @@ export function LeadDetailsModal({
 
  function getCompleteAddress() {
   const parts: string[] = []
-  if (currentLead.endereco) parts.push(currentLead.endereco)
-  if (currentLead.numero) parts.push(currentLead.numero)
-  if (currentLead.complemento) parts.push(currentLead.complemento)
-  if (currentLead.bairro) parts.push(currentLead.bairro)
-  if (currentLead.municipio) parts.push(currentLead.municipio)
+  if (currentLead.address) parts.push(currentLead.address)
+  if (currentLead.number) parts.push(currentLead.number)
+  if (currentLead.complement) parts.push(currentLead.complement)
+  if (currentLead.district) parts.push(currentLead.district)
+  if (currentLead.city) parts.push(currentLead.city)
 
   const addressLine = parts.join(', ')
   return currentLead.cep
@@ -153,7 +157,7 @@ export function LeadDetailsModal({
      <DialogTitle className="flex items-center justify-between text-lg sm:text-xl">
       <div className="flex items-center gap-2">
        <Building size={20} />
-       <span className="truncate max-w-80">{currentLead.empresa}</span>
+       <span className="truncate max-w-80">{currentLead.company}</span>
       </div>
       <div className="flex gap-2">
        {isEditing ? (
@@ -192,7 +196,7 @@ export function LeadDetailsModal({
        {currentLead.status}
       </Badge>
       <Badge variant="outline" className="bg-red-100 text-red-800">
-       Serviço: {currentLead.tipo}
+       Serviço: {currentLead.service}
       </Badge>
      </div>
      {/* Informações do Serviço */}
@@ -202,30 +206,34 @@ export function LeadDetailsModal({
        Informações do Serviço
       </h3>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 text-sm">
-       <EditableField label="Serviço" value={currentLead.tipo} field="tipo" />
+       <EditableField
+        label="Serviço"
+        value={currentLead.service}
+        field="service"
+       />
        <EditableField
         label="Licença"
-        value={currentLead.licenca}
-        field="licenca"
+        value={currentLead.license}
+        field="license"
        />
        <EditableField
         label="Validade"
-        value={currentLead.vigencia || currentLead.vencimento}
-        field="vigencia"
+        value={currentLead.validity || currentLead.validity}
+        field="validity"
         type="date"
         icon={<Calendar size={12} />}
        />
        <EditableField
         label="Valor do Serviço"
-        value={currentLead.valor_servico || ''}
-        field="valor_servico"
+        value={currentLead.service_value || ''}
+        field="service_value"
         type="number"
        />
        <div className="sm:col-span-2">
         <EditableField
          label="Ocupação"
-         value={currentLead.ocupacao}
-         field="ocupacao"
+         value={currentLead.occupation}
+         field="occupation"
         />
        </div>
       </div>
@@ -246,8 +254,8 @@ export function LeadDetailsModal({
        />
        <EditableField
         label="Website"
-        value={currentLead.site || ''}
-        field="site"
+        value={currentLead.website || ''}
+        field="website"
         type="url"
        />
        <div>
@@ -259,28 +267,28 @@ export function LeadDetailsModal({
          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-1">
           <Input
            placeholder="Endereço"
-           value={editedLead?.endereco || ''}
-           onChange={e => updateField('endereco', e.target.value)}
+           value={editedLead?.address || ''}
+           onChange={e => updateField('address', e.target.value)}
           />
           <Input
            placeholder="Número"
-           value={editedLead?.numero || ''}
-           onChange={e => updateField('numero', e.target.value)}
+           value={editedLead?.number || ''}
+           onChange={e => updateField('number', e.target.value)}
           />
           <Input
            placeholder="Complemento"
-           value={editedLead?.complemento || ''}
-           onChange={e => updateField('complemento', e.target.value)}
+           value={editedLead?.complement || ''}
+           onChange={e => updateField('complement', e.target.value)}
           />
           <Input
            placeholder="Bairro"
-           value={editedLead?.bairro || ''}
-           onChange={e => updateField('bairro', e.target.value)}
+           value={editedLead?.district || ''}
+           onChange={e => updateField('district', e.target.value)}
           />
           <Input
            placeholder="Município"
-           value={editedLead?.municipio || ''}
-           onChange={e => updateField('municipio', e.target.value)}
+           value={editedLead?.city || ''}
+           onChange={e => updateField('city', e.target.value)}
           />
           <Input
            placeholder="CEP"
@@ -307,13 +315,13 @@ export function LeadDetailsModal({
       <div className="space-y-3 text-sm">
        <EditableField
         label="Nome do Contato"
-        value={currentLead.contato}
-        field="contato"
+        value={currentLead.contact}
+        field="contact"
        />
        <EditableField
         label="Telefone/WhatsApp"
-        value={currentLead.whatsapp}
-        field="whatsapp"
+        value={currentLead.phone}
+        field="phone"
         type="tel"
         icon={<Phone size={14} />}
        />
@@ -339,22 +347,22 @@ export function LeadDetailsModal({
         {isEditing ? (
          <Input
           type="date"
-          value={editedLead?.vencimento || ''}
-          onChange={e => updateField('vencimento', e.target.value)}
+          value={editedLead?.expiration_date || ''}
+          onChange={e => updateField('expiration_date', e.target.value)}
           className="mt-1"
          />
         ) : (
          <p
           className={`${
-           isVencimentoProximo(currentLead.vencimento)
+           isVencimentoProximo(currentLead.expiration_date)
             ? 'text-red-600 font-semibold'
             : 'text-gray-600'
           }`}
          >
-          {currentLead.vencimento
-           ? new Date(currentLead.vencimento).toLocaleDateString('pt-BR')
+          {currentLead.expiration_date
+           ? new Date(currentLead.expiration_date).toLocaleDateString('pt-BR')
            : 'Não informado'}
-          {isVencimentoProximo(currentLead.vencimento) && (
+          {isVencimentoProximo(currentLead.expiration_date) && (
            <span className="block text-xs text-red-500">
             ⚠️ Vencimento próximo
            </span>
@@ -367,14 +375,14 @@ export function LeadDetailsModal({
         {isEditing ? (
          <Input
           type="date"
-          value={editedLead?.proxima_acao || ''}
-          onChange={e => updateField('proxima_acao', e.target.value)}
+          value={editedLead?.next_action || ''}
+          onChange={e => updateField('next_action', e.target.value)}
           className="mt-1"
          />
         ) : (
          <p className="text-gray-600">
-          {currentLead.proxima_acao
-           ? new Date(currentLead.proxima_acao).toLocaleDateString('pt-BR')
+          {currentLead.next_action
+           ? new Date(currentLead.next_action).toLocaleDateString('pt-BR')
            : 'Não informado'}
          </p>
         )}
@@ -385,13 +393,29 @@ export function LeadDetailsModal({
      {/* Ações Rápidas */}
      {!isEditing && (
       <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 pt-4 border-t">
-       <button className="flex-1 bg-green-100 hover:bg-green-200 text-green-700 py-3 px-4 rounded-lg transition-colors flex items-center justify-center gap-2 text-sm sm:text-base">
+       <button
+        onClick={() =>
+         window.open(`https://wa.me/55${formatedPhone}`, '_blank')
+        }
+        title={`${
+         currentLead.phone ? `Enviar mensagem para ${currentLead.phone}` : ''
+        }`}
+        type="button"
+        className="flex-1 bg-green-100 hover:bg-green-200 text-green-700 py-3 px-4 rounded-lg transition-colors flex items-center justify-center gap-2 text-sm sm:text-base"
+       >
         <Phone size={16} />
-        WhatsApp
+        Abrir WhatsApp
        </button>
-       <button className="flex-1 bg-blue-100 hover:bg-blue-200 text-blue-700 py-3 px-4 rounded-lg transition-colors flex items-center justify-center gap-2 text-sm sm:text-base">
+       <button
+        onClick={() => window.open(`mailto:${currentLead.email}`, '_blank')}
+        title={`${
+         currentLead.email ? `Enviar email para ${currentLead.email}` : ''
+        }`}
+        type="button"
+        className="flex-1 bg-blue-100 hover:bg-blue-200 text-blue-700 py-3 px-4 rounded-lg transition-colors flex items-center justify-center gap-2 text-sm sm:text-base"
+       >
         <Mail size={16} />
-        Email
+        Enviar Email
        </button>
       </div>
      )}

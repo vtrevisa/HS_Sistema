@@ -112,27 +112,30 @@ export function ImportLeadsModal({
 
   try {
    const rawLeads = (await loadRawLeads()) as ExcelLead[]
+
    if (!rawLeads || rawLeads.length === 0) {
     throw new Error('Nenhum dado encontrado na planilha')
    }
 
+   console.log(rawLeads)
+
    const processedLeads: LeadRequest[] = rawLeads.map(lead => ({
-    empresa: lead.empresa || '',
-    tipo: lead.tipo || lead.type || '',
-    licenca: lead.licenca || lead.license || '',
-    vigencia: lead.vigencia || '',
-    vencimento: lead.vencimento || '',
-    proxima_acao: lead.proxima_acao || '',
+    company: lead.company || '',
+    service: lead.service || lead.type || '',
+    license: lead.license || lead.license || '',
+    validity: lead.validity || lead.vigencia || '',
+    expiration_date: lead.expiration_date || lead.vencimento || '',
+    next_action: lead.next_action || lead.nextAction || '',
     status: lead.status || '',
-    endereco: lead.address || '',
-    numero: lead.numero,
-    municipio: lead.municipio || '',
-    bairro: lead.bairro || '',
-    ocupacao: lead.ocupacao || lead.occupation,
-    complemento: lead.complemento
+    address: lead.address || '',
+    number: lead.number || lead.numero || '',
+    city: lead.city || lead.municipio || '',
+    district: lead.district || lead.bairro || '',
+    occupation: lead.occupation || lead.occupation,
+    complement: lead.complement || lead.complemento || ''
    }))
 
-   onImportComplete(rawLeads)
+   onImportComplete(processedLeads)
 
    setImportStatus('success')
 

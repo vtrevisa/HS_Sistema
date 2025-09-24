@@ -26,19 +26,19 @@ class LeadRequest extends FormRequest
     protected function prepareForValidation()
     {
         $this->merge([
-            'empresa' => $this->input('empresa') ?? $this->input('company'),
-            'tipo' => $this->input('tipo') ?? $this->input('type'),
-            'licenca' => $this->input('licenca') ?? $this->input('license'),
-            'vigencia' => $this->input('vigencia') ?? $this->input('vigencia'),
-            'endereco' => $this->input('endereco') ?? $this->input('address'),
-            'ocupacao' => $this->input('ocupacao') ?? $this->input('occupation'),
-            'numero' => $this->input('numero'),
-            'municipio' => $this->input('municipio') ?? $this->input('municipio'),
-            'bairro' => $this->input('bairro') ?? $this->input('bairro'),
+            'company' => $this->input('company') ?? $this->input('company'),
+            'service' => $this->input('service') ?? $this->input('type'),
+            'license' => $this->input('license') ?? $this->input('license'),
+            'validity' => $this->input('validity') ?? $this->input('vigencia'),
+            'address' => $this->input('address') ?? $this->input('address'),
+            'occupation' => $this->input('occupation') ?? $this->input('occupation'),
+            'number' => $this->input('number'),
+            'city' => $this->input('city') ?? $this->input('municipio'),
+            'district' => $this->input('district') ?? $this->input('bairro'),
             'cep' => $this->input('cep'),
-            'complemento' => $this->input('complemento'),
-            'vencimento' => $this->input('vencimento'),
-            'proxima_acao' => $this->input('proxima_acao') ?? $this->input('nextAction'),
+            'complement' => $this->input('complement'),
+            'expiration_date' => $this->input('expiration_date'),
+            'next_action' => $this->input('next_action') ?? $this->input('nextAction'),
         ]);
     }
 
@@ -59,17 +59,17 @@ class LeadRequest extends FormRequest
         $leadId = $this->route('lead');
 
         return [
-            'empresa' => 'nullable|string',
-            'tipo'      => $isUpdate ? 'sometimes|required' : 'required',
-            'licenca'   => 'required|string|unique:leads,licenca,' . ($leadId ? $leadId->id : null),
-            'vigencia'  => $isUpdate ? 'sometimes|required' : 'required',
-            'endereco'  => $isUpdate ? 'sometimes|required' : 'required',
-            'numero'    => $isUpdate ? 'sometimes|required' : 'required',
-            'municipio' => $isUpdate ? 'sometimes|required' : 'required',
-            'bairro'    => $isUpdate ? 'sometimes|required' : 'required',
-            'ocupacao'  => $isUpdate ? 'sometimes|required' : 'required',
-            'vencimento' => $isUpdate ? 'sometimes|required' : 'required',
-            'proxima_acao' => 'sometimes|nullable|string',
+            'company' => 'nullable|string',
+            'service'      => $isUpdate ? 'sometimes|required' : 'required',
+            'license'   => 'required|string|unique:leads,license,' . ($leadId ? $leadId->id : null),
+            'validity'  => $isUpdate ? 'sometimes|required' : 'required',
+            'address'  => $isUpdate ? 'sometimes|required' : 'required',
+            'number'    => $isUpdate ? 'sometimes|required' : 'required',
+            'city' => $isUpdate ? 'sometimes|required' : 'required',
+            'district'    => $isUpdate ? 'sometimes|required' : 'required',
+            'occupation'  => $isUpdate ? 'sometimes|required' : 'required',
+            'expiration_date' => $isUpdate ? 'sometimes|required' : 'required',
+            'next_action' => 'sometimes|nullable|string',
 
             // Campos opcionais no POST e obrigatórios no UPDATE
             // 'complemento' => $isUpdate ? 'required|string' : 'nullable|string',
@@ -90,11 +90,11 @@ class LeadRequest extends FormRequest
 
             // Campos opcionais no POST
             'cep' => 'nullable|string',
-            'complemento' => 'nullable|string',
+            'complement' => 'nullable|string',
             'cnpj'        => 'nullable|string',
-            'site'        => 'nullable|string',
-            'contato'     => 'nullable|string',
-            'whatsapp'    => 'nullable|string',
+            'website'        => 'nullable|string',
+            'contact'     => 'nullable|string',
+            'phone'    => 'nullable|string',
             'email'       => 'nullable|email',
         ];
     }
@@ -102,16 +102,16 @@ class LeadRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'tipo.required' => 'Tipo é obrigatório..',
-            'licenca.required' => 'Licença é obrigatório..',
-            'licenca.string' => 'Necessário licença válida..',
-            'licenca.unique' => 'Está licença já está cadastrada..',
-            'vigencia.required' => 'Vigência é obrigatória..',
-            'endereco.required' => 'Endereço é obrigatório..',
-            'numero.required' => 'Número é obrigatório..',
-            'municipio.required' => 'Município é obrigatório..',
-            'bairro.required' => 'Bairro é obrigatório..',
-            'ocupacao.required' => 'Ocupação é obrigatório..',
+            'service.required' => 'Tipo é obrigatório..',
+            'license.required' => 'Licença é obrigatório..',
+            'license.string' => 'Necessário licença válida..',
+            'license.unique' => 'Está licença já está cadastrada..',
+            'validity.required' => 'Vigência é obrigatória..',
+            'address.required' => 'Endereço é obrigatório..',
+            'number.required' => 'Número é obrigatório..',
+            'city.required' => 'Município é obrigatório..',
+            'district.required' => 'Bairro é obrigatório..',
+            'occupation.required' => 'Ocupação é obrigatório..',
 
         ];
     }

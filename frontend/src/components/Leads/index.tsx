@@ -25,8 +25,8 @@ export function Leads() {
 
  // Filter leads from context
  const filteredLeads = leads.filter(lead => {
-  const company = lead.empresa?.toLowerCase() ?? ''
-  const contact = lead.contato?.toLowerCase() ?? ''
+  const company = lead.company?.toLowerCase() ?? ''
+  const contact = lead.contact?.toLowerCase() ?? ''
   const search = searchTerm.toLowerCase()
 
   const matchesSearch = company.includes(search) || contact.includes(search)
@@ -34,7 +34,7 @@ export function Leads() {
   const matchesStatus =
    selectedFilter === 'todos' ? true : lead.status === selectedFilter
   const matchesType =
-   selectedType === 'todos' ? true : lead.tipo === selectedType
+   selectedType === 'todos' ? true : lead.service === selectedType
 
   return matchesSearch && matchesStatus && matchesType
  })
@@ -42,11 +42,11 @@ export function Leads() {
  function handleImportComplete(importedLeads: LeadRequest[]) {
   const processedLeads: LeadRequest[] = importedLeads.map(lead => {
    const completeAddress = [
-    lead.endereco || lead['address' as keyof LeadRequest],
-    lead.numero,
-    lead.complemento,
-    lead.bairro,
-    lead.municipio || lead['cidade' as keyof LeadRequest]
+    lead.address || lead['address' as keyof LeadRequest],
+    lead.number,
+    lead.complement,
+    lead.district,
+    lead.city || lead['cidade' as keyof LeadRequest]
    ]
     .filter(Boolean)
     .join(', ')
@@ -55,11 +55,11 @@ export function Leads() {
     ...lead,
     address: completeAddress,
     // Manter os campos originais para referência
-    numero: lead.numero,
-    complemento: lead.complemento,
+    numero: lead.number,
+    complemento: lead.complement,
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    municipio: lead.municipio || (lead as any).cidade,
-    bairro: lead.bairro
+    municipio: lead.city || (lead as any).cidade,
+    bairro: lead.district
    }
   })
 
@@ -68,11 +68,11 @@ export function Leads() {
 
  function handleNewLead(leadData: Omit<LeadRequest, 'id'>) {
   const completeAddress = [
-   leadData.endereco,
-   leadData.numero,
-   leadData.complemento,
-   leadData.bairro,
-   leadData.municipio
+   leadData.address,
+   leadData.number,
+   leadData.complement,
+   leadData.district,
+   leadData.city
   ]
    .filter(Boolean)
    .join(', ')

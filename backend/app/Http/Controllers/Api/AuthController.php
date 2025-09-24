@@ -133,6 +133,7 @@ class AuthController extends Controller
 
             return response()->json([
                 'status' => true,
+                //'token' => $token,
                 'user' => $user,
             ], 200);
         } catch (Exception $e) {
