@@ -13,123 +13,6 @@ use Illuminate\Support\Facades\Http;
 class CompanyController extends Controller
 {
 
-
-
-    //     public function searchCompanyByAddress(Request $request)
-    //     {
-    //         $endereco = $request->input('address');
-
-    //         if (!$endereco) {
-    //             return response()->json(['erro' => 'Endereço é obrigatório.'], 400);
-    //         }
-
-    //         // 1. Search with OpenAI to extract company name
-    //         $respostaAI = $this->searchOnOpenAI($endereco);
-
-    //         // 2. Try to extract CNPJ directly from the response
-    //         preg_match('/\d{14}/', $respostaAI, $matches);
-    //         $cnpjExtraido = $matches[0] ?? null;
-
-    //         if (!$cnpjExtraido) {
-    //             // If not extracted, try extracting the company name
-    //             $nomeEmpresa = $this->extractCompanyName($respostaAI);
-
-    //             if (!$nomeEmpresa) {
-    //                 return response()->json([
-    //                     'mensagem' => 'Não foi possível identificar nome nem CNPJ via OpenAI.',
-    //                     'resposta_ai' => $respostaAI
-    //                 ], 200);
-    //             }
-
-    //             // **Opcional**: se você tiver outra API que converta nome → CNPJ, poderia usar aqui.
-    //             return response()->json([
-    //                 'mensagem' => 'OpenAI retornou nome, mas sem CNPJ.',
-    //                 'nome_empresa' => $nomeEmpresa,
-    //                 'resposta_ai' => $respostaAI
-    //             ], 200);
-    //         }
-
-    //         // 3. Consult InfoSimples API by passing CNPJ
-    //         $dadosCNPJ = $this->searchCompanyInfoSimples($cnpjExtraido);
-
-    //         if (!$dadosCNPJ) {
-    //             return response()->json([
-    //                 'mensagem' => 'CNPJ obtido pela OpenAI, mas não encontrado na InfoSimples.',
-    //                 'cnpj_extraido' => $cnpjExtraido,
-    //                 'resposta_ai' => $respostaAI
-    //             ], 404);
-    //         }
-
-    //         // 4. Return final response with complete data
-    //         return response()->json([
-    //             'endereco_informado' => $endereco,
-    //             'cnpj_encontrado' => $cnpjExtraido,
-    //             'dados_empresa' => $dadosCNPJ,
-    //             'resposta_ai' => $respostaAI
-    //         ]);
-    //     }
-
-    //     private function searchOnOpenAI($endereco)
-    //     {
-    //         $apiKey = env('OPENAI_API_KEY');
-
-    //         $prompt = <<<EOT
-    // Recebi o seguinte endereço: "$endereco".
-    // Com base nele, informe o nome provável da empresa localizada naquele ponto e, se souber, o CNPJ com 14 dígitos.
-    // EOT;
-
-    //         $response = Http::withHeaders([
-    //             'Authorization' => "Bearer $apiKey",
-    //             'Content-Type' => 'application/json',
-    //         ])->post('https://api.openai.com/v1/chat/completions', [
-    //             'model' => 'gpt-4o', // ou gpt-3.5-turbo
-    //             'messages' => [
-    //                 ['role' => 'user', 'content' => $prompt]
-    //             ],
-    //             'temperature' => 0.5,
-    //         ]);
-
-    //         if ($response->failed()) {
-    //             return 'Erro na consulta à OpenAI.';
-    //         }
-
-    //         return $response['choices'][0]['message']['content'];
-    //     }
-
-    //     private function extractCompanyName($resposta)
-    //     {
-    //         // Simple regex to capture company name (adjust as needed)
-    //         if (preg_match('/empresa\s+(.*?)\s+(Ltda|LTDA|S\.A\.|SA|EIRELI)?/i', $resposta, $matches)) {
-    //             // Return “X Ltda” or something similar
-    //             return trim($matches[1] . ' ' . ($matches[2] ?? ''));
-    //         }
-
-    //         // Plan B: try to get a whole sentence, without a period at the end
-    //         $linha = strtok($resposta, "\n.");
-    //         return $linha ? trim($linha) : null;
-    //     }
-
-    //     private function searchCompanyInfoSimples($cnpj)
-    //     {
-    //         $token = env('INFOSIMPLES_API_KEY');
-
-    //         $url = "https://api.infosimples.com/consultas/receita-federal/cnpj";
-
-    //         $response = Http::withHeaders([
-    //             'Authorization' => "Bearer $token",
-    //             'Accept' => 'application/json',
-    //         ])->get($url, [
-    //             'cnpj' => $cnpj,
-    //         ]);
-
-    //         if ($response->failed()) {
-    //             return null;
-    //         }
-
-    //         return $response->json();
-    //     }
-
-
     public function searchCompanyByAddress(Request $request)
     {
         $address = $request->input('address');
@@ -289,6 +172,8 @@ class CompanyController extends Controller
 
         return response()->json($result);
     }
+
+
 
     // Show all companies from db
 
