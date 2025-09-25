@@ -3,6 +3,7 @@
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\LeadController;
 use App\Http\Controllers\Api\CompanyController;
+use App\Http\Controllers\Api\OpenAIController;
 use App\Http\Controllers\Api\UserController;
 
 use Illuminate\Support\Facades\Route;
@@ -24,8 +25,10 @@ Route::put('/leads/{lead}', [LeadController::class, 'update']); //PUT
 Route::delete('/leads/{lead}', [LeadController::class, 'destroy']); //DELETE
 
 
+
 // Companies
 Route::get('/companies', [CompanyController::class, 'index']); //GET
+Route::post('/companies/search/address', [CompanyController::class, 'searchCompanyByAddress']);
 
 
 // Users

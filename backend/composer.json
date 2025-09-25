@@ -7,12 +7,13 @@
     "license": "MIT",
     "require": {
         "php": "^8.2",
-        "guzzlehttp/guzzle": "^7.9",
+        "guzzlehttp/guzzle": "^7.10",
         "illuminate/cache": "*",
         "laravel/framework": "^12.0",
         "laravel/sanctum": "^4.0",
         "laravel/tinker": "^2.10.1",
         "league/csv": "^9.24",
+        "openai-php/client": "^0.16.1",
         "spatie/robots-txt": "^2.5",
         "symfony/dom-crawler": "^7.3"
     },
