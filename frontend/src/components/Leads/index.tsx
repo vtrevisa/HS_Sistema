@@ -86,21 +86,20 @@ export function Leads() {
  }
 
  return (
-  <div className="p-4 sm:p-6">
-   <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
+  <div className="p-4 lg:p-6 space-y-6">
+   <div className="flex sm:items-center justify-between flex-col sm:flex-row gap-2">
     <h1 className="text-2xl lg:text-3xl font-bold text-blue-600 dark:text-white">
      Gerenciar Leads
     </h1>
-    <div className="flex gap-2 flex-wrap">
-     <LeadsActions
-      onImportClick={() => setIsImportModalOpen(true)}
-      onNewLeadClick={() => setIsNewLeadModalOpen(true)}
-      onExportClick={() => exportLeadsToExcel(leads)}
-     />
-    </div>
+
+    <LeadsActions
+     onImportClick={() => setIsImportModalOpen(true)}
+     onNewLeadClick={() => setIsNewLeadModalOpen(true)}
+     onExportClick={() => exportLeadsToExcel(leads)}
+    />
    </div>
 
-   <div className="mb-6">
+   {/* <div className="mb-6">
     <LeadsFilters
      searchTerm={searchTerm}
      setSearchTerm={setSearchTerm}
@@ -109,7 +108,7 @@ export function Leads() {
      selectedType={selectedType}
      setSelectedType={setSelectedType}
     />
-   </div>
+   </div> */}
 
    <LeadsTable
     leads={filteredLeads}

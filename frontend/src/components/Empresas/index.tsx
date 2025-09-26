@@ -86,9 +86,9 @@ export function Empresas() {
  }
 
  return (
-  <div className="p-6 space-y-6">
-   <div className="flex items-center justify-between">
-    <h1 className="text-3xl font-bold text-blue-600 dark:text-white">
+  <div className="p-4 lg:p-6 space-y-6">
+   <div className="flex sm:items-center justify-between flex-col sm:flex-row gap-2">
+    <h1 className="text-2xl lg:text-3xl font-bold text-blue-600 dark:text-white">
      Busca de Dados da Empresa
     </h1>
     <EmpresasActions

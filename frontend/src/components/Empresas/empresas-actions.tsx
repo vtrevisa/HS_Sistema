@@ -11,7 +11,7 @@ export function EmpresasActions({
  onNewCompanyClick
 }: EmpresasActionsProps) {
  return (
-  <div className="flex gap-2">
+  <div className="flex gap-2 flex-col sm:flex-row">
    <Button
     onClick={enhanceAllData}
     className="bg-blue-600 hover:bg-blue-700 dark:text-white"

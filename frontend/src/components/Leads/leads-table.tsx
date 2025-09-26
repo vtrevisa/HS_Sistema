@@ -244,9 +244,7 @@ export function LeadsTable({
        <div className="flex justify-between items-start mb-3">
         <div className="flex items-center gap-3 flex-1 min-w-0">
          <div className="flex-1 min-w-0">
-          <h3 className="font-semibold text-foreground truncate">
-           {lead.company}
-          </h3>
+          <h3 className="font-semibold text-foreground">{lead.company}</h3>
           <p className="text-sm text-muted-foreground truncate">
            {lead.contact}
           </p>
@@ -293,7 +291,7 @@ export function LeadsTable({
          </span>
         </div>
        </div>
-       <div className="flex justify-between items-center mt-3 pt-3 border-t border-border">
+       <div className="flex flex-col sm:flex-row gap-2 sm:justify-between sm:items-center mt-3 pt-3 border-t border-border">
         <div className="text-xs text-muted-foreground">
          Vencimento:{' '}
          {new Date(lead.expiration_date).toLocaleDateString('pt-BR')}
@@ -326,6 +324,23 @@ export function LeadsTable({
           className="bg-blue-100 dark:bg-blue-900/30 hover:bg-blue-200 dark:hover:bg-blue-900/50 text-blue-700 dark:text-blue-300 p-2 rounded-lg transition-colors"
          >
           <Mail size={12} />
+         </button>
+         <button
+          onClick={() => onLeadClick?.(lead)}
+          className="bg-amber-100 dark:bg-amber-900/30 hover:bg-amber-200 dark:hover:bg-amber-900/50 text-amber-700 dark:text-amber-300 p-2 rounded-lg transition-colors"
+          title="Editar"
+         >
+          <Pencil size={14} />
+         </button>
+         <button
+          onClick={e => {
+           e.stopPropagation()
+           onDeleteClick(lead)
+          }}
+          className="bg-red-100 dark:bg-red-900/30 hover:bg-red-200 dark:hover:bg-red-900/50 text-red-700 dark:text-red-300 p-2 rounded-lg transition-colors"
+          title="Apagar"
+         >
+          <Trash size={14} />
          </button>
         </div>
        </div>
