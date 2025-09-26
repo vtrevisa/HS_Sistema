@@ -6,7 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Company;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Http;
 
 
@@ -75,7 +75,7 @@ class CompanyController extends Controller
 
         $result = [];
 
-        // 4️⃣ For each establishment found, get details and consult InfoSimples
+        // 4️⃣ Process the results
 
         foreach ($places as $place) {
             $placeId = $place['place_id'];
@@ -92,70 +92,82 @@ class CompanyController extends Controller
 
             $company = $details['result'];
             $companyName = $company['name'] ?? null;
+            $companyAddr  = $company['formatted_address'] ?? null;
 
-
-            // Search in InfoSimples
             $cnpjInfo = "CNPJ não encontrado";
             $cnpjSource = null;
 
-            if ($companyName) {
-                $normalizedName = Str::ascii($companyName);
-                $normalizedName = preg_replace('/[^A-Za-z0-9 ]/', '', $normalizedName);
-
-                $variations = [
-                    $normalizedName,
-                    $normalizedName . ' LTDA',
-                    $normalizedName . ' ME',
-                    $normalizedName . ' EIRELI',
-                    $normalizedName . ' SA',
-                    implode(' ', array_slice(explode(' ', $normalizedName), 0, 3)),
-                    preg_replace('/\b(LTDA|ME|EIRELI|S\/A|SA)\b/i', '', $normalizedName)
-                ];
-
-                $variations = array_unique(array_filter($variations));
-
-                foreach ($variations as $var) {
-
-                    $respInfo = Http::timeout(20)->get("https://api.infosimples.com/api/v2/consultas/receita-federal/cnpj", [
-                        'token' => $infoSimplesToken,
-                        'nome'  => $var
-                    ]);
-
-                    if ($respInfo->ok() && isset($respInfo['cnpj'])) {
-                        $cnpjInfo = $respInfo->json();
-                        $cnpjSource = 'infosimples';
-                        break;
-                    }
-                }
-            }
+            // 🔹 5️⃣ First try Google Custom Search
 
             if ($cnpjInfo === "CNPJ não encontrado" && $googleCseApiKey && $googleCseCx) {
-                preg_match('/,\s*([^,]+)\s*-\s*[A-Z]{2}/', $company['formatted_address'], $matches);
+                preg_match('/,\s*([^,]+)\s*-\s*[A-Z]{2}/', $companyAddr, $matches);
                 $city = $matches[1] ?? '';
 
+                $queries = [
+                    "\"$companyName\" \"$city\" CNPJ",
+                    "\"$companyName\" CNPJ",
+                    "\"$companyAddr\" CNPJ",
+                    "\"$companyName\" \"$companyAddr\" CNPJ",
+                ];
 
-                $query = urlencode("\"$companyName\" \"$city\" CNPJ");
-                $respGoogle = Http::get("https://www.googleapis.com/customsearch/v1", [
-                    'key' => $googleCseApiKey,
-                    'cx'  => $googleCseCx,
-                    'q'   => $query,
-                    'num' => 5
-                ]);
+                foreach ($queries as $q) {
+                    Log::info("🔍 Buscando CNPJ no Google CSE", ['query' => $q]);
 
-                if ($respGoogle->ok()) {
-                    $items = $respGoogle['items'] ?? [];
-                    $pattern = '/\d{2}\.\d{3}\.\d{3}\/\d{4}-\d{2}/';
+                    $respGoogle = Http::get("https://www.googleapis.com/customsearch/v1", [
+                        'key' => $googleCseApiKey,
+                        'cx'  => $googleCseCx,
+                        'q'   => $q,
+                        'num' => 5
+                    ]);
 
-                    foreach ($items as $item) {
-                        $snippet = $item['snippet'] ?? '';
-                        if (preg_match($pattern, $snippet, $matches)) {
-                            $cnpjInfo = $matches[0];
-                            $cnpjSource = 'google_custom_search';
-                            break;
+
+                    if ($respGoogle->ok()) {
+                        $items   = $respGoogle['items'] ?? [];
+                        Log::info("📄 Resultado do Google CSE", ['items' => $items]);
+
+                        $pattern = '/\d{2}\.\d{3}\.\d{3}\/\d{4}-\d{2}/';
+
+                        foreach ($items as $item) {
+                            $snippet = $item['snippet'] ?? '';
+                            $title   = $item['title'] ?? '';
+                            $link    = $item['link'] ?? '';
+
+                            if (preg_match($pattern, $snippet, $matches) || preg_match($pattern, $title, $matches)) {
+                                $cnpjInfo   = $matches[0];
+                                $cnpjSource = 'google_custom_search';
+                                Log::info("✅ CNPJ encontrado via Google CSE", [
+                                    'cnpj' => $cnpjInfo,
+                                    'fonte' => $link
+                                ]);
+                                break 2;
+                            }
                         }
+                    } else {
+                        Log::warning("❌ Falha ao consultar Google CSE", ['query' => $q]);
                     }
                 }
             }
+
+            // 6️⃣ If you didn't find it on Google, try InfoSimples
+
+            if ($cnpjInfo === "CNPJ não encontrado" && $companyName && $infoSimplesToken) {
+                Log::info("🔄 Tentando buscar CNPJ via InfoSimples", ['nome' => $companyName]);
+
+                $respInfo = Http::timeout(20)->get("https://api.infosimples.com/api/v2/consultas/receita-federal/cnpj", [
+                    'token' => $infoSimplesToken,
+                    'nome'  => $companyName
+                ]);
+
+                if ($respInfo->ok() && isset($respInfo['cnpj'])) {
+                    $cnpjInfo   = $respInfo['cnpj'];
+                    $cnpjSource = 'infosimples';
+
+                    Log::info("✅ CNPJ encontrado via InfoSimples", ['cnpj' => $cnpjInfo]);
+                } else {
+                    Log::warning("❌ Nenhum CNPJ encontrado na InfoSimples", ['nome' => $companyName]);
+                }
+            }
+
 
             $result[] = [
                 'nome_empresa'       => $companyName,
