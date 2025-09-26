@@ -99,7 +99,7 @@ export function Leads() {
     />
    </div>
 
-   {/* <div className="mb-6">
+   <div className="mb-6">
     <LeadsFilters
      searchTerm={searchTerm}
      setSearchTerm={setSearchTerm}
@@ -108,7 +108,7 @@ export function Leads() {
      selectedType={selectedType}
      setSelectedType={setSelectedType}
     />
-   </div> */}
+   </div>
 
    <LeadsTable
     leads={filteredLeads}

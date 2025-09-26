@@ -272,17 +272,6 @@ export function NewLeadModal({
        />
       </div>
 
-      {/* <div>
-       <label className="block text-sm font-medium text-foreground mb-1">
-        Complemento
-       </label>
-       <input
-        type="tel"
-        {...register('complement')}
-        className="w-full border border-gray-300 bg-background text-foreground rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 outline-none"
-       />
-      </div> */}
-
       <div>
        <label className="block text-sm font-medium text-foreground mb-1">
         Ocupação
