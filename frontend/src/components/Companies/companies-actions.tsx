@@ -1,15 +1,15 @@
 import { Plus, RefreshCw } from 'lucide-react'
 import { Button } from '../ui/button'
 
-interface EmpresasActionsProps {
+interface CompaniesActionsProps {
  onNewCompanyClick: () => void
  enhanceAllData: () => void
 }
 
-export function EmpresasActions({
+export function CompaniesActions({
  enhanceAllData,
  onNewCompanyClick
-}: EmpresasActionsProps) {
+}: CompaniesActionsProps) {
  return (
   <div className="flex gap-2 flex-col sm:flex-row">
    <Button

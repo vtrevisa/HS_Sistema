@@ -30,6 +30,7 @@ Route::post('/companies', [CompanyController::class, 'store']); //POST
 Route::put('/companies/{company}', [CompanyController::class, 'update']); //PUT
 Route::delete('/companies/{company}', [CompanyController::class, 'destroy']); //DELETE
 Route::post('/companies/search/address', [CompanyController::class, 'searchCompanyByAddress']); //POST
+Route::post('/companies/search/cnpj', [CompanyController::class, 'searchCompanyByCnpj']); //POST
 
 
 // Users

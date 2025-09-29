@@ -39,21 +39,6 @@ export const LeadsProvider = ({ children }: LeadsProviderProps) => {
   saveLeads.mutate(leads)
  }
 
- //  function updateLead(leadId: number, updatedLead: Partial<LeadRequest>) {
- //   console.log('TODO: implementar updateLead mutation', leadId, updatedLead)
- //   // updateLeadMutation.mutate({ leadId, updatedLead })
- //  }
-
- //  function updateLeadStatus(leadId: number, newStatus: string) {
- //   console.log('TODO: implementar updateLeadStatus mutation', leadId, newStatus)
- //   // updateLeadStatusMutation.mutate({ leadId, status: newStatus })
- //  }
-
- //  function getLeadsByStatus(status: string) {
- //   if (!leadsDB.data) return []
- //   return leadsDB.data.filter(lead => lead.status === status)
- //  }
-
  return (
   <LeadsContext.Provider
    value={{

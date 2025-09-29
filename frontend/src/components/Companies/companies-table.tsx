@@ -11,35 +11,36 @@ import {
 import { Badge } from '../ui/badge'
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card'
 import { Button } from '../ui/button'
+import type { CompanyRequest } from '@/http/types/companies'
 
-export interface AlvaraEnriquecido {
- id: string
- nomeComercial: string
- endereco: string
- cidade: string
- estado: string
- tipoServico: 'AVCB' | 'CLCB'
- dataVencimento: string
- telefone?: string
- email?: string
- cnpj?: string
- enderecoFormatado?: string
- enriquecido: boolean
-}
+// export interface AlvaraEnriquecido {
+//  id: string
+//  nomeComercial: string
+//  endereco: string
+//  cidade: string
+//  estado: string
+//  tipoServico: 'AVCB' | 'CLCB'
+//  dataVencimento: string
+//  telefone?: string
+//  email?: string
+//  cnpj?: string
+//  enderecoFormatado?: string
+//  enriquecido: boolean
+// }
 
-interface EmpresasTableProps {
- alvaras: AlvaraEnriquecido[]
- processingEnrichment: string[]
- enhanceData: (alvaraId: string) => void
+interface CompaniesTableProps {
+ companies: CompanyRequest[]
+ processingEnrichment: number[]
+ enhanceData: (companyId: number) => void
  gererateNewLead: () => void
 }
 
-export function EmpresasTable({
- alvaras,
+export function CompaniesTable({
+ companies,
  processingEnrichment,
  enhanceData,
  gererateNewLead
-}: EmpresasTableProps) {
+}: CompaniesTableProps) {
  return (
   <Card>
    <CardHeader>
@@ -91,13 +92,13 @@ export function EmpresasTable({
         </tr>
        </thead>
        <tbody className="[&_tr:last-child]:border-0">
-        {alvaras.map(alvara => (
+        {companies.map(company => (
          <tr
-          key={alvara.id}
+          key={company.id}
           className="border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted"
          >
           <td className="p-4 align-middle [&:has([role=checkbox])]:pr-0">
-           {alvara.enriquecido ? (
+           {company.status === 'enriquecido' ? (
             <Badge
              variant="default"
              className="bg-green-100 text-green-800 hover:bg-green-100"
@@ -113,50 +114,50 @@ export function EmpresasTable({
            )}
           </td>
           <td className="p-4 align-middle [&:has([role=checkbox])]:pr-0 font-medium">
-           {alvara.nomeComercial}
+           {company.company}
           </td>
           <td className="p-4 align-middle [&:has([role=checkbox])]:pr-0">
-           {alvara.enderecoFormatado || alvara.endereco}
+           {company.address}, {company.number}
           </td>
           <td className="p-4 align-middle [&:has([role=checkbox])]:pr-0">
-           {alvara.cidade}
+           {company.city}
           </td>
           <td className="p-4 align-middle [&:has([role=checkbox])]:pr-0">
-           {alvara.estado}
+           {company.state}
           </td>
           <td className="p-4 align-middle [&:has([role=checkbox])]:pr-0">
            {' '}
            <span
             className={`px-2 py-1 rounded-full text-xs font-medium ${
-             alvara.tipoServico === 'AVCB'
+             company.service === 'AVCB'
               ? 'bg-blue-100 text-blue-800'
               : 'bg-green-100 text-green-800'
             }`}
            >
-            {alvara.tipoServico}
+            {company.service}
            </span>
           </td>
           <td className="p-4 align-middle [&:has([role=checkbox])]:pr-0">
-           {new Date(alvara.dataVencimento).toLocaleDateString('pt-BR')}
+           {new Date(company.validity).toLocaleDateString('pt-BR')}
           </td>
           <td className="p-4 align-middle [&:has([role=checkbox])]:pr-0">
-           {alvara.telefone || '-'}
+           {company.phone || '-'}
           </td>
           <td className="p-4 align-middle [&:has([role=checkbox])]:pr-0">
-           {alvara.email || '-'}
+           {company.email || '-'}
           </td>
           <td className="p-4 align-middle [&:has([role=checkbox])]:pr-0">
-           {alvara.cnpj || '-'}
+           {company.cnpj || '-'}
           </td>
           <td className="p-4 align-middle [&:has([role=checkbox])]:pr-0">
-           {!alvara.enriquecido && (
+           {company.status === 'pendente' && (
             <Button
              size="sm"
              variant="outline"
-             onClick={() => enhanceData(alvara.id)}
-             disabled={processingEnrichment.includes(alvara.id)}
+             onClick={() => enhanceData(company.id)}
+             disabled={processingEnrichment.includes(company.id)}
             >
-             {processingEnrichment.includes(alvara.id) ? (
+             {processingEnrichment.includes(company.id) ? (
               <RefreshCw className="h-3 w-3 animate-spin" />
              ) : (
               <RefreshCw className="h-3 w-3" />
@@ -181,20 +182,20 @@ export function EmpresasTable({
      </div>
      {/* Versão Mobile */}
      <div className="lg:hidden divide-y divide-border">
-      {alvaras.map(alvara => (
+      {companies.map(company => (
        <div
-        key={alvara.id}
+        key={company.id}
         className="p-4 hover:bg-muted/30 transition-colors cursor-pointer"
        >
         <div className="flex justify-between items-start mb-3">
          <div className="flex items-center gap-3 flex-1 min-w-0">
           <div className="flex-1 min-w-0">
            <h3 className="font-semibold text-foreground truncate mb-1">
-            {alvara.nomeComercial}
+            {company.company}
            </h3>
            <div className="flex gap-2">
             <div>
-             {alvara.enriquecido ? (
+             {company.status === 'enriquecido' ? (
               <Badge
                variant="default"
                className="bg-green-100 text-green-800 hover:bg-green-100"
@@ -211,26 +212,26 @@ export function EmpresasTable({
             </div>
             <span
              className={`px-2 py-1 rounded-full text-sm truncate ${
-              alvara.tipoServico === 'AVCB'
+              company.service === 'AVCB'
                ? 'bg-blue-500/10 text-blue-600 dark:bg-blue-500/20 dark:text-blue-400'
                : 'bg-green-500/10 text-green-600 dark:bg-green-500/20 dark:text-green-400'
              }`}
             >
-             {alvara.tipoServico}
+             {company.service}
             </span>
            </div>
           </div>
          </div>
          <div className="flex flex-col sm:flex-row gap-2 ml-2">
-          {!alvara.enriquecido && (
+          {company.status === 'pendente' && (
            <div>
             <Button
              size="sm"
              variant="outline"
-             onClick={() => enhanceData(alvara.id)}
-             disabled={processingEnrichment.includes(alvara.id)}
+             onClick={() => enhanceData(company.id)}
+             disabled={processingEnrichment.includes(company.id)}
             >
-             {processingEnrichment.includes(alvara.id) ? (
+             {processingEnrichment.includes(company.id) ? (
               <RefreshCw className="h-3 w-3 animate-spin" />
              ) : (
               <RefreshCw className="h-3 w-3" />
@@ -249,31 +250,31 @@ export function EmpresasTable({
          </div>
         </div>
         <div className="flex gap-2 flex-col">
-         {alvara.cnpj && (
+         {company.cnpj && (
           <div className="flex items-center gap-2 text-muted-foreground">
            <Building size={14} className="flex-shrink-0 mt-0.5" />
-           <span className="text-xs line-clamp-2">{alvara.cnpj}</span>
+           <span className="text-xs line-clamp-2">{company.cnpj}</span>
           </div>
          )}
 
-         {alvara.telefone && (
+         {company.phone && (
           <div className="flex items-center gap-2 text-muted-foreground">
            <Phone size={14} className="flex-shrink-0 mt-0.5" />
-           <span className="text-xs line-clamp-2">{alvara.telefone}</span>
+           <span className="text-xs line-clamp-2">{company.phone}</span>
           </div>
          )}
 
-         {alvara.email && (
+         {company.email && (
           <div className="flex items-center gap-2 text-muted-foreground">
            <Mail size={14} className="flex-shrink-0 mt-0.5" />
-           <span className="text-xs line-clamp-2">{alvara.email}</span>
+           <span className="text-xs line-clamp-2">{company.email}</span>
           </div>
          )}
 
          <div className="flex items-start gap-2 text-muted-foreground">
           <MapPin size={14} className="flex-shrink-0 mt-0.5" />
           <span className="text-xs line-clamp-2">
-           {alvara.endereco}, {alvara.cidade} - {alvara.estado}
+           {company.address}, {company.number}, {company.city} - {company.state}
           </span>
          </div>
         </div>

@@ -171,6 +171,61 @@ class CompanyController extends Controller
     }
 
 
+
+    public function searchCompanyByCnpj(Request $request)
+    {
+        $cnpj = $request->input('cnpj');
+
+        if (!$cnpj) {
+            return response()->json(['erro' => 'CNPJ não informado.'], 400);
+        }
+
+        $infoSimplesToken = env('INFOSIMPLES_API_KEY');
+
+        try {
+            $response = Http::timeout(20)->asForm()->post(
+                'https://api.infosimples.com/api/v2/consultas/receita-federal/cnpj',
+                [
+                    'token'   => $infoSimplesToken,
+                    'timeout' => 600,
+                    'cnpj'    => preg_replace('/\D/', '', $cnpj), // só números
+                ]
+            );
+
+            if ($response->failed()) {
+                return response()->json(['erro' => 'Erro ao consultar a API InfoSimples.'], 500);
+            }
+
+            $data = $response->json();
+
+            if (empty($data['data'][0])) {
+                return response()->json([
+                    'erro' => 'CNPJ não encontrado.',
+                    'cnpj' => $cnpj
+                ], 404);
+            }
+
+            $dados = $data['data'][0];
+
+            $result = [
+                'cnpj'         => $dados['cnpj'] ?? null,
+                'razao_social' => $dados['razao_social'] ?? null,
+                'nome_fantasia' => $dados['nome_fantasia'] ?? null,
+                'email'        => $dados['email'] ?? null,
+                'telefone'     => $dados['telefone'] ?? null,
+                //'qsa_nomes'    => array_map(fn($q) => $q['nome'], $dados['qsa'] ?? []),
+            ];
+
+            return response()->json($result);
+        } catch (\Exception $e) {
+            return response()->json([
+                'erro'   => 'Exceção ao consultar InfoSimples.',
+                'detalhe' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+
     // Show all companies from db
 
     public function index(): JsonResponse

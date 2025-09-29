@@ -1,5 +1,5 @@
-import { Empresas as EmpresasComponent } from '@/components/Empresas'
+import { Companies as CompaniesComponent } from '@/components/Companies'
 
-export function Empresas() {
- return <EmpresasComponent />
+export function Companies() {
+ return <CompaniesComponent />
 }
