@@ -3,7 +3,6 @@
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\LeadController;
 use App\Http\Controllers\Api\CompanyController;
-use App\Http\Controllers\Api\OpenAIController;
 use App\Http\Controllers\Api\UserController;
 
 use Illuminate\Support\Facades\Route;
@@ -24,24 +23,25 @@ Route::post('/leads', [LeadController::class, 'store']); //POST
 Route::put('/leads/{lead}', [LeadController::class, 'update']); //PUT
 Route::delete('/leads/{lead}', [LeadController::class, 'destroy']); //DELETE
 
-
-
 // Companies
 Route::get('/companies', [CompanyController::class, 'index']); //GET
-Route::post('/companies/search/address', [CompanyController::class, 'searchCompanyByAddress']);
+Route::get('/companies/{company}', [CompanyController::class, 'show']); //GET
+Route::post('/companies', [CompanyController::class, 'store']); //POST
+Route::put('/companies/{company}', [CompanyController::class, 'update']); //PUT
+Route::delete('/companies/{company}', [CompanyController::class, 'destroy']); //DELETE
+Route::post('/companies/search/address', [CompanyController::class, 'searchCompanyByAddress']); //POST
 
 
 // Users
+Route::get('/users', [UserController::class, 'index']); //GET
+Route::get('/users/{user}', [UserController::class, 'show']); //GET
 Route::post('/users', [UserController::class, 'store']); //POST
+Route::put('/users/{user}', [UserController::class, 'update']); //PUT
+Route::delete('/users/{user}', [UserController::class, 'destroy']); //DELETE
+
 
 // Route::group(['middleware' => ['auth:sanctum']], function () {
 
-//     // Users
-//     Route::get('/users', [UserController::class, 'index']); //GET
-//     Route::get('/users/{user}', [UserController::class, 'show']); //GET
-//     Route::post('/users', [UserController::class, 'store']); //POST
-//     Route::put('/users/{user}', [UserController::class, 'update']); //PUT
-//     Route::delete('/users/{user}', [UserController::class, 'destroy']); //DELETE
-
+  
 
 // });

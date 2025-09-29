@@ -3,10 +3,14 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\CompanyRequest;
 use App\Models\Company;
+use Exception;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\DB;
+use Laravel\Sanctum\PersonalAccessToken;
 
 
 class CompanyController extends Controller
@@ -167,8 +171,6 @@ class CompanyController extends Controller
     }
 
 
-
-
     // Show all companies from db
 
     public function index(): JsonResponse
@@ -180,5 +182,150 @@ class CompanyController extends Controller
             'status' => true,
             'companies' => $companies,
         ], 200);
+    }
+
+    // Show company from db
+
+    public function show(Company $company): JsonResponse
+    {
+        return response()->json([
+            'status' => true,
+            'company' => $company,
+        ], 200);
+    }
+
+    // Add comapny to db
+
+    public function store(CompanyRequest $request): JsonResponse
+    {
+        $token = $request->bearerToken() ?? $request->cookie('auth-token');
+
+        if (!$token) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Token de autenticação é inválido ou não fornecido.',
+            ], 401);
+        }
+
+        // Retrieves the user associated with the token
+        $accessToken = PersonalAccessToken::findToken($token);
+
+        if (!$accessToken) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Token de autenticação é inválido ou expirado.',
+            ], 401);
+        }
+
+        $user = $accessToken->tokenable;
+
+        // Init transaction on DB
+        DB::beginTransaction();
+
+        try {
+            // Add company on DB
+
+            $company = Company::create([
+                'status' => $request->input('status', ''),
+                'company' => ucwords(strtolower($request->input('company', ''))),
+                'cep' => $request->input('cep', ''),
+                'address' => ucwords(strtolower($request->input('address', ''))),
+                'number' => $request->input('number', ''),
+                'state' => strtoupper($request->input('state', '')),
+                'city' => ucwords(strtolower($request->input('city', ''))),
+                'service' => strtoupper($request->input('service', '')),
+                'validity' => $request->input('validity', ''),
+                'phone' => $request->input('phone', ''),
+                'cnpj' => $request->input('cnpj', ''),
+                'email' => strtolower($request->input('email', '')),
+            ]);
+
+            // Success Operation
+            DB::commit();
+
+            return response()->json([
+                'status' => true,
+                'company' => $company,
+                'user' => $user,
+                'message' => "Empresa cadastrada com sucesso!",
+            ], 201);
+        } catch (Exception $e) {
+            // Init rollback transaction on DB
+            DB::rollBack();
+
+            return response()->json([
+                'status' => false,
+                'message' => "Empresa não foi cadastrada!",
+                'error' => $e->getMessage()
+            ], 400);
+        }
+    }
+
+    // Edit company from db
+
+    public function update(CompanyRequest $request, Company $company): JsonResponse
+    {
+        // Init transaction on DB
+        DB::beginTransaction();
+
+        try {
+            // Edit company on DB
+
+            $company->update([
+                'status' => $request->input('status', ''),
+                'company' => ucwords(strtolower($request->input('company', ''))),
+                'cep' => $request->input('cep', ''),
+                'address' => ucwords(strtolower($request->input('address', ''))),
+                'number' => $request->input('number', ''),
+                'state' => strtoupper($request->input('state', '')),
+                'city' => ucwords(strtolower($request->input('city', ''))),
+                'service' => strtoupper($request->input('service', '')),
+                'validity' => $request->input('validity', ''),
+                'phone' => $request->input('phone', ''),
+                'cnpj' => $request->input('cnpj', ''),
+                'email' => strtolower($request->input('email', '')),
+            ]);
+
+            // Success Operation
+            DB::commit();
+
+            return response()->json([
+                'status' => true,
+                'company' => $company,
+                'message' => "Empresa editada com sucesso!",
+            ], 200);
+        } catch (Exception $e) {
+            // Init rollback transaction on DB
+            DB::rollBack();
+
+            return response()->json([
+                'status' => false,
+                'message' => "Empresa não editada!",
+                'error' => $e->getMessage()
+            ], 400);
+        }
+    }
+
+    // Delete company from db
+
+    public function destroy(Company $company): JsonResponse
+    {
+        try {
+
+            // Delete company on DB
+            $company->delete();
+
+            return response()->json([
+                'status' => true,
+                'company' => $company,
+                'message' => "Empresa deletada com sucesso!",
+            ], 200);
+        } catch (Exception $e) {
+            return response()->json([
+                'status' => false,
+                'message' => "Empresa não apagada!",
+                'error' => $e->getMessage()
+            ], 400);
+        }
     }
 }

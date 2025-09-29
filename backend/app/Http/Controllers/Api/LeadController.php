@@ -162,6 +162,7 @@ class LeadController extends Controller
             return response()->json([
                 'status' => false,
                 'message' => "Lead não editado!",
+                'error' => $e->getMessage()
             ], 400);
         }
     }
@@ -184,6 +185,7 @@ class LeadController extends Controller
             return response()->json([
                 'status' => false,
                 'message' => "Lead não apagado!",
+                'error' => $e->getMessage()
             ], 400);
         }
     }
