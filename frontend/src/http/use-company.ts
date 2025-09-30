@@ -24,6 +24,7 @@ export function useCompany() {
     },
     staleTime: 1 * 60 * 1000, 
     gcTime: 30 * 60 * 1000,
+    refetchOnWindowFocus: "always",
   });
 
   // Mutation to save companies
@@ -61,6 +62,8 @@ export function useCompany() {
       toast.error("Erro ao buscar empresa pelo CNPJ");
     },
   });
+
+  
 
   return {
     companies: companiesDB.data || [],

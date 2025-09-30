@@ -6,7 +6,10 @@ import { Button } from '../ui/button'
 import { IMaskInput } from 'react-imask'
 import { useEffect } from 'react'
 import type { CnpjResponse } from '@/http/use-company'
+import { cnpj as cnpjValidator } from 'cpf-cnpj-validator'
 import type { AxiosError } from 'axios'
+import { Loader2 } from 'lucide-react'
+import { toast } from 'sonner'
 
 interface NewCompanyModalProps {
  isOpen: boolean
@@ -31,7 +34,7 @@ export function NewCompanyModal({
   formState: { errors, isSubmitting }
  } = useForm<Omit<CompanyRequest, 'id'>>({
   defaultValues: {
-   status: 'pendente',
+   status: '',
    company: '',
    cep: '',
    address: '',
@@ -61,6 +64,7 @@ export function NewCompanyModal({
     setValue('address', data.logradouro || '', { shouldValidate: true })
     setValue('city', data.localidade || '', { shouldValidate: true })
     setValue('state', data.uf || '', { shouldValidate: true })
+    document.getElementById('number')?.focus()
    }
   } catch (error) {
    console.error('Erro ao buscar CEP:', error)
@@ -68,10 +72,35 @@ export function NewCompanyModal({
  }
 
  async function handleSaveCompany(data: Omit<CompanyRequest, 'id'>) {
-  await new Promise(resolve => setTimeout(resolve, 1500))
+  const cleanCnpj = data.cnpj?.replace(/\D/g, '') || ''
 
-  onCompanyCreate(data)
+  let enrichedData: Partial<Omit<CompanyRequest, 'id'>> = {}
 
+  if (cleanCnpj.length === 14) {
+   try {
+    const cnpjResult = await onSearchCnpj.mutateAsync(cleanCnpj)
+
+    if (cnpjResult && cnpjResult.cnpj) {
+     enrichedData = {
+      company: cnpjResult.nome_fantasia || data.company,
+      email: cnpjResult.email || data.email,
+      phone: cnpjResult.telefone || data.phone,
+      status: 'enriquecido'
+     }
+    } else {
+     enrichedData = { status: 'pendente' }
+    }
+   } catch (error) {
+    enrichedData = { status: 'pendente' }
+    toast.error('Erro ao buscar CNPJ', {
+     description: `${error}`
+    })
+   }
+  } else {
+   enrichedData = { status: 'pendente' }
+  }
+
+  onCompanyCreate({ ...data, ...enrichedData })
   reset()
   onClose()
  }
@@ -86,30 +115,24 @@ export function NewCompanyModal({
 
  useEffect(() => {
   const cleanCnpj = cnpj?.replace(/\D/g, '') || ''
-  if (cleanCnpj.length === 14) {
+  if (cleanCnpj.length === 14 && cnpjValidator.isValid(cleanCnpj)) {
    onSearchCnpj.mutate(cleanCnpj, {
     onSuccess: data => {
-     setValue('company', data.nome_fantasia || '')
+     // eslint-disable-next-line @typescript-eslint/no-explicit-any
+     if ((data as any)?.erro) {
+      toast.error('CNPJ não encontrado')
+      return
+     }
+     setValue('company', data.nome_fantasia || data.razao_social || '')
      setValue('email', data.email || '')
      setValue('phone', data.telefone || '')
+    },
+    onError: () => {
+     toast.error('Erro ao consultar CNPJ')
     }
    })
   }
- }, [cnpj, onSearchCnpj, setValue])
-
- //  useEffect(() => {
- //   const cleanCnpj = cnpj?.replace(/\D/g, '')
- //   if (cleanCnpj?.length === 14) {
- //    onSearchCnpj.mutate(cleanCnpj, {
- //     onSuccess: data => {
- //      // ⚠️ Não atualizar cnpj para evitar loop
- //      setValue('company', data.nome_fantasia || data.razao_social || '')
- //      setValue('email', data.email || '')
- //      setValue('phone', data.telefone || '')
- //     }
- //    })
- //   }
- //  }, [cnpj, onSearchCnpj, setValue])
+ }, [cnpj, setValue])
 
  return (
   <Dialog open={isOpen} onOpenChange={onClose}>
@@ -127,12 +150,19 @@ export function NewCompanyModal({
         control={control}
         name="cnpj"
         render={({ field }) => (
-         <IMaskInput
-          {...field}
-          mask="00.000.000/0000-00"
-          placeholder="00.000.000/0000-00"
-          className="w-full border border-gray-300 bg-background text-foreground placeholder:text-foreground rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 outline-none"
-         />
+         <div className="relative">
+          <IMaskInput
+           {...field}
+           mask="00.000.000/0000-00"
+           placeholder="00.000.000/0000-00"
+           className="w-full border border-gray-300 bg-background text-foreground placeholder:text-foreground rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 outline-none"
+          />
+          {onSearchCnpj.isPending && (
+           <span className="absolute right-3 top-2 text-sm text-gray-500">
+            <Loader2 />
+           </span>
+          )}
+         </div>
         )}
        />
       </div>

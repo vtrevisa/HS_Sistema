@@ -24,10 +24,17 @@ class CompanyController extends Controller
             return response()->json(['erro' => 'Endereço não informado.'], 400);
         }
 
-        $googleApiKey     = env('GOOGLE_MAPS_API_KEY');
-        $googleCseApiKey  = env('GOOGLE_CSE_API_KEY');
-        $googleCseCx      = env('GOOGLE_CSE_CX');
-        $infoSimplesToken = env('INFOSIMPLES_API_KEY');
+        $googleApiKey   = env('GOOGLE_MAPS_API_KEY');
+        $googleCseApiKey = env('GOOGLE_CSE_API_KEY');
+        $googleCseCx    = env('GOOGLE_CSE_CX');
+
+        if (!$googleApiKey) {
+            return response()->json(['erro' => 'Google Maps API Key não configurada.'], 500);
+        }
+
+        if (!$googleCseApiKey || !$googleCseCx) {
+            return response()->json(['erro' => 'Google CSE não configurado.'], 500);
+        }
 
         // 1️⃣ Geocoding
         $geo = Http::timeout(10)->get('https://maps.googleapis.com/maps/api/geocode/json', [
@@ -46,180 +53,221 @@ class CompanyController extends Controller
         // 2️⃣ Nearby Search
         $nearby = Http::timeout(10)->get('https://maps.googleapis.com/maps/api/place/nearbysearch/json', [
             'location' => "$lat,$lng",
-            'radius'   => 20,
+            'radius'   => 100, // metros
             'type'     => 'establishment',
             'key'      => $googleApiKey
         ]);
 
-        $places = [];
-        if ($nearby->ok() && !empty($nearby['results'])) {
-            $places = collect($nearby['results'])
-                ->filter(fn($p) => in_array('establishment', $p['types'] ?? []))
-                ->all();
+        if ($nearby->failed() || empty($nearby['results'])) {
+            return response()->json(['status' => 'pendente', 'erro' => 'Nenhuma empresa encontrada próxima ao endereço.'], 404);
         }
 
-        // 3️⃣ Fallback Text Search
-        if (empty($places)) {
-            $textSearch = Http::timeout(10)->get('https://maps.googleapis.com/maps/api/place/textsearch/json', [
-                'query' => $address,
-                'type'  => 'establishment',
-                'key'   => $googleApiKey
-            ]);
+        $places = collect($nearby['results'])->map(function ($place) {
+            return [
+                'nome_empresa' => $place['name'] ?? null,
+                'endereco'     => $place['vicinity'] ?? null,
+                'lat'          => $place['geometry']['location']['lat'] ?? null,
+                'lng'          => $place['geometry']['location']['lng'] ?? null,
+                'types'        => $place['types'] ?? [],
+                'place_id'     => $place['place_id'] ?? null,
+                'telefone'     => null,
+                'site'         => null,
+                'cnpj'         => null,
+                'dados_oficiais' => null
+            ];
+        })->all();
 
-            if ($textSearch->ok() && !empty($textSearch['results'])) {
-                $places = $textSearch['results'];
-            }
-        }
+        $patternCnpj = '/\d{2}\.?\d{3}\.?\d{3}\/?\d{4}-?\d{2}/';
 
-        if (empty($places)) {
-            return response()->json(['erro' => 'Nenhuma empresa encontrada próxima ao endereço.'], 404);
-        }
-
-        $result = [];
-
-        // 4️⃣ Process the results
-        foreach ($places as $place) {
-            $placeId = $place['place_id'];
-
+        // 3️⃣ Buscar detalhes (telefone, site) e CNPJ via Google Custom Search
+        foreach ($places as &$place) {
+            // Detalhes Place
             $details = Http::timeout(10)->get('https://maps.googleapis.com/maps/api/place/details/json', [
-                'place_id' => $placeId,
-                'fields'   => 'name,formatted_address,formatted_phone_number,website,types,geometry',
+                'place_id' => $place['place_id'],
+                'fields'   => 'name,formatted_address,formatted_phone_number,website',
                 'key'      => $googleApiKey
             ]);
 
-            if ($details->failed() || empty($details['result'])) {
-                continue;
+            if ($details->ok() && !empty($details['result'])) {
+                $detailData = $details['result'];
+                $place['telefone'] = $detailData['formatted_phone_number'] ?? null;
+                $place['site']     = $detailData['website'] ?? null;
+                $place['endereco'] = $detailData['formatted_address'] ?? $place['endereco'];
             }
 
-            $company      = $details['result'];
-            $companyName  = $company['name'] ?? null;
-            $companyAddr  = $company['formatted_address'] ?? null;
-            $cnpjInfo     = "CNPJ não encontrado";
-            $cnpjSource   = null;
-            $dadosOficiais = null;
+            // Busca CNPJ via Google Custom Search
+            $queries = [];
+            if (!empty($place['nome_empresa'])) {
+                $queries[] = "\"{$place['nome_empresa']}\" CNPJ";
+                if (!empty($place['endereco'])) {
+                    $queries[] = "\"{$place['nome_empresa']}\" \"{$place['endereco']}\" CNPJ";
+                }
+                if (!empty($place['site'])) {
+                    $queries[] = "site:{$place['site']} CNPJ";
+                }
+            }
 
-            // 5️⃣ Search for CNPJ via Google Custom Search
-            if ($googleCseApiKey && $googleCseCx) {
+            $cnpjFound = null;
 
-                $queries = [
-                    "\"$companyName\" CNPJ",
-                    "\"$companyName\" \"$companyAddr\" CNPJ",
-                    "\"$companyAddr\" CNPJ"
-                ];
+            foreach ($queries as $q) {
+                $respGoogle = Http::timeout(15)->get('https://www.googleapis.com/customsearch/v1', [
+                    'key' => $googleCseApiKey,
+                    'cx'  => $googleCseCx,
+                    'q'   => $q,
+                    'num' => 5
+                ]);
 
-                foreach ($queries as $q) {
-                    $respGoogle = Http::get("https://www.googleapis.com/customsearch/v1", [
-                        'key' => $googleCseApiKey,
-                        'cx'  => $googleCseCx,
-                        'q'   => $q,
-                        'num' => 5
-                    ]);
+                if (!$respGoogle->ok()) continue;
 
-                    if ($respGoogle->ok()) {
-                        $items = $respGoogle['items'] ?? [];
-                        $pattern = '/\d{2}\.\d{3}\.\d{3}\/\d{4}-\d{2}/';
-
-                        foreach ($items as $item) {
-                            $snippet = $item['snippet'] ?? '';
-                            $title   = $item['title'] ?? '';
-
-                            if (preg_match($pattern, $snippet, $matches) || preg_match($pattern, $title, $matches)) {
-                                $cnpjInfo   = $matches[0];
-                                $cnpjSource = 'google_custom_search';
-                                break 2;
-                            }
+                $items = $respGoogle['items'] ?? [];
+                foreach ($items as $item) {
+                    $texts = [$item['title'] ?? '', $item['snippet'] ?? ''];
+                    foreach ($texts as $text) {
+                        if (preg_match($patternCnpj, $text, $matches)) {
+                            $cnpjFound = $matches[0];
+                            break 3; // sai da busca
                         }
                     }
                 }
             }
 
-            // 6️⃣ Check InfoSimples if you found a CNPJ
-            if ($cnpjInfo !== "CNPJ não encontrado" && $infoSimplesToken) {
-                $respDados = Http::timeout(20)->get("https://api.infosimples.com/api/v2/consultas/receita-federal/cnpj", [
-                    'token' => $infoSimplesToken,
-                    'cnpj'  => preg_replace('/\D/', '', $cnpjInfo)
-                ]);
+            $place['cnpj'] = $cnpjFound;
 
-                if ($respDados->ok()) {
+            // Consulta ReceitaWS
+            if ($cnpjFound) {
+                $cnpjClean = preg_replace('/\D/', '', $cnpjFound);
+                $respDados = Http::timeout(15)->get("https://www.receitaws.com.br/v1/cnpj/{$cnpjClean}");
+
+                if ($respDados->ok() && ($respDados->json()['status'] ?? '') === 'OK') {
                     $dados = $respDados->json();
-
-                    $dadosOficiais = [
-                        'cnpj'        => $dados['data'][0]['cnpj'] ?? null,
-                        'email'       => $dados['data'][0]['email'] ?? null,
-                        'razao_social' => $dados['data'][0]['razao_social'] ?? null,
-                        'telefone'    => $dados['data'][0]['telefone'] ?? null,
-                        'qsa_nomes'   => array_column($dados['data'][0]['qsa'] ?? [], 'nome')
+                    $place['dados_oficiais'] = [
+                        'cnpj'          => $dados['cnpj'] ?? null,
+                        'razao_social'  => $dados['nome'] ?? null,
+                        'nome_fantasia' => $dados['fantasia'] ?? null,
+                        'email'         => $dados['email'] ?? null,
+                        'telefone'      => $dados['telefone'] ?? null,
+                        'qsa_nomes'     => array_map(fn($q) => $q['nome'], $dados['qsa'] ?? [])
                     ];
                 }
             }
-
-            $result[] = [
-                'nome_empresa'       => $companyName,
-                'telefone'           => $company['formatted_phone_number'] ?? null,
-                'site'               => $company['website'] ?? null,
-                'endereco_formatado' => $company['formatted_address'] ?? null,
-                'categorias'         => $company['types'] ?? [],
-                'lat'                => $company['geometry']['location']['lat'] ?? null,
-                'lng'                => $company['geometry']['location']['lng'] ?? null,
-                'cnpj_info'          => $cnpjInfo,
-                'cnpj_source'        => $cnpjSource,
-                'dados_oficiais'     => $dadosOficiais
-            ];
         }
 
-        return response()->json($result);
+        // 4️⃣ Status
+        $status = collect($places)->contains(fn($p) => $p['cnpj']) ? 'enriquecida' : 'pendente';
+
+        return response()->json([
+            'status' => $status,
+            'places' => $places
+        ]);
     }
 
 
 
     public function searchCompanyByCnpj(Request $request)
     {
+        // $cnpj = $request->input('cnpj');
+
+        // if (!$cnpj) {
+        //     return response()->json(['erro' => 'CNPJ não informado.'], 400);
+        // }
+
+        // $infoSimplesToken = env('INFOSIMPLES_API_KEY');
+
+        // if (!$infoSimplesToken) {
+        //     return response()->json(['erro' => 'Token InfoSimples não configurado.'], 500);
+        // }
+
+        // $cnpjClean = preg_replace('/\D/', '', $cnpj);
+
+        // try {
+        //     $response = Http::timeout(20)->asForm()->post(
+        //         'https://api.infosimples.com/api/v2/consultas/receita-federal/cnpj',
+        //         [
+        //             'token'   => $infoSimplesToken,
+        //             'timeout' => 600,
+        //             'cnpj'    => $cnpjClean,
+        //         ]
+        //     );
+
+        //     if ($response->failed()) {
+        //         return response()->json([
+        //             'erro' => 'Erro ao consultar a API InfoSimples.',
+        //             'status' => $response->status(),
+        //             'body' => $response->body()
+        //         ], 500);
+        //     }
+
+
+        //     $data = $response->json();
+
+        //     if (empty($data['data'][0])) {
+        //         return response()->json([
+        //             'erro' => 'CNPJ não encontrado.',
+        //             'cnpj' => $cnpj,
+        //             'raw_response' => $data
+        //         ], 404);
+        //     }
+
+        //     $info = $data['data'][0];
+
+
+        //     $result = [
+        //         'cnpj'          => $info['cnpj'] ?? null,
+        //         'cnpj_digits'   => preg_replace('/\D/', '', $info['cnpj'] ?? $cnpjClean),
+        //         'razao_social'  => $info['razao_social'] ?? null,
+        //         'nome_fantasia' => $info['nome_fantasia'] ?? null,
+        //         'email'         => $info['email'] ?? null,
+        //         'telefone'      => $info['telefone'] ?? null,
+        //         'qsa_nomes'     => array_map(fn($q) => $q['nome'] ?? null, $info['qsa'] ?? []),
+        //     ];
+
+        //     return response()->json($result);
+        // } catch (\Exception $e) {
+        //     return response()->json([
+        //         'erro'   => 'Exceção ao consultar InfoSimples.',
+        //         'detalhe' => $e->getMessage()
+        //     ], 500);
+        // }
+
         $cnpj = $request->input('cnpj');
 
         if (!$cnpj) {
             return response()->json(['erro' => 'CNPJ não informado.'], 400);
         }
 
-        $infoSimplesToken = env('INFOSIMPLES_API_KEY');
-
         try {
-            $response = Http::timeout(20)->asForm()->post(
-                'https://api.infosimples.com/api/v2/consultas/receita-federal/cnpj',
-                [
-                    'token'   => $infoSimplesToken,
-                    'timeout' => 600,
-                    'cnpj'    => preg_replace('/\D/', '', $cnpj), // só números
-                ]
-            );
+            $cnpjLimpo = preg_replace('/\D/', '', $cnpj);
+
+            $response = Http::timeout(20)->get("https://www.receitaws.com.br/v1/cnpj/{$cnpjLimpo}");
 
             if ($response->failed()) {
-                return response()->json(['erro' => 'Erro ao consultar a API InfoSimples.'], 500);
+                return response()->json(['erro' => 'Erro ao consultar a API Receitaws.'], 500);
             }
 
-            $data = $response->json();
+            $dados = $response->json();
 
-            if (empty($data['data'][0])) {
+
+            if (isset($dados['status']) && $dados['status'] === 'ERROR') {
                 return response()->json([
-                    'erro' => 'CNPJ não encontrado.',
-                    'cnpj' => $cnpj
+                    'erro' => $dados['message'] ?? 'CNPJ não encontrado.',
+                    'cnpj' => $cnpjLimpo
                 ], 404);
             }
 
-            $dados = $data['data'][0];
-
             $result = [
-                'cnpj'         => $dados['cnpj'] ?? null,
-                'razao_social' => $dados['razao_social'] ?? null,
-                'nome_fantasia' => $dados['nome_fantasia'] ?? null,
-                'email'        => $dados['email'] ?? null,
-                'telefone'     => $dados['telefone'] ?? null,
-                //'qsa_nomes'    => array_map(fn($q) => $q['nome'], $dados['qsa'] ?? []),
+                'cnpj'          => $dados['cnpj'] ?? null,
+                'razao_social'  => $dados['nome'] ?? null,
+                'nome_fantasia' => $dados['fantasia'] ?? null,
+                'email'         => $dados['email'] ?? null,
+                'telefone'      => $dados['telefone'] ?? null,
+                'atividade_principal' => $dados['atividade_principal'][0]['text'] ?? null,
+                'qsa_nomes'     => array_map(fn($q) => $q['nome'], $dados['qsa'] ?? []),
             ];
 
             return response()->json($result);
         } catch (\Exception $e) {
             return response()->json([
-                'erro'   => 'Exceção ao consultar InfoSimples.',
+                'erro'   => 'Exceção ao consultar Receitaws.',
                 'detalhe' => $e->getMessage()
             ], 500);
         }
