@@ -121,13 +121,13 @@ export function NewLeadModal({
        </label>
 
        <Controller
-        control={control}
         name="cnpj"
+        control={control}
         render={({ field }) => (
          <IMaskInput
           {...field}
           mask="00.000.000/0000-00"
-          placeholder="00.000.000/0000-00"
+          placeholder="___.___.___/____-__"
           className="w-full border border-gray-300 bg-background text-foreground placeholder:text-foreground rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 outline-none"
          />
         )}
@@ -187,7 +187,7 @@ export function NewLeadModal({
          <IMaskInput
           {...field}
           mask="(00) 00000-0000"
-          placeholder="(11) 99999-9999"
+          placeholder="(__) _____-____"
           className="w-full border border-gray-300 bg-background text-foreground placeholder:text-foreground rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 outline-none"
          />
         )}
@@ -212,7 +212,7 @@ export function NewLeadModal({
        <input
         type="url"
         {...register('website')}
-        placeholder="www.empresa.com.br"
+        placeholder="www.sitedasuaempresa.com.br"
         className="w-full border border-gray-300 bg-background text-foreground placeholder:text-foreground rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 outline-none"
         onBlur={e => {
          if (
@@ -238,7 +238,7 @@ export function NewLeadModal({
          <IMaskInput
           {...field}
           mask="00000-000"
-          placeholder="00000-000"
+          placeholder="_____-___"
           className="w-full border border-gray-300 bg-background text-foreground placeholder:text-foreground rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 outline-none"
          />
         )}

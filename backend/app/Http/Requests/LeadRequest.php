@@ -71,23 +71,6 @@ class LeadRequest extends FormRequest
             'expiration_date' => $isUpdate ? 'sometimes|required' : 'required',
             'next_action' => 'sometimes|nullable|string',
 
-            // Campos opcionais no POST e obrigatórios no UPDATE
-            // 'complemento' => $isUpdate ? 'required|string' : 'nullable|string',
-            // 'cnpj'        => $isUpdate ? 'required|string' : 'nullable|string',
-            // 'site'        => $isUpdate ? 'required|string' : 'nullable|string',
-            // 'contato'     => $isUpdate ? 'required|string' : 'nullable|string',
-            // 'whatsapp'    => $isUpdate ? 'required|string' : 'nullable|string',
-            // 'email'       => $isUpdate ? 'required|email' : 'nullable|email',
-
-            // 'tipo'      => 'required',
-            // 'licenca'   => 'required|string|unique:leads,licenca',
-            // 'vigencia'  => 'required',
-            // 'endereco'  => 'required',
-            // 'numero'    => 'required',
-            // 'municipio' => 'required',
-            // 'bairro'    => 'required',
-            // 'ocupacao'  => 'required',
-
             // Campos opcionais no POST
             'cep' => 'nullable|string',
             'complement' => 'nullable|string',

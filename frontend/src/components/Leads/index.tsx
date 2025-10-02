@@ -18,8 +18,7 @@ export function Leads() {
  const [isImportModalOpen, setIsImportModalOpen] = useState(false)
  const [isLeadDetailsModalOpen, setIsLeadDetailsModalOpen] = useState(false)
  const [isDeleteLeadModalOpen, setIsDeleteLeadModalOpen] = useState(false)
- // eslint-disable-next-line @typescript-eslint/no-explicit-any
- const [selectedLead, setSelectedLead] = useState<any>(null)
+ const [selectedLead, setSelectedLead] = useState<LeadRequest | null>(null)
 
  const { leads, addLead, addLeads } = useLeads()
 

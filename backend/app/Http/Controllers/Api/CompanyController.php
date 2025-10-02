@@ -165,69 +165,6 @@ class CompanyController extends Controller
 
     public function searchCompanyByCnpj(Request $request)
     {
-        // $cnpj = $request->input('cnpj');
-
-        // if (!$cnpj) {
-        //     return response()->json(['erro' => 'CNPJ não informado.'], 400);
-        // }
-
-        // $infoSimplesToken = env('INFOSIMPLES_API_KEY');
-
-        // if (!$infoSimplesToken) {
-        //     return response()->json(['erro' => 'Token InfoSimples não configurado.'], 500);
-        // }
-
-        // $cnpjClean = preg_replace('/\D/', '', $cnpj);
-
-        // try {
-        //     $response = Http::timeout(20)->asForm()->post(
-        //         'https://api.infosimples.com/api/v2/consultas/receita-federal/cnpj',
-        //         [
-        //             'token'   => $infoSimplesToken,
-        //             'timeout' => 600,
-        //             'cnpj'    => $cnpjClean,
-        //         ]
-        //     );
-
-        //     if ($response->failed()) {
-        //         return response()->json([
-        //             'erro' => 'Erro ao consultar a API InfoSimples.',
-        //             'status' => $response->status(),
-        //             'body' => $response->body()
-        //         ], 500);
-        //     }
-
-
-        //     $data = $response->json();
-
-        //     if (empty($data['data'][0])) {
-        //         return response()->json([
-        //             'erro' => 'CNPJ não encontrado.',
-        //             'cnpj' => $cnpj,
-        //             'raw_response' => $data
-        //         ], 404);
-        //     }
-
-        //     $info = $data['data'][0];
-
-
-        //     $result = [
-        //         'cnpj'          => $info['cnpj'] ?? null,
-        //         'cnpj_digits'   => preg_replace('/\D/', '', $info['cnpj'] ?? $cnpjClean),
-        //         'razao_social'  => $info['razao_social'] ?? null,
-        //         'nome_fantasia' => $info['nome_fantasia'] ?? null,
-        //         'email'         => $info['email'] ?? null,
-        //         'telefone'      => $info['telefone'] ?? null,
-        //         'qsa_nomes'     => array_map(fn($q) => $q['nome'] ?? null, $info['qsa'] ?? []),
-        //     ];
-
-        //     return response()->json($result);
-        // } catch (\Exception $e) {
-        //     return response()->json([
-        //         'erro'   => 'Exceção ao consultar InfoSimples.',
-        //         'detalhe' => $e->getMessage()
-        //     ], 500);
-        // }
 
         $cnpj = $request->input('cnpj');
 

@@ -1,11 +1,11 @@
 import type { UseMutationResult } from '@tanstack/react-query'
 import { useForm, Controller } from 'react-hook-form'
-import type { CompanyRequest } from '@/http/types/companies'
+import type { CnpjResponse, CompanyRequest } from '@/http/types/companies'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../ui/dialog'
 import { Button } from '../ui/button'
 import { IMaskInput } from 'react-imask'
 import { useEffect } from 'react'
-import type { CnpjResponse } from '@/http/use-company'
+
 import { cnpj as cnpjValidator } from 'cpf-cnpj-validator'
 import type { AxiosError } from 'axios'
 import { Loader2 } from 'lucide-react'
@@ -147,15 +147,17 @@ export function NewCompanyModal({
         CNPJ
        </label>
        <Controller
-        control={control}
         name="cnpj"
+        control={control}
         render={({ field }) => (
          <div className="relative">
           <IMaskInput
            {...field}
            mask="00.000.000/0000-00"
-           placeholder="00.000.000/0000-00"
-           className="w-full border border-gray-300 bg-background text-foreground placeholder:text-foreground rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 outline-none"
+           value={field.value ?? ''}
+           placeholder="___.___.___/____-__"
+           className="w-full border border-gray-300 bg-background text-foreground placeholder:text-foreground rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+           onAccept={(value: string) => field.onChange(value)}
           />
           {onSearchCnpj.isPending && (
            <span className="absolute right-3 top-2 text-sm text-gray-500">
@@ -188,13 +190,15 @@ export function NewCompanyModal({
         CEP
        </label>
        <Controller
-        control={control}
         name="cep"
+        control={control}
         render={({ field }) => (
          <IMaskInput
           {...field}
           mask="00000-000"
-          placeholder="00000-000"
+          placeholder="_____-___"
+          value={field.value ?? ''}
+          onAccept={(value: string) => field.onChange(value)}
           className="w-full border border-gray-300 bg-background text-foreground placeholder:text-foreground rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 outline-none"
          />
         )}
@@ -315,13 +319,15 @@ export function NewCompanyModal({
         Telefone
        </label>
        <Controller
-        control={control}
         name="phone"
+        control={control}
         render={({ field }) => (
          <IMaskInput
           {...field}
           mask="(00) 00000-0000"
-          placeholder="(11) 99999-9999"
+          placeholder="(__) _____-____"
+          value={field.value ?? ''}
+          onAccept={(value: string) => field.onChange(value)}
           className="w-full border border-gray-300 bg-background text-foreground placeholder:text-foreground rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 outline-none"
          />
         )}

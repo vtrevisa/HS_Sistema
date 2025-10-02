@@ -4,6 +4,7 @@ import {
  CheckCircle,
  Mail,
  MapPin,
+ Pencil,
  Phone,
  RefreshCw,
  UserPlus
@@ -13,32 +14,19 @@ import { Card, CardContent, CardHeader, CardTitle } from '../ui/card'
 import { Button } from '../ui/button'
 import type { CompanyRequest } from '@/http/types/companies'
 
-// export interface AlvaraEnriquecido {
-//  id: string
-//  nomeComercial: string
-//  endereco: string
-//  cidade: string
-//  estado: string
-//  tipoServico: 'AVCB' | 'CLCB'
-//  dataVencimento: string
-//  telefone?: string
-//  email?: string
-//  cnpj?: string
-//  enderecoFormatado?: string
-//  enriquecido: boolean
-// }
-
 interface CompaniesTableProps {
  companies: CompanyRequest[]
  processingEnrichment: number[]
- enhanceData: (companyId: number) => void
- gererateNewLead: () => void
+ enhanceData: (company: CompanyRequest) => void
+ onCompanyClick?: (company: CompanyRequest) => void
+ gererateNewLead: (company: CompanyRequest) => void
 }
 
 export function CompaniesTable({
  companies,
  processingEnrichment,
  enhanceData,
+ onCompanyClick,
  gererateNewLead
 }: CompaniesTableProps) {
  return (
@@ -95,7 +83,7 @@ export function CompaniesTable({
         {companies.map(company => (
          <tr
           key={company.id}
-          className="border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted"
+          className="border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted cursor-pointer"
          >
           <td className="p-4 align-middle [&:has([role=checkbox])]:pr-0">
            {company.status === 'enriquecido' ? (
@@ -150,25 +138,34 @@ export function CompaniesTable({
            {company.cnpj || '-'}
           </td>
           <td className="p-4 align-middle [&:has([role=checkbox])]:pr-0">
-           {company.status === 'pendente' && (
+           <div className="flex gap-2">
+            {company.status === 'pendente' && (
+             <Button
+              size="sm"
+              variant="outline"
+              onClick={() => enhanceData(company)}
+              disabled={processingEnrichment.includes(company.id)}
+             >
+              {processingEnrichment.includes(company.id) ? (
+               <RefreshCw className="h-3 w-3 animate-spin" />
+              ) : (
+               <RefreshCw className="h-3 w-3" />
+              )}
+             </Button>
+            )}
             <Button
              size="sm"
              variant="outline"
-             onClick={() => enhanceData(company.id)}
-             disabled={processingEnrichment.includes(company.id)}
+             onClick={() => onCompanyClick?.(company)}
             >
-             {processingEnrichment.includes(company.id) ? (
-              <RefreshCw className="h-3 w-3 animate-spin" />
-             ) : (
-              <RefreshCw className="h-3 w-3" />
-             )}
+             <Pencil size={14} />
             </Button>
-           )}
+           </div>
           </td>
           <td className="p-4 align-middle [&:has([role=checkbox])]:pr-0">
            <Button
             size="sm"
-            onClick={gererateNewLead}
+            onClick={() => gererateNewLead(company)}
             className="bg-blue-600 hover:bg-blue-700 dark:text-white"
            >
             <UserPlus className="h-3 w-3 mr-1" />
@@ -185,6 +182,7 @@ export function CompaniesTable({
       {companies.map(company => (
        <div
         key={company.id}
+        onClick={() => onCompanyClick?.(company)}
         className="p-4 hover:bg-muted/30 transition-colors cursor-pointer"
        >
         <div className="flex justify-between items-start mb-3">
@@ -223,25 +221,35 @@ export function CompaniesTable({
           </div>
          </div>
          <div className="flex flex-col sm:flex-row gap-2 ml-2">
-          {company.status === 'pendente' && (
-           <div>
-            <Button
-             size="sm"
-             variant="outline"
-             onClick={() => enhanceData(company.id)}
-             disabled={processingEnrichment.includes(company.id)}
-            >
-             {processingEnrichment.includes(company.id) ? (
-              <RefreshCw className="h-3 w-3 animate-spin" />
-             ) : (
-              <RefreshCw className="h-3 w-3" />
-             )}
-            </Button>
-           </div>
-          )}
+          <div className="flex flex-col gap-2">
+           {company.status === 'pendente' && (
+            <div>
+             <Button
+              size="sm"
+              variant="outline"
+              onClick={() => enhanceData(company)}
+              disabled={processingEnrichment.includes(company.id)}
+             >
+              {processingEnrichment.includes(company.id) ? (
+               <RefreshCw className="h-3 w-3 animate-spin" />
+              ) : (
+               <RefreshCw className="h-3 w-3" />
+              )}
+             </Button>
+            </div>
+           )}
+           <Button
+            size="sm"
+            variant="outline"
+            onClick={() => onCompanyClick?.(company)}
+           >
+            <Pencil size={14} />
+           </Button>
+          </div>
+
           <Button
            size="sm"
-           onClick={gererateNewLead}
+           onClick={() => gererateNewLead(company)}
            className="bg-blue-600 hover:bg-blue-700 dark:text-white"
           >
            <UserPlus className="h-3 w-3 mr-1" />
