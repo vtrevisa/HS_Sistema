@@ -4,8 +4,8 @@ import {
  LogOut,
  Target,
  Users,
- Search
- //  Trello,
+ Search,
+ Trello
  //  Shield,
  //  Calculator,
  //  Zap,
@@ -65,6 +65,12 @@ export function Header({ onTabChange }: AppSidebarProps) {
    label: 'Busca de Dados da Empresa',
    icon: Search,
    href: '/dashboard/busca-empresa'
+  },
+  {
+   id: 'pipeline-crm',
+   label: 'Pipeline CRM',
+   icon: Trello,
+   href: '/dashboard/pipeline-crm'
   },
   {
    id: 'gestao-leads',

@@ -10,6 +10,7 @@ import { Home } from './pages/app/home'
 import { Alvaras } from './pages/app/captacao-alvaras'
 import { Companies } from './pages/app/busca-dados'
 import { Leads } from './pages/app/gestao-leads'
+import { Pipeline } from './pages/app/pipeline-crm'
 
 const queryClient = new QueryClient()
 
@@ -27,6 +28,7 @@ export function App() {
         <Route path="/dashboard/captacao-alvaras" element={<Alvaras />} />
         <Route path="/dashboard/busca-empresa" element={<Companies />} />
         <Route path="/dashboard/gestao-leads" element={<Leads />} />
+        <Route path="/dashboard/pipeline-crm" element={<Pipeline />} />
        </Route>
       </Route>
      </Routes>
