@@ -37,7 +37,7 @@ export function CompaniesTable({
    <CardContent>
     <div className="data-table overflow-hidden">
      {/* Versão Desktop */}
-     <div className="hidden lg:block overflow-x-auto scrollbar-thin">
+     <div className="hidden min-[1150px]:block overflow-x-auto scrollbar-thin">
       <table className="w-full caption-bottom text-sm">
        <thead className="[&_tr]:border-b">
         <tr className="border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted">
@@ -51,24 +51,18 @@ export function CompaniesTable({
           Endereço
          </th>
          <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground [&:has([role=checkbox])]:pr-0">
-          Cidade
-         </th>
-         <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground [&:has([role=checkbox])]:pr-0">
-          Estado
-         </th>
-         <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground [&:has([role=checkbox])]:pr-0">
           Tipo de Serviço
          </th>
          <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground [&:has([role=checkbox])]:pr-0">
           Data de Vencimento
          </th>
-         <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground [&:has([role=checkbox])]:pr-0">
+         <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground [&:has([role=checkbox])]:pr-0 max-[1600px]:hidden">
           Telefone
          </th>
-         <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground [&:has([role=checkbox])]:pr-0">
+         <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground [&:has([role=checkbox])]:pr-0 max-[1600px]:hidden">
           E-mail
          </th>
-         <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground [&:has([role=checkbox])]:pr-0">
+         <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground [&:has([role=checkbox])]:pr-0 max-[1600px]:hidden">
           CNPJ
          </th>
          <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground [&:has([role=checkbox])]:pr-0">
@@ -105,13 +99,9 @@ export function CompaniesTable({
            {company.company}
           </td>
           <td className="p-4 align-middle [&:has([role=checkbox])]:pr-0">
-           {company.address}, {company.number}
-          </td>
-          <td className="p-4 align-middle [&:has([role=checkbox])]:pr-0">
-           {company.city}
-          </td>
-          <td className="p-4 align-middle [&:has([role=checkbox])]:pr-0">
-           {company.state}
+           {[company.address, company.number, company.city, company.state]
+            .filter(Boolean)
+            .join(', ')}
           </td>
           <td className="p-4 align-middle [&:has([role=checkbox])]:pr-0">
            {' '}
@@ -128,13 +118,13 @@ export function CompaniesTable({
           <td className="p-4 align-middle [&:has([role=checkbox])]:pr-0">
            {new Date(company.validity).toLocaleDateString('pt-BR')}
           </td>
-          <td className="p-4 align-middle [&:has([role=checkbox])]:pr-0">
+          <td className="p-4 align-middle [&:has([role=checkbox])]:pr-0 max-[1600px]:hidden">
            {company.phone || '-'}
           </td>
-          <td className="p-4 align-middle [&:has([role=checkbox])]:pr-0">
+          <td className="p-4 align-middle [&:has([role=checkbox])]:pr-0 max-[1600px]:hidden">
            {company.email || '-'}
           </td>
-          <td className="p-4 align-middle [&:has([role=checkbox])]:pr-0">
+          <td className="p-4 align-middle [&:has([role=checkbox])]:pr-0 max-[1600px]:hidden">
            {company.cnpj || '-'}
           </td>
           <td className="p-4 align-middle [&:has([role=checkbox])]:pr-0">
@@ -178,7 +168,7 @@ export function CompaniesTable({
       </table>
      </div>
      {/* Versão Mobile */}
-     <div className="lg:hidden divide-y divide-border">
+     <div className="min-[1150px]:hidden divide-y divide-border">
       {companies.map(company => (
        <div
         key={company.id}

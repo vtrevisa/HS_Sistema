@@ -110,6 +110,17 @@ export function CompanyDetailsModal({
   }
  }
 
+ function getServiceColor(service: string) {
+  switch (service) {
+   case 'CLCB':
+    return 'bg-green-100 text-green-800 hover:bg-green-100'
+   case 'AVCB':
+    return 'bg-blue-100 text-blue-800 hover:bg-blue-100'
+   default:
+    return 'bg-gray-100 text-gray-800 hover:bg-gray-100'
+  }
+ }
+
  function getCompleteAddress() {
   const parts: string[] = []
   if (currentCompany.address) parts.push(currentCompany.address)
@@ -197,6 +208,9 @@ export function CompanyDetailsModal({
      <div className="flex gap-2 flex-wrap">
       <Badge className={`${getStatusColor(currentCompany.status)} capitalize`}>
        {currentCompany.status}
+      </Badge>
+      <Badge className={`${getServiceColor(currentCompany.service)}`}>
+       Serviço: {currentCompany.service}
       </Badge>
      </div>
 
