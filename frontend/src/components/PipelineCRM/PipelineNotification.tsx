@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import {
  AlertTriangle,
  Bell,
@@ -38,6 +39,8 @@ export function PipelineNotification() {
   settings,
   updateSettings
  } = useNotifications()
+
+ const navigate = useNavigate()
 
  const [activeFilter, setActiveFilter] = useState<'all' | 'unread' | 'high'>(
   'all'
@@ -292,7 +295,17 @@ export function PipelineNotification() {
             <div className="flex items-center justify-between text-xs text-gray-400">
              <span>
               {notification.actionUrl && (
-               <Button variant="link" size="sm" className="h-auto p-0 text-xs">
+               <Button
+                variant="link"
+                type="button"
+                size="sm"
+                className="h-auto p-0 text-xs"
+                onClick={() => {
+                 if (notification.actionUrl) {
+                  navigate(notification.actionUrl)
+                 }
+                }}
+               >
                 Ver detalhes →
                </Button>
               )}

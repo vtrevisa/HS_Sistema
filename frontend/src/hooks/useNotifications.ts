@@ -30,17 +30,22 @@ interface NotificationSettings {
 
 export const useNotifications = () => {
   const [notifications, setNotifications] = useState<Notification[]>([]);
-  const [settings, setSettings] = useState<NotificationSettings>({
-    documentExpiry: true,
-    budgetStatus: true,
-    followUpReminders: true,
-    processAlerts: true,
-    emailNotifications: false,
-    pushNotifications: true,
+  const [settings, setSettings] = useState<NotificationSettings>(() => {
+    const stored = localStorage.getItem('notificationSettings');
+    return stored
+      ? JSON.parse(stored)
+      : {
+          documentExpiry: true,
+          budgetStatus: true,
+          followUpReminders: true,
+          processAlerts: true,
+          emailNotifications: false,
+          pushNotifications: true,
+        };
   });
+
   const { leads } = useLeads();
   const { processos } = useCLCB();
-  //const { toast } = useToast();
 
   // Mock budgets data - in real app this would come from a context
   const budgets = [
@@ -72,7 +77,7 @@ export const useNotifications = () => {
           dueDate: lead.expiration_date,
           priority: daysUntilExpiry <= 3 ? 'high' : 'medium',
           category: 'document',
-          actionUrl: `/leads/${lead.id}`,
+          actionUrl: `/dashboard/gestao-leads?lead=${lead.id}`,
           isRead: false,
           createdAt: new Date().toISOString()
         });
@@ -149,7 +154,7 @@ export const useNotifications = () => {
           dueDate: lead.next_action,
           priority: 'high',
           category: 'reminder',
-          actionUrl: `/leads/${lead.id}`,
+          actionUrl: `/dashboard/gestao-leads?lead=${lead.id}`,
           isRead: false,
           createdAt: new Date().toISOString()
         });
@@ -263,9 +268,11 @@ export const useNotifications = () => {
   };
 
   const updateSettings = (newSettings: Partial<NotificationSettings>) => {
-    setSettings(prev => ({ ...prev, ...newSettings }));
-    // In a real app, this would be saved to localStorage or backend
-    localStorage.setItem('notificationSettings', JSON.stringify({ ...settings, ...newSettings }));
+    setSettings(prev => {
+      const updated = { ...prev, ...newSettings };
+      localStorage.setItem('notificationSettings', JSON.stringify(updated));
+      return updated;
+    });
   };
 
   return {

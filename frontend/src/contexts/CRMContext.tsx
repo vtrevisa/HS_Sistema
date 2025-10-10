@@ -15,7 +15,7 @@ import {
 } from '@/http/types/crm'
 
 interface CRMContextType {
- leads: Lead[]
+ leads: Lead[] | undefined
  archivedProposals: ArchivedProposal[]
  addLead: (lead: Omit<Lead, 'id' | 'createdAt' | 'updatedAt'>) => void
  updateLead: (leadId: number, updatedLead: Partial<Lead>) => void
@@ -97,7 +97,7 @@ export const CRMProvider = ({ children }: CRMProviderProps) => {
    activities: [],
    attachments: []
   }
-  setLeads(prev => [...prev, newLead])
+  setLeads(prev => [...(prev || []), newLead])
  }
 
  const updateLead = (leadId: number, updatedLead: Partial<Lead>) => {
@@ -144,8 +144,8 @@ export const CRMProvider = ({ children }: CRMProviderProps) => {
   }
 
   const mappedStatus = statusMap[status] || status
-  const lead = leads?.filter(lead => lead.status === mappedStatus)
-  if (!lead) return
+
+  return leads?.filter(lead => lead.status === mappedStatus) || []
  }
 
  const getColumnSummary = (status: string): ColumnSummary => {
@@ -178,13 +178,13 @@ export const CRMProvider = ({ children }: CRMProviderProps) => {
    reason
   }
 
-  setArchivedProposals(prev => [...prev, archivedProposal])
+  setArchivedProposals(prev => [...(prev || []), archivedProposal])
 
   if (status === 'Ganho') {
    updateLeadStatus(leadId, 'Cliente Fechado')
   } else {
    // Remove lead from active list
-   setLeads(prev => prev.filter(l => l.id !== leadId))
+   setLeads(prev => (prev || []).filter(lead => lead.id !== leadId))
   }
  }
 
