@@ -9,8 +9,6 @@ interface LeadsContextType {
  addLeads: (leads: LeadRequest[]) => void
  updateLead: (lead: LeadRequest) => void
  deleteLead: (leadId: number) => void
- //updateLeadStatus: (leadId: number, newStatus: string) => void
- //getLeadsByStatus: (status: string) => LeadResponse[]
 }
 
 interface LeadsProviderProps {

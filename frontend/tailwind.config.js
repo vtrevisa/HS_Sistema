@@ -16,6 +16,11 @@ export default {
    }
   },
   extend: {
+   screens: {
+    'xl-max': { min: '1280px', max: '1600px' },
+    'sm-max': { max: '910px' },
+    'md-min': '910px'
+   },
    backgroundImage: {
     login: "url('/background.jpg')"
    },

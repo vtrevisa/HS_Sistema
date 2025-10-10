@@ -1,12 +1,16 @@
 import { Plus } from 'lucide-react'
 import { PipelineNotification } from './PipelineNotification'
 
-export function PipelineActions() {
+interface PipelineActionsProps {
+ onNewLeadClick: () => void
+}
+
+export function PipelineActions({ onNewLeadClick }: PipelineActionsProps) {
  return (
-  <div className="flex gap-2 flex-col sm:flex-row">
+  <div className="flex gap-2 flex-row">
    <PipelineNotification />
    <button
-    onClick={() => {}}
+    onClick={onNewLeadClick}
     className="bg-destructive hover:bg-destructive/90 text-destructive-foreground px-4 py-2 rounded-lg flex items-center gap-2 transition-colors"
    >
     <Plus size={20} />

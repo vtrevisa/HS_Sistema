@@ -1,35 +1,24 @@
-import type { Lead } from '@/http/types/crm'
 import { Card, CardContent, CardHeader } from '../ui/card'
 import { Badge } from '../ui/badge'
-import {
- AlertTriangle,
- Calendar,
- Clock,
- DollarSign,
- FileText
-} from 'lucide-react'
+import { AlertTriangle, Calendar, Clock, DollarSign } from 'lucide-react'
+
+import type { LeadRequest } from '@/http/types/leads'
 
 interface PipelineLeadCardProps {
- lead: Lead
- onLeadClick: (lead: Lead) => void
+ lead: LeadRequest & { daysInStage: number; isOverdue: boolean }
+ onLeadClick: (lead: LeadRequest) => void
 }
 
 export function PipelineLeadCard({ lead, onLeadClick }: PipelineLeadCardProps) {
- function getCardBorderColor() {
-  if (lead.isOverdue) return 'border-red-500 dark:border-red-400'
-  return 'border-border'
- }
+ const getCardBorderColor = () =>
+  lead.isOverdue ? 'border-red-500 dark:border-red-400' : 'border-border'
 
- function getOverdueIndicator() {
-  if (!lead.isOverdue) return null
-
-  return (
+ const getOverdueIndicator = () =>
+  lead.isOverdue ? (
    <div className="flex items-center gap-1 text-red-600 dark:text-red-400 text-xs font-medium">
-    <AlertTriangle size={12} />
-    Prazo vencido
+    <AlertTriangle size={12} /> Prazo vencido
    </div>
-  )
- }
+  ) : null
 
  return (
   <Card
@@ -39,7 +28,7 @@ export function PipelineLeadCard({ lead, onLeadClick }: PipelineLeadCardProps) {
    <CardHeader className="pb-3">
     <div className="space-y-2">
      <div className="flex justify-between items-start">
-      <h3 className="font-semibold text-card-foreground text-sm line-clamp-2">
+      <h3 className="font-semibold text-card-foreground text-sm max-w-[190px]">
        {lead.company}
       </h3>
       {getOverdueIndicator()}
@@ -47,7 +36,7 @@ export function PipelineLeadCard({ lead, onLeadClick }: PipelineLeadCardProps) {
 
      <div className="flex items-center justify-between">
       <Badge variant="secondary" className="text-xs">
-       Alvará {lead.type}
+       Alvará {lead.service}
       </Badge>
       <div className="flex items-center gap-1 text-xs text-muted-foreground">
        <Clock size={10} />
@@ -63,10 +52,10 @@ export function PipelineLeadCard({ lead, onLeadClick }: PipelineLeadCardProps) {
       <Calendar size={10} className="text-muted-foreground" />
       <span className="font-semibold text-card-foreground">Validade:</span>
       <span className="text-muted-foreground">
-       {new Date(lead.vencimento).toLocaleDateString('pt-BR')}
+       {new Date(lead.expiration_date).toLocaleDateString('pt-BR')}
       </span>
      </div>
-     {lead.valorServico && (
+     {lead.service_value && (
       <div className="flex items-center gap-1">
        <DollarSign size={10} className="text-muted-foreground" />
        <span className="font-semibold text-card-foreground">Valor:</span>
@@ -74,19 +63,19 @@ export function PipelineLeadCard({ lead, onLeadClick }: PipelineLeadCardProps) {
         {new Intl.NumberFormat('pt-BR', {
          style: 'currency',
          currency: 'BRL'
-        }).format(parseFloat(lead.valorServico))}
+        }).format(parseFloat(lead.service_value))}
        </span>
       </div>
      )}
     </div>
 
     {/* File Attachments Indicator */}
-    {lead.attachments && lead.attachments.length > 0 && (
+    {/* {lead.attachments && lead.attachments.length > 0 && (
      <div className="flex items-center gap-1 text-xs text-blue-600 dark:text-blue-400">
       <FileText size={10} />
       <span>{lead.attachments.length} arquivo(s)</span>
      </div>
-    )}
+    )} */}
    </CardContent>
   </Card>
  )

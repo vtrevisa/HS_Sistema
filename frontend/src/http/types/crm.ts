@@ -64,7 +64,7 @@ export interface ArchivedProposal {
   leadId: number;
   company: string;
   type: string;
-  valor: number;
+  value: number;
   status: 'Ganho' | 'Perdido';
   archivedAt: string;
   reason?: string; // For lost proposals

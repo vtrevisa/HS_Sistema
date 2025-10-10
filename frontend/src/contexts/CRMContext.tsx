@@ -1,41 +1,14 @@
-import {
- createContext,
- useContext,
- useState,
- type ReactNode,
- useEffect
-} from 'react'
-import {
- type Lead,
- type ArchivedProposal,
- type Activity,
- type FileAttachment,
- type ColumnSummary,
- CRM_STATUSES
-} from '@/http/types/crm'
+import { createContext, useContext, type ReactNode, useMemo } from 'react'
+import { useLeads } from './LeadsContext'
+import type { LeadRequest } from '@/http/types/leads'
 
 interface CRMContextType {
- leads: Lead[] | undefined
- archivedProposals: ArchivedProposal[]
- addLead: (lead: Omit<Lead, 'id' | 'createdAt' | 'updatedAt'>) => void
- updateLead: (leadId: number, updatedLead: Partial<Lead>) => void
- updateLeadStatus: (leadId: number, newStatus: string) => void
- getLeadsByStatus: (status: string) => Lead[]
- getColumnSummary: (status: string) => ColumnSummary
- archiveProposal: (
-  leadId: number,
-  status: 'Ganho' | 'Perdido',
-  reason?: string
- ) => void
- getArchivedProposals: (filter?: 'Ganho' | 'Perdido') => ArchivedProposal[]
- addActivity: (leadId: number, activity: Omit<Activity, 'id' | 'date'>) => void
- addAttachment: (
-  leadId: number,
-  attachment: Omit<FileAttachment, 'id' | 'uploadedAt'>
- ) => void
- deleteLead: (leadId: number) => void
- calculateDaysInStage: (lead: Lead) => number
- isLeadOverdue: (lead: Lead) => boolean
+ pipelineLeads: (LeadRequest & { daysInStage: number; isOverdue: boolean })[]
+ getLeadsByStatus: (
+  status: string
+ ) => (LeadRequest & { daysInStage: number; isOverdue: boolean })[]
+ getColumnSummary: (status: string) => { count: number; totalValue: number }
+ updateLeadStatus: (leadId: number, newStatus: string) => Promise<void>
 }
 
 const CRMContext = createContext<CRMContextType | undefined>(undefined)
@@ -43,9 +16,7 @@ const CRMContext = createContext<CRMContextType | undefined>(undefined)
 // eslint-disable-next-line react-refresh/only-export-components
 export const useCRM = () => {
  const context = useContext(CRMContext)
- if (!context) {
-  throw new Error('useCRM must be used within a CRMProvider')
- }
+ if (!context) throw new Error('useCRM must be used within a CRMProvider')
  return context
 }
 
@@ -54,214 +25,77 @@ interface CRMProviderProps {
 }
 
 export const CRMProvider = ({ children }: CRMProviderProps) => {
- const [leads, setLeads] = useState<Lead[]>()
+ const { leads, updateLead } = useLeads()
 
- const [archivedProposals, setArchivedProposals] = useState<ArchivedProposal[]>(
-  []
- )
-
- // Calculate days in stage and overdue status for each lead
- useEffect(() => {
-  setLeads(prevLeads =>
-   prevLeads?.map(lead => ({
-    ...lead,
-    daysInStage: calculateDaysInStage(lead),
-    isOverdue: isLeadOverdue(lead)
-   }))
-  )
- }, [])
-
- const calculateDaysInStage = (lead: Lead): number => {
-  const lastUpdate = new Date(lead.updatedAt || lead.createdAt || Date.now())
-  const now = new Date()
-  return Math.floor(
-   (now.getTime() - lastUpdate.getTime()) / (1000 * 60 * 60 * 24)
-  )
+ const statusToColumnId: Record<string, string> = {
+  Lead: 'lead',
+  'Primeiro contato': 'contato-automatico',
+  'Follow-up': 'contato-manual',
+  'Proposta enviada': 'proposta-followup',
+  'Cliente fechado': 'cliente-fechado',
+  Arquivado: 'arquivado'
  }
 
- const isLeadOverdue = (lead: Lead): boolean => {
-  const statusConfig = CRM_STATUSES.find(s => s.title === lead.status)
-  if (!statusConfig?.deadline) return false
-
-  const daysInStage = calculateDaysInStage(lead)
-  return daysInStage >= statusConfig.deadline
- }
-
- const addLead = (leadData: Omit<Lead, 'id' | 'createdAt' | 'updatedAt'>) => {
-  const now = new Date().toISOString()
-  const newLead: Lead = {
-   ...leadData,
-   id: Date.now(),
-   createdAt: now,
-   updatedAt: now,
-   activities: [],
-   attachments: []
-  }
-  setLeads(prev => [...(prev || []), newLead])
- }
-
- const updateLead = (leadId: number, updatedLead: Partial<Lead>) => {
-  setLeads(prev =>
-   prev?.map(lead =>
-    lead.id === leadId
-     ? { ...lead, ...updatedLead, updatedAt: new Date().toISOString() }
-     : lead
+ const pipelineLeads = useMemo(() => {
+  return leads.map(lead => {
+   const updatedAt = new Date(lead.updated_at || lead.created_at || Date.now())
+   const now = new Date()
+   const daysInStage = Math.floor(
+    (now.getTime() - updatedAt.getTime()) / (1000 * 60 * 60 * 24)
    )
-  )
- }
 
- const updateLeadStatus = (leadId: number, newStatus: string) => {
-  const now = new Date().toISOString()
-  setLeads(prev =>
-   prev?.map(lead =>
-    lead.id === leadId
-     ? {
-        ...lead,
-        status: newStatus,
-        updatedAt: now,
-        activities: [
-         ...(lead.activities || []),
-         {
-          id: Date.now().toString(),
-          type: 'status_change',
-          description: `Status alterado para: ${newStatus}`,
-          date: now
-         }
-        ]
-       }
-     : lead
-   )
-  )
- }
+   const statusDeadlines: Record<string, number | null> = {
+    Lead: 7,
+    'Primeiro contato': 7,
+    'Follow-up': 30,
+    'Proposta enviada': 60,
+    'Cliente fechado': null,
+    Arquivado: null
+   }
+   const deadline = statusDeadlines[lead.status] || null
+   const isOverdue = deadline !== null ? daysInStage > deadline : false
 
- const getLeadsByStatus = (status: string): Lead[] => {
-  const statusMap: { [key: string]: string } = {
-   lead: 'Lead / Contato',
-   'contato-automatico': 'Contato Automático',
-   'contato-manual': 'Contato Manual',
-   'proposta-followup': 'Proposta / Follow-UP',
-   'cliente-fechado': 'Cliente Fechado'
-  }
+   return { ...lead, daysInStage, isOverdue }
+  })
+ }, [leads])
 
-  const mappedStatus = statusMap[status] || status
+ const getLeadsByStatus = (columnId: string) =>
+  pipelineLeads.filter(lead => statusToColumnId[lead.status] === columnId)
 
-  return leads?.filter(lead => lead.status === mappedStatus) || []
- }
-
- const getColumnSummary = (status: string): ColumnSummary => {
+ const getColumnSummary = (status: string) => {
   const columnLeads = getLeadsByStatus(status)
   return {
    count: columnLeads.length,
    totalValue: columnLeads.reduce(
-    (sum, lead) => sum + parseFloat(lead.valorServico || '0'),
+    (sum, lead) => sum + parseFloat(lead.service_value || '0'),
     0
    )
   }
  }
 
- const archiveProposal = (
-  leadId: number,
-  status: 'Ganho' | 'Perdido',
-  reason?: string
- ) => {
-  const lead = leads?.find(l => l.id === leadId)
+ async function updateLeadStatus(leadId: number, newStatus: string) {
+  const lead = leads.find(lead => lead.id === leadId)
   if (!lead) return
 
-  const archivedProposal: ArchivedProposal = {
-   id: Date.now(),
-   leadId,
-   company: lead.company,
-   type: lead.type,
-   valor: parseFloat(lead.valorServico || '0'),
-   status,
-   archivedAt: new Date().toISOString(),
-   reason
+  const leadToUpdate = { ...lead, status: newStatus }
+
+  try {
+   // Atualiza no backend
+   await updateLead(leadToUpdate)
+
+   console.log(`✅ Lead #${leadId} movido para: ${newStatus}`)
+  } catch (error) {
+   console.error('Erro ao atualizar status do lead:', error)
   }
-
-  setArchivedProposals(prev => [...(prev || []), archivedProposal])
-
-  if (status === 'Ganho') {
-   updateLeadStatus(leadId, 'Cliente Fechado')
-  } else {
-   // Remove lead from active list
-   setLeads(prev => (prev || []).filter(lead => lead.id !== leadId))
-  }
- }
-
- const getArchivedProposals = (
-  filter?: 'Ganho' | 'Perdido'
- ): ArchivedProposal[] => {
-  if (!filter) return archivedProposals
-  return archivedProposals.filter(p => p.status === filter)
- }
-
- const addActivity = (
-  leadId: number,
-  activity: Omit<Activity, 'id' | 'date'>
- ) => {
-  const newActivity: Activity = {
-   ...activity,
-   id: Date.now().toString(),
-   date: new Date().toISOString()
-  }
-
-  setLeads(prev =>
-   prev?.map(lead =>
-    lead.id === leadId
-     ? {
-        ...lead,
-        activities: [...(lead.activities || []), newActivity],
-        updatedAt: new Date().toISOString()
-       }
-     : lead
-   )
-  )
- }
-
- const addAttachment = (
-  leadId: number,
-  attachment: Omit<FileAttachment, 'id' | 'uploadedAt'>
- ) => {
-  const newAttachment: FileAttachment = {
-   ...attachment,
-   id: Date.now().toString(),
-   uploadedAt: new Date().toISOString()
-  }
-
-  setLeads(prev =>
-   prev?.map(lead =>
-    lead.id === leadId
-     ? {
-        ...lead,
-        attachments: [...(lead.attachments || []), newAttachment],
-        updatedAt: new Date().toISOString()
-       }
-     : lead
-   )
-  )
- }
-
- const deleteLead = (leadId: number) => {
-  setLeads(prev => prev?.filter(lead => lead.id !== leadId))
  }
 
  return (
   <CRMContext.Provider
    value={{
-    leads,
-    archivedProposals,
-    addLead,
-    updateLead,
-    updateLeadStatus,
+    pipelineLeads,
     getLeadsByStatus,
     getColumnSummary,
-    archiveProposal,
-    getArchivedProposals,
-    addActivity,
-    addAttachment,
-    deleteLead,
-    calculateDaysInStage,
-    isLeadOverdue
+    updateLeadStatus
    }}
   >
    {children}

@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import type { LeadRequest } from '@/http/types/leads'
 
 import {
@@ -34,6 +34,10 @@ export function LeadDetailsModal({
  const [editedLead, setEditedLead] = useState<LeadRequest | null>(null)
 
  const { updateLead } = useLead()
+
+ useEffect(() => {
+  if (lead) setEditedLead({ ...lead })
+ }, [lead])
 
  if (!lead) return null
 
@@ -119,13 +123,11 @@ export function LeadDetailsModal({
 
  const EditableField = ({
   label,
-  value,
   field,
   type = 'text',
   icon
  }: {
   label: string
-  value?: string
   field: keyof LeadRequest
   type?: string
   icon?: React.ReactNode
@@ -138,14 +140,15 @@ export function LeadDetailsModal({
    {isEditing ? (
     <Input
      type={type}
-     value={value || ''}
-     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-     onChange={e => updateField(field, e.target.value as any)}
+     value={editedLead?.[field] || ''}
+     onChange={e => updateField(field, e.target.value)}
      className="mt-1"
      placeholder={`Digite ${label.toLowerCase()}`}
     />
    ) : (
-    <p className="text-gray-600 break-words">{value || 'Não informado'}</p>
+    <p className="text-gray-600 break-words">
+     {currentLead[field] || 'Não informado'}
+    </p>
    )}
   </div>
  )
@@ -206,35 +209,21 @@ export function LeadDetailsModal({
        Informações do Serviço
       </h3>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 text-sm">
-       <EditableField
-        label="Serviço"
-        value={currentLead.service}
-        field="service"
-       />
-       <EditableField
-        label="Licença"
-        value={currentLead.license}
-        field="license"
-       />
+       <EditableField label="Serviço" field="service" />
+       <EditableField label="Licença" field="license" />
        <EditableField
         label="Validade"
-        value={currentLead.validity || currentLead.validity}
         field="validity"
         type="date"
         icon={<Calendar size={12} />}
        />
        <EditableField
         label="Valor do Serviço"
-        value={currentLead.service_value || ''}
         field="service_value"
         type="number"
        />
        <div className="sm:col-span-2">
-        <EditableField
-         label="Ocupação"
-         value={currentLead.occupation}
-         field="occupation"
-        />
+        <EditableField label="Ocupação" field="occupation" />
        </div>
       </div>
      </div>
@@ -247,17 +236,8 @@ export function LeadDetailsModal({
       </h3>
 
       <div className="grid grid-cols-1 gap-3 sm:gap-4 text-sm">
-       <EditableField
-        label="CNPJ"
-        value={currentLead.cnpj || ''}
-        field="cnpj"
-       />
-       <EditableField
-        label="Website"
-        value={currentLead.website || ''}
-        field="website"
-        type="url"
-       />
+       <EditableField label="CNPJ" field="cnpj" />
+       <EditableField label="Website" field="website" type="url" />
        <div>
         <span className="font-medium text-gray-800 flex items-center gap-1">
          <MapPin size={12} />
@@ -313,21 +293,15 @@ export function LeadDetailsModal({
        Contato
       </h3>
       <div className="space-y-3 text-sm">
-       <EditableField
-        label="Nome do Contato"
-        value={currentLead.contact}
-        field="contact"
-       />
+       <EditableField label="Nome do Contato" field="contact" />
        <EditableField
         label="Telefone/WhatsApp"
-        value={currentLead.phone}
         field="phone"
         type="tel"
         icon={<Phone size={14} />}
        />
        <EditableField
         label="Email"
-        value={currentLead.email}
         field="email"
         type="email"
         icon={<Mail size={14} />}

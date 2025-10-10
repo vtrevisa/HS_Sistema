@@ -83,6 +83,7 @@ export interface LeadRequest {
   website?: string;
   categoria?: string;
   created_at?: string
+  updated_at?: string
 
 }
 
