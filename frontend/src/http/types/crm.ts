@@ -66,7 +66,7 @@ export interface ArchivedProposal {
   type: string;
   value: number;
   status: 'Ganho' | 'Perdido';
-  archivedAt: string;
+  archived_at: string;
   reason?: string; // For lost proposals
   processId?: number; // For won proposals
 }
@@ -85,3 +85,4 @@ export const CRM_STATUSES = [
 ] as const;
 
 export type CRMStatus = typeof CRM_STATUSES[number]['id'];
+

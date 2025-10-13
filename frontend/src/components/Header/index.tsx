@@ -5,13 +5,14 @@ import {
  Target,
  Users,
  Search,
- Trello
+ Trello,
+ FileText
  //  Shield,
  //  Calculator,
  //  Zap,
  //  Settings,
  //  Calendar,
- //  FileText,
+
  //  MessageCircle,
  //  Cog
 } from 'lucide-react'
@@ -77,6 +78,12 @@ export function Header({ onTabChange }: AppSidebarProps) {
    label: 'Gestão de Leads',
    icon: Users,
    href: '/dashboard/gestao-leads'
+  },
+  {
+   id: 'propostas-arquivadas',
+   label: 'Propostas Arquivadas',
+   icon: FileText,
+   href: '/dashboard/propostas-arquivadas'
   }
 
   // { id: 'kanban', label: 'Kanban', icon: Trello },

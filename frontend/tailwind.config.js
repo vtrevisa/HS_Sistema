@@ -17,7 +17,9 @@ export default {
   },
   extend: {
    screens: {
+    1150: '1150px',
     'xl-max': { min: '1280px', max: '1600px' },
+    'xl-max2': { min: '1150px', max: '1600px' },
     'sm-max': { max: '910px' },
     'md-min': '910px'
    },

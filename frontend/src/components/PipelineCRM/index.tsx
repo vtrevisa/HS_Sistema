@@ -1,12 +1,12 @@
 import { useCRM } from '@/contexts/CRMContext'
 import { useLeads } from '@/contexts/LeadsContext'
-import { PipelineActions } from './PipelineActions'
+import { PipelineActions } from './pipeline-actions'
 import { Plus } from 'lucide-react'
 import { useState } from 'react'
 import { NewLeadModal } from '../Modals/new-leads'
 import { LeadDetailsModal } from '../Modals/lead-details'
 
-import { PipelineLeadCard } from './PipelineLeadCard'
+import { PipelineLeadCard } from './pipeline-lead-card'
 import type { LeadRequest } from '@/http/types/leads'
 
 export function Pipeline() {

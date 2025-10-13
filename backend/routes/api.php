@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\ArchivedProposalController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\LeadController;
 use App\Http\Controllers\Api\CompanyController;
@@ -31,6 +32,9 @@ Route::put('/companies/{company}', [CompanyController::class, 'update']); //PUT
 Route::delete('/companies/{company}', [CompanyController::class, 'destroy']); //DELETE
 Route::post('/companies/search/address', [CompanyController::class, 'searchCompanyByAddress']); //POST
 Route::post('/companies/search/cnpj', [CompanyController::class, 'searchCompanyByCnpj']); //POST
+
+// Proposals
+Route::get('/archived-proposals', [ArchivedProposalController::class, 'index']);
 
 
 // Users

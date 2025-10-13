@@ -1,5 +1,5 @@
 import { Plus } from 'lucide-react'
-import { PipelineNotification } from './PipelineNotification'
+import { PipelineNotification } from './pipeline-notification'
 
 interface PipelineActionsProps {
  onNewLeadClick: () => void

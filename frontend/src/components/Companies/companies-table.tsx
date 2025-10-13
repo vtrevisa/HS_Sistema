@@ -37,7 +37,7 @@ export function CompaniesTable({
    <CardContent>
     <div className="data-table overflow-hidden">
      {/* Versão Desktop */}
-     <div className="hidden min-[1150px]:block overflow-x-auto scrollbar-thin">
+     <div className="hidden 1150:block overflow-x-auto scrollbar-thin">
       <table className="w-full caption-bottom text-sm">
        <thead className="[&_tr]:border-b">
         <tr className="border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted">
@@ -56,13 +56,13 @@ export function CompaniesTable({
          <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground [&:has([role=checkbox])]:pr-0">
           Data de Vencimento
          </th>
-         <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground [&:has([role=checkbox])]:pr-0 max-[1600px]:hidden">
+         <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground [&:has([role=checkbox])]:pr-0 xl-max2:hidden">
           Telefone
          </th>
-         <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground [&:has([role=checkbox])]:pr-0 max-[1600px]:hidden">
+         <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground [&:has([role=checkbox])]:pr-0 xl-max2:hidden">
           E-mail
          </th>
-         <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground [&:has([role=checkbox])]:pr-0 max-[1600px]:hidden">
+         <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground [&:has([role=checkbox])]:pr-0 xl-max2:hidden">
           CNPJ
          </th>
          <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground [&:has([role=checkbox])]:pr-0">
@@ -118,13 +118,13 @@ export function CompaniesTable({
           <td className="p-4 align-middle [&:has([role=checkbox])]:pr-0">
            {new Date(company.validity).toLocaleDateString('pt-BR')}
           </td>
-          <td className="p-4 align-middle [&:has([role=checkbox])]:pr-0 max-[1600px]:hidden">
+          <td className="p-4 align-middle [&:has([role=checkbox])]:pr-0 xl-max2:hidden">
            {company.phone || '-'}
           </td>
-          <td className="p-4 align-middle [&:has([role=checkbox])]:pr-0 max-[1600px]:hidden">
+          <td className="p-4 align-middle [&:has([role=checkbox])]:pr-0 xl-max2:hidden">
            {company.email || '-'}
           </td>
-          <td className="p-4 align-middle [&:has([role=checkbox])]:pr-0 max-[1600px]:hidden">
+          <td className="p-4 align-middle [&:has([role=checkbox])]:pr-0 xl-max2:hidden">
            {company.cnpj || '-'}
           </td>
           <td className="p-4 align-middle [&:has([role=checkbox])]:pr-0">
@@ -168,7 +168,7 @@ export function CompaniesTable({
       </table>
      </div>
      {/* Versão Mobile */}
-     <div className="min-[1150px]:hidden divide-y divide-border">
+     <div className="block 1150:hidden divide-y divide-border">
       {companies.map(company => (
        <div
         key={company.id}
