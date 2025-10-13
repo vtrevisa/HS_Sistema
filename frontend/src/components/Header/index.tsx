@@ -31,10 +31,6 @@ import {
 } from '@/components/ui/sidebar'
 import { useLogout } from '@/http/use-logout'
 
-interface AppSidebarProps {
- onTabChange: (tab: string) => void
-}
-
 interface MenuItemProps {
  id: string
  label: string
@@ -42,7 +38,7 @@ interface MenuItemProps {
  href: string
 }
 
-export function Header({ onTabChange }: AppSidebarProps) {
+export function Header() {
  const { state } = useSidebar()
  const isCollapsed = state === 'collapsed'
  const location = useLocation()
@@ -131,7 +127,7 @@ export function Header({ onTabChange }: AppSidebarProps) {
        {comercialItems.map(item => {
         return (
          <SidebarMenuItem key={item.id}>
-          <Link to={item.href} onClick={() => onTabChange?.(item.id)}>
+          <Link to={item.href}>
            <SidebarMenuButton
             isActive={activeTab === item.id}
             tooltip={isCollapsed ? item.label : undefined}

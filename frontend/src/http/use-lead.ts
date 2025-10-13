@@ -7,7 +7,7 @@ import { toast } from "sonner"
 export function useLead() {
   const queryClient = useQueryClient();
 
-  // Fn to show all leads
+  // List all leads
   const leadsDB = useQuery<LeadRequest[], AxiosError>({
     queryKey: ["leads"],
     queryFn: async (): Promise<LeadRequest[]> => {

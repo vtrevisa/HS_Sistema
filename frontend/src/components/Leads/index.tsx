@@ -1,6 +1,5 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
-import { useLeads } from '@/contexts/LeadsContext'
 import { LeadsActions } from './lead-actions'
 import { LeadsFilters } from './lead-filters'
 import { LeadsTable } from './leads-table'
@@ -10,6 +9,7 @@ import { ImportLeadsModal } from '../Modals/import-leads'
 import type { LeadRequest } from '@/http/types/leads'
 import { DeleteLeadsModal } from '../Modals/delete-leads'
 import { exportLeadsToExcel } from '@/services/leads'
+import { useLead } from '@/http/use-lead'
 
 export function Leads() {
  const [searchTerm, setSearchTerm] = useState('')
@@ -21,36 +21,40 @@ export function Leads() {
  const [isDeleteLeadModalOpen, setIsDeleteLeadModalOpen] = useState(false)
  const [selectedLead, setSelectedLead] = useState<LeadRequest | null>(null)
 
- const { leads, addLead, addLeads } = useLeads()
+ const { leadsDB, saveLeads } = useLead()
+
+ const leads = useMemo(() => leadsDB.data ?? [], [leadsDB.data])
 
  const location = useLocation()
 
  const navigate = useNavigate()
 
  // Filter leads from context
- const filteredLeads = leads.filter(lead => {
-  const company = lead.company?.toLowerCase() ?? ''
-  const contact = lead.contact?.toLowerCase() ?? ''
-  const search = searchTerm.toLowerCase()
+ const filteredLeads = useMemo(() => {
+  return leads.filter(lead => {
+   const company = lead.company?.toLowerCase() ?? ''
+   const contact = lead.contact?.toLowerCase() ?? ''
+   const search = searchTerm.toLowerCase()
 
-  const matchesSearch = company.includes(search) || contact.includes(search)
+   const matchesSearch = company.includes(search) || contact.includes(search)
 
-  const matchesStatus =
-   selectedFilter === 'todos' ? true : lead.status === selectedFilter
-  const matchesType =
-   selectedType === 'todos' ? true : lead.service === selectedType
+   const matchesStatus =
+    selectedFilter === 'todos' ? true : lead.status === selectedFilter
+   const matchesType =
+    selectedType === 'todos' ? true : lead.service === selectedType
 
-  return matchesSearch && matchesStatus && matchesType
- })
+   return matchesSearch && matchesStatus && matchesType
+  })
+ }, [leads, searchTerm, selectedFilter, selectedType])
 
  function handleImportComplete(importedLeads: LeadRequest[]) {
-  const processedLeads: LeadRequest[] = importedLeads.map(lead => {
+  const processedLeads = importedLeads.map(lead => {
    const completeAddress = [
-    lead.address || lead['address' as keyof LeadRequest],
+    lead.address,
     lead.number,
     lead.complement,
     lead.district,
-    lead.city || lead['cidade' as keyof LeadRequest]
+    lead.city
    ]
     .filter(Boolean)
     .join(', ')
@@ -67,7 +71,7 @@ export function Leads() {
    }
   })
 
-  addLeads(processedLeads)
+  saveLeads.mutate(processedLeads)
  }
 
  function handleNewLead(leadData: Omit<LeadRequest, 'id'>) {
@@ -81,12 +85,7 @@ export function Leads() {
    .filter(Boolean)
    .join(', ')
 
-  const processedLead = {
-   ...leadData,
-   address: completeAddress
-  }
-
-  addLead(processedLead)
+  saveLeads.mutate([{ ...leadData, address: completeAddress }])
  }
 
  function closeLeadDetails() {

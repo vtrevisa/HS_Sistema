@@ -33,7 +33,7 @@ export function DeleteLeadsModal({
     </DialogHeader>
     <p className="text-sm text-muted-foreground">
      Tem certeza que deseja excluir o lead{' '}
-     <span className="font-semibold">{lead?.empresa}</span>? <br />
+     <span className="font-semibold">{lead?.company}</span>? <br />
      Essa ação não pode ser desfeita.
     </p>
     <div className="flex justify-end gap-2 mt-4">

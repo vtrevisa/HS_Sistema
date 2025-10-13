@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
-import { useLeads } from '@/contexts/LeadsContext';
+import { useLead } from '@/http/use-lead';
 import { useCLCB } from '@/contexts/CLCBContext';
 
 interface Notification {
@@ -44,8 +44,10 @@ export const useNotifications = () => {
         };
   });
 
-  const { leads } = useLeads();
+  const { leadsDB } = useLead();
   const { processos } = useCLCB();
+
+  const leads = leadsDB.data ?? [];
 
   // Mock budgets data - in real app this would come from a context
   const budgets = [

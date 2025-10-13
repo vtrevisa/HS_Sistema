@@ -1,8 +1,9 @@
-import { useCRM } from '@/contexts/CRMContext'
-import { useLeads } from '@/contexts/LeadsContext'
-import { PipelineActions } from './pipeline-actions'
-import { Plus } from 'lucide-react'
 import { useState } from 'react'
+import { Plus } from 'lucide-react'
+import { useCRM } from '@/http/use-crm'
+import { useLead } from '@/http/use-lead'
+
+import { PipelineActions } from './pipeline-actions'
 import { NewLeadModal } from '../Modals/new-leads'
 import { LeadDetailsModal } from '../Modals/lead-details'
 
@@ -11,7 +12,7 @@ import type { LeadRequest } from '@/http/types/leads'
 
 export function Pipeline() {
  const { getLeadsByStatus, getColumnSummary, updateLeadStatus } = useCRM()
- const { addLead } = useLeads()
+ const { saveLeads } = useLead()
  const [isNewLeadModalOpen, setIsNewLeadModalOpen] = useState(false)
  const [selectedLead, setSelectedLead] = useState<LeadRequest | null>(null)
  const [isLeadDetailsModalOpen, setIsLeadDetailsModalOpen] = useState(false)
@@ -50,7 +51,7 @@ export function Pipeline() {
  }
 
  function handleNewLead(leadData: Omit<LeadRequest, 'id'>) {
-  addLead(leadData)
+  saveLeads.mutate([leadData])
   console.log('Novo lead criado:', leadData)
  }
 
@@ -89,7 +90,7 @@ export function Pipeline() {
    const newStatus = statusMap[columnId]
 
    if (newStatus && draggedLead.status !== newStatus) {
-    // Atualiza o status via LeadsContext
+    // Atualiza o status via UseLead
     updateLeadStatus(draggedLead.id!, newStatus)
     console.log(`Lead movido para ${newStatus}: ${draggedLead.company}`)
    }
