@@ -5,9 +5,10 @@ import { CompaniesTable } from './companies-table'
 import { NewCompanyModal } from '../Modals/new-company'
 import { useCompany } from '@/http/use-company'
 import type { CompanyRequest } from '@/http/types/companies'
-import { CompanyDetailsModal } from '../Modals/company-details'
-import { useLead } from '@/http/use-lead'
 import type { LeadRequest } from '@/http/types/leads'
+import { CompanyDetailsModal } from '../Modals/company-details'
+import { ImportAlvarasModal } from '../Modals/import-alvaras'
+import { useLead } from '@/http/use-lead'
 
 export function Companies() {
  const [isNewCompanyModalOpen, setIsNewCompanyModalOpen] = useState(false)
@@ -16,11 +17,12 @@ export function Companies() {
  )
  const [isCompanyDetailsModalOpen, setIsCompanyDetailsModalOpen] =
   useState(false)
+ const [isImportModalOpen, setIsImportModalOpen] = useState(false)
 
  const {
   companies,
   isLoading,
-  saveCompany,
+  saveCompanies,
   enhanceData,
   enhanceAllData,
   processingEnrichment,
@@ -31,7 +33,7 @@ export function Companies() {
 
  // Create new company
  function handleNewCompany(companyData: Omit<CompanyRequest, 'id'>) {
-  saveCompany.mutate(companyData)
+  saveCompanies.mutate([companyData])
  }
 
  // Generate new company
@@ -50,21 +52,51 @@ export function Companies() {
    cep: company.cep || '',
    address: company.address || '',
    number: company.number || '',
+   complement: company.complement || '',
    city: company.city || '',
    service: company.service || '',
    validity: company.validity || '',
    phone: company.phone || '',
    cnpj: company.cnpj || '',
    email: company.email || '',
-   license: 'Não informado',
+   license: company.license,
    expiration_date: company.validity,
    next_action: nextActionDate.toISOString().split('T')[0],
-   district: 'Não informado',
-   occupation: 'Não informado',
+   district: company.district || '',
+   occupation: company.occupation || '',
+   website: company.website || '',
+   contact: company.contact || '',
    status: 'Lead'
   }
 
   saveLeads.mutate([newLead])
+ }
+
+ function handleImportComplete(importedAlvaras: CompanyRequest[]) {
+  const processedAlvaras = importedAlvaras.map(alvara => {
+   //  const completeAddress = [
+   //   alvara.address,
+   //   alvara.number,
+   //   alvara.complement,
+   //   alvara.district,
+   //   alvara.city
+   //  ]
+   //   .filter(Boolean)
+   //   .join(', ')
+
+   return {
+    ...alvara,
+    address: alvara.address,
+    // Manter os campos originais para referência
+    numero: alvara.number,
+    complemento: alvara.complement,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    municipio: alvara.city || (alvara as any).cidade,
+    bairro: alvara.district
+   }
+  })
+
+  saveCompanies.mutate(processedAlvaras)
  }
 
  return (
@@ -76,6 +108,7 @@ export function Companies() {
     <CompaniesActions
      enhanceAllData={enhanceAllData}
      onNewCompanyClick={() => setIsNewCompanyModalOpen(true)}
+     onImportClick={() => setIsImportModalOpen(true)}
     />
    </div>
    {/* Tabela de Empresas */}
@@ -103,6 +136,12 @@ export function Companies() {
     isOpen={isCompanyDetailsModalOpen}
     onClose={() => setIsCompanyDetailsModalOpen(false)}
     company={selectedCompany}
+   />
+
+   <ImportAlvarasModal
+    isOpen={isImportModalOpen}
+    onClose={() => setIsImportModalOpen(false)}
+    onImportComplete={handleImportComplete}
    />
   </div>
  )

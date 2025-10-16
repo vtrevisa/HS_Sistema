@@ -25,14 +25,27 @@ export function useCompany() {
 
   // Mutation to save companies
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const saveMutation = useMutation<CompanyRequest, AxiosError<any>, Omit<CompanyRequest, 'id'>>({
-    mutationFn: async (company: Omit<CompanyRequest, 'id'>) => {
-      const { data } = await api.post<CompanyRequest>("/companies", company)
-      return data
+  const saveMutation = useMutation<CompanyRequest[], AxiosError<any>, Omit<CompanyRequest, 'id'>[]>({
+    mutationFn: async (companies: Omit<CompanyRequest, 'id'>[]) => {
+      const responses = await Promise.all(
+      companies.map(company =>
+        api.post<CompanyRequest>("/companies", company).then(res => res.data)
+      )
+    )
+    return responses
     },
-    onSuccess: () => {
+    onSuccess: (savedCompanies) => {
       queryClient.invalidateQueries({ queryKey: ["companies"] })
       toast.success("A empresa foi salva com sucesso!")
+
+      setTimeout(() => {
+        toast.success(
+          savedCompanies.length === 1
+          ? '1 empresa foi salva com sucesso!'
+          : `${savedCompanies.length} empresas foram salvas com sucesso!`
+        )
+      }, 3200)
+
     },
     onError: (error) => {
       const messages =
@@ -47,6 +60,8 @@ export function useCompany() {
       }, 3200)
     }
   })
+
+  
 
   // Mutation to update companies
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -111,7 +126,7 @@ export function useCompany() {
 
     try {
       const data = await searchByAddressMutation.mutateAsync({
-        address: `${company.address} ${company.number} ${company.city} ${company.state}`,
+        address: `${company.address} ${company.number} ${company.district} ${company.city} ${company.state}`,
       });
 
       if (!data.places || data.places.length === 0) {
@@ -139,12 +154,17 @@ export function useCompany() {
         return;
       }
 
+      const firstPerson = matchedPlace.dados_oficiais?.qsa_nomes?.find(name => !/(S\/A|LTDA|PARTICIPACOES)/i.test(name)) ?.toLowerCase()
+  .replace(/\b\w/g, char => char.toUpperCase());
+
       await updateMutation.mutateAsync({
         ...company,
-        company: matchedPlace.dados_oficiais?.razao_social || matchedPlace.nome_empresa || "",
+        company: matchedPlace.nome_empresa || matchedPlace.dados_oficiais?.razao_social || "",
         phone: matchedPlace.telefone || null,
         cnpj: matchedPlace.cnpj || null,
         email: matchedPlace.dados_oficiais?.email || null,
+        contact: firstPerson || undefined,
+        website: matchedPlace.site || null,
         status: "enriquecido",
       });
 
@@ -181,7 +201,7 @@ export function useCompany() {
   return {
     companies: companiesDB.data || [],
     isLoading: companiesDB.isLoading,
-    saveCompany: saveMutation,
+    saveCompanies: saveMutation,
     updateCompany: updateMutation,
     searchByCnpj: searchCnpjMutation,
     searchByAddress: searchByAddressMutation,

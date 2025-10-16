@@ -5,7 +5,6 @@ import { LeadsFilters } from './lead-filters'
 import { LeadsTable } from './leads-table'
 import { NewLeadModal } from '../Modals/new-leads'
 import { LeadDetailsModal } from '../Modals/lead-details'
-import { ImportLeadsModal } from '../Modals/import-leads'
 import type { LeadRequest } from '@/http/types/leads'
 import { DeleteLeadsModal } from '../Modals/delete-leads'
 import { exportLeadsToExcel } from '@/services/leads'
@@ -16,7 +15,6 @@ export function Leads() {
  const [selectedFilter, setSelectedFilter] = useState('todos')
  const [selectedType, setSelectedType] = useState('todos')
  const [isNewLeadModalOpen, setIsNewLeadModalOpen] = useState(false)
- const [isImportModalOpen, setIsImportModalOpen] = useState(false)
  const [isLeadDetailsModalOpen, setIsLeadDetailsModalOpen] = useState(false)
  const [isDeleteLeadModalOpen, setIsDeleteLeadModalOpen] = useState(false)
  const [selectedLead, setSelectedLead] = useState<LeadRequest | null>(null)
@@ -46,33 +44,6 @@ export function Leads() {
    return matchesSearch && matchesStatus && matchesType
   })
  }, [leads, searchTerm, selectedFilter, selectedType])
-
- function handleImportComplete(importedLeads: LeadRequest[]) {
-  const processedLeads = importedLeads.map(lead => {
-   const completeAddress = [
-    lead.address,
-    lead.number,
-    lead.complement,
-    lead.district,
-    lead.city
-   ]
-    .filter(Boolean)
-    .join(', ')
-
-   return {
-    ...lead,
-    address: completeAddress,
-    // Manter os campos originais para referência
-    numero: lead.number,
-    complemento: lead.complement,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    municipio: lead.city || (lead as any).cidade,
-    bairro: lead.district
-   }
-  })
-
-  saveLeads.mutate(processedLeads)
- }
 
  function handleNewLead(leadData: Omit<LeadRequest, 'id'>) {
   const completeAddress = [
@@ -116,7 +87,6 @@ export function Leads() {
     </h1>
 
     <LeadsActions
-     onImportClick={() => setIsImportModalOpen(true)}
      onNewLeadClick={() => setIsNewLeadModalOpen(true)}
      onExportClick={() => exportLeadsToExcel(leads)}
     />
@@ -143,12 +113,6 @@ export function Leads() {
      setSelectedLead(lead)
      setIsDeleteLeadModalOpen(true)
     }}
-   />
-
-   <ImportLeadsModal
-    isOpen={isImportModalOpen}
-    onClose={() => setIsImportModalOpen(false)}
-    onImportComplete={handleImportComplete}
    />
 
    <NewLeadModal

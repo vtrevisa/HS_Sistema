@@ -8,9 +8,11 @@ export interface AddressResponse {
     telefone: string | null;
     cnpj: string | null;
     nome_empresa: string | null;
+    site: string | null;
     dados_oficiais?: {
       razao_social?: string | null;
       email?: string | null;
+      qsa_nomes?: string[]
     };
   }[];
 }
@@ -22,10 +24,16 @@ export interface CompanyRequest {
   cep: string;
   address: string;
   number?: string | null;
-  state: string;
+  complement?: string;
+  state?: string;
   city: string;
+  district: string;
   service: string;
+  license: string;
+  occupation?: string;
   validity: string;
+  website?: string | null;
+  contact?: string;
   phone?: string | null;
   cnpj?: string | null;
   email?: string | null;
@@ -38,4 +46,6 @@ export interface CnpjResponse {
  nome_fantasia: string | null
  email: string | null
  telefone: string | null
+ qsa_nomes?: string[]
+
 }

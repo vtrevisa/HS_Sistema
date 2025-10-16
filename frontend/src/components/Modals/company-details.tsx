@@ -11,7 +11,9 @@ import {
  Calendar,
  MapPin,
  Phone,
- Mail
+ Mail,
+ User,
+ Globe
 } from 'lucide-react'
 import { useCompany } from '@/http/use-company'
 import { Loading } from '../Login/loading'
@@ -125,6 +127,7 @@ export function CompanyDetailsModal({
   const parts: string[] = []
   if (currentCompany.address) parts.push(currentCompany.address)
   if (currentCompany.number) parts.push(currentCompany.number)
+  if (currentCompany.district) parts.push(currentCompany.district)
   if (currentCompany.city) parts.push(currentCompany.city)
   if (currentCompany.state) parts.push(currentCompany.state)
 
@@ -277,9 +280,19 @@ export function CompanyDetailsModal({
            onChange={e => updateField('number', e.target.value)}
           />
           <Input
+           placeholder="Bairro"
+           value={editedCompany?.district || ''}
+           onChange={e => updateField('district', e.target.value)}
+          />
+          <Input
            placeholder="Cidade"
            value={editedCompany?.city || ''}
            onChange={e => updateField('city', e.target.value)}
+          />
+          <Input
+           placeholder="Complemento"
+           value={editedCompany?.complement || ''}
+           onChange={e => updateField('complement', e.target.value)}
           />
           <Input
            placeholder="Estado"
@@ -290,6 +303,26 @@ export function CompanyDetailsModal({
         ) : (
          <p className="text-gray-600 break-words">
           {getCompleteAddress() || 'Não informado'}
+         </p>
+        )}
+       </div>
+
+       {/* Contato */}
+       <div>
+        <span className="font-medium text-gray-800 flex items-center gap-1">
+         <User size={12} />
+         Contato:
+        </span>
+        {isEditing ? (
+         <Input
+          type="text"
+          value={editedCompany?.contact || ''}
+          onChange={e => updateField('contact', e.target.value)}
+          className="mt-1"
+         />
+        ) : (
+         <p className="text-gray-600">
+          {currentCompany.contact || 'Não informado'}
          </p>
         )}
        </div>
@@ -330,6 +363,26 @@ export function CompanyDetailsModal({
         ) : (
          <p className="text-gray-600">
           {currentCompany.email || 'Não informado'}
+         </p>
+        )}
+       </div>
+
+       {/* Website */}
+       <div>
+        <span className="font-medium text-gray-800 flex items-center gap-1">
+         <Globe size={12} />
+         Website:
+        </span>
+        {isEditing ? (
+         <Input
+          type="text"
+          value={editedCompany?.website || ''}
+          onChange={e => updateField('website', e.target.value)}
+          className="mt-1"
+         />
+        ) : (
+         <p className="text-gray-600">
+          {currentCompany.website || 'Não informado'}
          </p>
         )}
        </div>

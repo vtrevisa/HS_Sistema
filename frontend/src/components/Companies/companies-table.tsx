@@ -2,11 +2,13 @@ import {
  AlertCircle,
  Building,
  CheckCircle,
+ Globe,
  Mail,
  MapPin,
  Pencil,
  Phone,
  RefreshCw,
+ User,
  UserPlus
 } from 'lucide-react'
 import { Badge } from '../ui/badge'
@@ -99,7 +101,13 @@ export function CompaniesTable({
            {company.company}
           </td>
           <td className="p-4 align-middle [&:has([role=checkbox])]:pr-0">
-           {[company.address, company.number, company.city, company.state]
+           {[
+            company.address,
+            company.number,
+            company.district,
+            company.city,
+            company.state
+           ]
             .filter(Boolean)
             .join(', ')}
           </td>
@@ -178,7 +186,7 @@ export function CompaniesTable({
         <div className="flex justify-between items-start mb-3">
          <div className="flex items-center gap-3 flex-1 min-w-0">
           <div className="flex-1 min-w-0">
-           <h3 className="font-semibold text-foreground truncate mb-1">
+           <h3 className="font-semibold text-foreground text-sm leading-snug whitespace-normal break-words mb-1">
             {company.company}
            </h3>
            <div className="flex gap-2">
@@ -255,6 +263,13 @@ export function CompaniesTable({
           </div>
          )}
 
+         {company.contact && (
+          <div className="flex items-center gap-2 text-muted-foreground">
+           <User size={14} className="flex-shrink-0 mt-0.5" />
+           <span className="text-xs line-clamp-2">{company.contact}</span>
+          </div>
+         )}
+
          {company.phone && (
           <div className="flex items-center gap-2 text-muted-foreground">
            <Phone size={14} className="flex-shrink-0 mt-0.5" />
@@ -266,6 +281,13 @@ export function CompaniesTable({
           <div className="flex items-center gap-2 text-muted-foreground">
            <Mail size={14} className="flex-shrink-0 mt-0.5" />
            <span className="text-xs line-clamp-2">{company.email}</span>
+          </div>
+         )}
+
+         {company.website && (
+          <div className="flex items-center gap-2 text-muted-foreground">
+           <Globe size={14} className="flex-shrink-0 mt-0.5" />
+           <span className="text-xs line-clamp-2">{company.website}</span>
           </div>
          )}
 

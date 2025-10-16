@@ -24,20 +24,21 @@ import {
  fetchGoogleSheetData,
  readExcelFile
 } from '@/services/leads'
-import type { ExcelLead, LeadRequest } from '@/http/types/leads'
+import type { LeadRequest } from '@/http/types/leads'
+import type { ExcelAlvara } from '@/http/types/alvaras'
 
-interface ImportLeadsModalProps {
+interface ImportAlvarasModalProps {
  isOpen: boolean
  onClose: () => void
  // eslint-disable-next-line @typescript-eslint/no-explicit-any
  onImportComplete: (leads: any[]) => void
 }
 
-export function ImportLeadsModal({
+export function ImportAlvarasModal({
  isOpen,
  onClose,
  onImportComplete
-}: ImportLeadsModalProps) {
+}: ImportAlvarasModalProps) {
  const [sheetsUrl, setSheetsUrl] = useState('')
  const [selectedFile, setSelectedFile] = useState<File | null>(null)
  const [importType, setImportType] = useState<'sheets' | 'excel'>('sheets')
@@ -57,7 +58,7 @@ export function ImportLeadsModal({
   }
  }
 
- async function loadRawLeads() {
+ async function loadRawAlvaras() {
   if (importType === 'sheets') {
    const sheetId = extractSheetId(sheetsUrl)
    if (!sheetId)
@@ -111,22 +112,20 @@ export function ImportLeadsModal({
   )
 
   try {
-   const rawLeads = (await loadRawLeads()) as ExcelLead[]
+   const rawAlvaras = (await loadRawAlvaras()) as ExcelAlvara[]
 
-   if (!rawLeads || rawLeads.length === 0) {
+   if (!rawAlvaras || rawAlvaras.length === 0) {
     throw new Error('Nenhum dado encontrado na planilha')
    }
 
-   console.log(rawLeads)
-
-   const processedLeads: LeadRequest[] = rawLeads.map(lead => ({
-    company: lead.company || '',
+   const processedAlvaras: LeadRequest[] = rawAlvaras.map(lead => ({
+    company: '',
     service: lead.service || lead.type || '',
     license: lead.license || lead.license || '',
     validity: lead.validity || lead.vigencia || '',
     expiration_date: lead.expiration_date || lead.vencimento || '',
     next_action: lead.next_action || lead.nextAction || '',
-    status: lead.status || '',
+    status: 'pendente',
     address: lead.address || '',
     number: lead.number || lead.numero || '',
     city: lead.city || lead.municipio || '',
@@ -135,15 +134,15 @@ export function ImportLeadsModal({
     complement: lead.complement || lead.complemento || ''
    }))
 
-   onImportComplete(processedLeads)
+   onImportComplete(processedAlvaras)
 
    setImportStatus('success')
 
    toast.success('Importação concluída!', {
     description:
-     processedLeads.length === 1
-      ? '1 lead importado, salvando no sistema...'
-      : `${processedLeads.length} leads importados, salvando no sistema...`,
+     processedAlvaras.length === 1
+      ? '1 alvará importado, salvando no sistema...'
+      : `${processedAlvaras.length} alvarás importados, salvando no sistema...`,
     duration: 3000
    })
 
@@ -167,7 +166,7 @@ export function ImportLeadsModal({
     <DialogHeader>
      <DialogTitle className="flex items-center gap-2">
       <Upload className="h-5 w-5 text-green-600" />
-      Importar Leads
+      Importar Alvarás
      </DialogTitle>
      <DialogDescription>
       Escolha entre importar de uma planilha do Google Sheets ou fazer upload de
@@ -246,10 +245,10 @@ export function ImportLeadsModal({
          <div className="flex justify-between text-sm">
           {/* <span>
            {config
-            ? 'Processando e enriquecendo leads...'
-            : 'Processando leads...'}
+            ? 'Processando e enriquecendo alvarás...'
+            : 'Processando alvarás...'}
           </span> */}
-          <span>Processando leads...</span>
+          <span>Processando alvarás...</span>
           <span>
            {importProgress.current}/{importProgress.total}
           </span>
@@ -301,7 +300,7 @@ export function ImportLeadsModal({
         Importação Concluída!
        </h3>
        <p className="text-gray-600">
-        Os leads foram importados com os dados especificados.
+        Os alvarás foram importados com os dados especificados.
         {/* {config && ' Dados enriquecidos via APIs reais.'} */}
        </p>
       </div>

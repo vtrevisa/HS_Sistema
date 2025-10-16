@@ -1,17 +1,27 @@
-import { Plus, RefreshCw } from 'lucide-react'
+import { Plus, RefreshCw, Upload } from 'lucide-react'
 import { Button } from '../ui/button'
 
 interface CompaniesActionsProps {
  onNewCompanyClick: () => void
  enhanceAllData: () => void
+ onImportClick: () => void
 }
 
 export function CompaniesActions({
+ onImportClick,
  enhanceAllData,
  onNewCompanyClick
 }: CompaniesActionsProps) {
  return (
   <div className="flex gap-2 flex-col sm:flex-row">
+   <Button
+    onClick={onImportClick}
+    className="bg-green-600 hover:bg-green-700 dark:text-white"
+   >
+    <Upload className="h-4 w-4 mr-2" />
+    Importar Planilha
+   </Button>
+
    <Button
     onClick={enhanceAllData}
     className="bg-blue-600 hover:bg-blue-700 dark:text-white"

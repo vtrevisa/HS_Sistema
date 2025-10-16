@@ -33,8 +33,8 @@ export function useLead() {
       setTimeout(() => {
         toast.success(
           savedLeads.length === 1
-          ? '1 lead foi salvo com sucesso!'
-          : `${savedLeads.length} leads foram salvos com sucesso!`
+          ? '1 lead foi gerado com sucesso!'
+          : `${savedLeads.length} leads foram geradoscd com sucesso!`
         )
       }, 3200)
     },

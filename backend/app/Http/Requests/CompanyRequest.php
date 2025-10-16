@@ -24,9 +24,13 @@ class CompanyRequest extends FormRequest
             'cep' => $this->input('cep'),
             'address' => $this->input('address'),
             'number' => $this->input('number'),
+            'complement' => $this->input('complement'),
             'state' => $this->input('state'),
             'city' => $this->input('city'),
+            'district' => $this->input('district'),
             'service' => $this->input('service'),
+            'license' => $this->input('license'),
+            'occupation' => $this->input('occupation'),
             'validity' => $this->input('validity')
         ]);
     }
@@ -53,16 +57,22 @@ class CompanyRequest extends FormRequest
 
         return [
             'status' => 'sometimes|nullable|string',
-            'company' => $isUpdate ? 'sometimes|required' : 'required',
-            'cep' => $isUpdate ? 'sometimes|required' : 'required',
+            'company' => $isUpdate ? 'required' : 'sometimes',
+            'cep' => $isUpdate ? 'sometimes' : 'sometimes',
             'address'  => $isUpdate ? 'sometimes|required' : 'required',
-            'state' => $isUpdate ? 'sometimes|required' : 'required',
+            'state' => $isUpdate ? 'sometimes' : 'sometimes',
             'city' => $isUpdate ? 'sometimes|required' : 'required',
             'service'      => $isUpdate ? 'sometimes|required' : 'required',
             'validity'  => $isUpdate ? 'sometimes|required' : 'required',
 
             // Campos opcionais no POST
             'number' => 'nullable|string',
+            'complement' => 'nullable|string',
+            'district' => 'nullable|string',
+            'license' => 'nullable|string',
+            'occupation' => 'nullable|string',
+            'website'    => 'nullable|string',
+            'contact'    => 'nullable|string',
             'phone'    => 'nullable|string',
             'cnpj'        => 'nullable|string',
             'email'       => 'nullable|email',

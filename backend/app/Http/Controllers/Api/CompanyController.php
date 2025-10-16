@@ -161,8 +161,6 @@ class CompanyController extends Controller
         ]);
     }
 
-
-
     public function searchCompanyByCnpj(Request $request)
     {
 
@@ -209,7 +207,6 @@ class CompanyController extends Controller
             ], 500);
         }
     }
-
 
     // Show all companies from db
 
@@ -271,10 +268,17 @@ class CompanyController extends Controller
                 'cep' => $request->input('cep', ''),
                 'address' => ucwords(strtolower($request->input('address', ''))),
                 'number' => $request->input('number', ''),
+                'complement' => ucwords(strtolower($request->input('complement', ''))),
                 'state' => strtoupper($request->input('state', '')),
                 'city' => ucwords(strtolower($request->input('city', ''))),
+                'district' => ucwords(strtolower($request->input('district', ''))),
+                'complement' => $request->input('complement', ''),
                 'service' => strtoupper($request->input('service', '')),
+                'license' => $request->input('license', ''),
+                'occupation' => $request->input('occupation', ''),
                 'validity' => $request->input('validity', ''),
+                'website' => $request->input('website', ''),
+                'contact' => $request->input('contact', ''),
                 'phone' => $request->input('phone', ''),
                 'cnpj' => $request->input('cnpj', ''),
                 'email' => strtolower($request->input('email', '')),
@@ -317,10 +321,17 @@ class CompanyController extends Controller
                 'cep' => $request->input('cep', ''),
                 'address' => ucwords(strtolower($request->input('address', ''))),
                 'number' => $request->input('number', ''),
+                'complement' => ucwords(strtolower($request->input('complement', ''))),
                 'state' => strtoupper($request->input('state', '')),
                 'city' => ucwords(strtolower($request->input('city', ''))),
+                'district' => ucwords(strtolower($request->input('district', ''))),
+                'complement' => $request->input('complement', ''),
                 'service' => strtoupper($request->input('service', '')),
+                'license' => $request->input('license', ''),
+                'occupation' => $request->input('occupation', ''),
                 'validity' => $request->input('validity', ''),
+                'website' => $request->input('website', ''),
+                'contact' => $request->input('contact', ''),
                 'phone' => $request->input('phone', ''),
                 'cnpj' => $request->input('cnpj', ''),
                 'email' => strtolower($request->input('email', '')),
