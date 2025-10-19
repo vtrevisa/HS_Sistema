@@ -4,6 +4,7 @@ use App\Http\Controllers\Api\ArchivedProposalController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\LeadController;
 use App\Http\Controllers\Api\CompanyController;
+use App\Http\Controllers\Api\GoogleSheetsController;
 use App\Http\Controllers\Api\UserController;
 
 use Illuminate\Support\Facades\Route;
@@ -36,6 +37,13 @@ Route::post('/companies/search/cnpj', [CompanyController::class, 'searchCompanyB
 // Proposals
 Route::get('/archived-proposals', [ArchivedProposalController::class, 'index']);
 
+
+// Manage Sheets
+Route::get('/sheets/import', [GoogleSheetsController::class, 'importSheet']); //GET
+Route::get('/sheets/import/{sheetName}', [GoogleSheetsController::class, 'importCitySheet']); //GET
+Route::get('/sheets/update', [GoogleSheetsController::class, 'updateSheet']); //GET
+Route::get('/sheets/list', [GoogleSheetsController::class, 'listSheets']); //GET
+Route::get('/sheets/{sheetName}', [GoogleSheetsController::class, 'getSheetData']); //GET
 
 // Users
 Route::get('/users', [UserController::class, 'index']); //GET
