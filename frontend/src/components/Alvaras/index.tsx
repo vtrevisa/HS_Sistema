@@ -1,46 +1,90 @@
 import { useState } from 'react'
 import { toast } from 'sonner'
+import type { DateRange } from 'react-day-picker'
 import { AlvarasFilters } from './alvaras-filters'
-import { AlvarasTable } from './alvaras-table'
+import { AlvarasCounter } from './alvaras-counter'
+import type { SearchAlvarasPayload } from '@/http/types/alvaras'
+import { useAlvaras } from '@/http/use-alvaras'
+
+// type FlowState =
+//  | 'no-subscription'
+//  | 'subscription-active'
+//  | 'search-result'
+//  | 'payment-required'
+//  | 'alvaras-released'
 
 export function Alvaras() {
- const [selectedStateFilter, setSelectedStateFilter] = useState('')
  const [city, setCity] = useState('')
- const [initDate, setInitDate] = useState('')
- const [endDate, setEndDate] = useState('')
- const [selectedTypeFilter, setSelectedTypeFilter] = useState('')
- const [selectedAlvaras, setSelectedAlvaras] = useState<string[]>([])
+ const [dateRange, setDateRange] = useState<DateRange | undefined>()
+ const [selectedTypeFilter, setSelectedTypeFilter] = useState<
+  'Todos' | 'AVCB' | 'CLCB'
+ >('Todos')
 
- function applyFilter() {
-  console.log('Buscando alvarás com filtros:', {
-   selectedStateFilter,
-   city,
-   initDate,
-   endDate,
-   selectedTypeFilter
-  })
+ const [subscriptionData] = useState({
+  planName: 'Premium',
+  monthlyLimit: 200,
+  used: 50,
+  resetDate: new Date(2025, 10, 1)
+ })
 
-  toast.success('Filtros Aplicados', {
-   description: 'A busca foi executada com os filtros selecionados.'
-  })
- }
+ const { alvarasData, searchAlvaras, searchResults, flowState } =
+  useAlvaras(subscriptionData)
 
- function exportList() {
-  if (selectedAlvaras.length === 0) {
-   toast.error('Seleção Necessária', {
-    description: 'Selecione pelo menos um alvará para exportar.'
+ async function handleSearchAlvaras() {
+  if (!city.trim()) {
+   toast.info('Campo obrigatório', {
+    description: 'Por favor, informe a cidade.'
    })
-
    return
   }
-  setSelectedAlvaras([])
 
-  toast.success('Lista Exportada', {
-   description:
-    selectedAlvaras.length === 1
-     ? '1 alvará foi enviado para a aba "Busca de Dados da Empresa".'
-     : `${selectedAlvaras.length} alvarás foram enviados para a aba "Busca de Dados da Empresa".`
-  })
+  if (!dateRange?.from || !dateRange?.to) {
+   toast.info('Período obrigatório', {
+    description: 'Por favor, selecione o período de vencimento.'
+   })
+   return
+  }
+
+  const from = new Date(dateRange.from)
+  const to = new Date(dateRange.to)
+
+  if (to < from) {
+   toast.info('Período inválido', {
+    description: 'A data de término deve ser maior que a data de início.'
+   })
+   return
+  }
+
+  const monthMap = [
+   'jan',
+   'fev',
+   'mar',
+   'abr',
+   'mai',
+   'jun',
+   'jul',
+   'ago',
+   'set',
+   'out',
+   'nov',
+   'dez'
+  ]
+
+  const payload: SearchAlvarasPayload = {
+   city,
+   from: { year: from.getFullYear(), month: monthMap[from.getMonth()] },
+   to: { year: to.getFullYear(), month: monthMap[to.getMonth()] },
+   selectedTypeFilter
+  }
+
+  console.log('Payload para backend:', payload)
+
+  try {
+   await searchAlvaras.mutateAsync(payload)
+  } catch (error) {
+   console.error(error)
+   toast.error('Erro ao buscar alvarás')
+  }
  }
 
  return (
@@ -51,27 +95,24 @@ export function Alvaras() {
     </h1>
    </div>
 
+   {/* Resultado da Busca */}
+   {searchResults &&
+    (flowState === 'search-result' || flowState === 'payment-required') && (
+     <AlvarasCounter
+      totalFound={searchResults.totalFound}
+      available={searchResults.available}
+     />
+    )}
+
    {/* Filtros */}
    <AlvarasFilters
-    selectedState={selectedStateFilter}
-    setSelectedState={setSelectedStateFilter}
     city={city}
     setCity={setCity}
-    initDate={initDate}
-    setInitDate={setInitDate}
-    endDate={endDate}
-    setEndDate={setEndDate}
+    dateRange={dateRange}
+    setDateRange={setDateRange}
     selectedType={selectedTypeFilter}
     setSelectedType={setSelectedTypeFilter}
-    applyFilter={applyFilter}
-    exportList={exportList}
-    selectedAlvaras={selectedAlvaras}
-   />
-
-   {/* Tabela de Resultados */}
-   <AlvarasTable
-    selectedAlvaras={selectedAlvaras}
-    setSelectedAlvaras={setSelectedAlvaras}
+    applyFilter={handleSearchAlvaras}
    />
   </div>
  )

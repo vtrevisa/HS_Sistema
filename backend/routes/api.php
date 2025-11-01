@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\AlvaraController;
 use App\Http\Controllers\Api\ArchivedProposalController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\LeadController;
@@ -17,6 +18,10 @@ Route::get('/auth/me', [AuthController::class, 'me']); //GET
 
 // Logout
 Route::post('/auth/logout', [AuthController::class, 'logout']); //POST
+
+// Alvaras
+Route::get('/alvaras', [AlvaraController::class, 'index']); //GET
+Route::post('/alvaras/search', [AlvaraController::class, 'search']); //POST
 
 // Leads
 Route::get('/leads', [LeadController::class, 'index']); //GET

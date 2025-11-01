@@ -18,3 +18,22 @@ export interface ExcelAlvara {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   [key: string]: any
 }
+
+export interface Alvara {
+  id: number;
+  city: string;
+  year: number;
+  month: string;
+  avcb: number;
+  clcb: number;
+  total_per_month: number;
+  insert_date: string;
+  update_date: string;
+}
+
+export interface SearchAlvarasPayload {
+  city: string;
+  selectedTypeFilter: "Todos" | "AVCB" | "CLCB";
+  from: { year: number; month: string };
+  to: { year: number; month: string };
+}

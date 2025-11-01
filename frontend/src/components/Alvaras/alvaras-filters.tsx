@@ -1,79 +1,59 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Label } from '@/components/ui/label'
 import { Input } from '@/components/ui/input'
+import { DatePickerWithRange } from '../ui/date-picker'
+import type { DateRange } from 'react-day-picker'
 
 import {
  CalendarRange,
  FileText,
- Filter,
  MapPin,
- MapPinHouse
+ MapPinHouse,
+ Search
 } from 'lucide-react'
 import { AlvarasActions } from './alvaras-actions'
 
 interface AlvarasFiltersProps {
- selectedState: string
- setSelectedState: (status: string) => void
  city: string
  setCity: (status: string) => void
- initDate: string
- setInitDate: (status: string) => void
- endDate: string
- setEndDate: (status: string) => void
- selectedType: string
- setSelectedType: (type: string) => void
+ dateRange: DateRange | undefined
+ setDateRange: (range: DateRange | undefined) => void
+ selectedType: 'Todos' | 'AVCB' | 'CLCB'
+ setSelectedType: (type: 'Todos' | 'AVCB' | 'CLCB') => void
  applyFilter: () => void
- exportList: () => void
- selectedAlvaras: string[]
 }
 
 export function AlvarasFilters({
- selectedState,
- setSelectedState,
  city,
  setCity,
- initDate,
- setInitDate,
- endDate,
- setEndDate,
+ dateRange,
+ setDateRange,
  selectedType,
  setSelectedType,
- applyFilter,
- exportList,
- selectedAlvaras
+ applyFilter
 }: AlvarasFiltersProps) {
  return (
   <Card>
    <CardHeader>
     <CardTitle className="flex items-center gap-2">
-     <Filter className="h-5 w-5" />
-     Filtros de Busca
+     <Search className="h-5 w-5" />
+     Buscar Alvarás
     </CardTitle>
    </CardHeader>
    <CardContent className="space-y-4">
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
      <div className="space-y-2">
       <Label htmlFor="estado" className="flex items-center gap-1">
        <MapPinHouse size={14} />
        Estado
       </Label>
-      <select
-       value={selectedState}
-       onChange={e => setSelectedState(e.target.value)}
-       className="w-full h-[40px] border border-gray-300 bg-background rounded-lg px-4 py-2 focus:ring-2 focus:ring-ring focus:border-transparent outline-none text-sm"
-      >
-       <option value="">Selecione o estado</option>
-       <option value="SP">São Paulo</option>
-       <option value="RJ">Rio de Janeiro</option>
-       <option value="MG">Minas Gerais</option>
-       <option value="RS">Rio Grande do Sul</option>
-      </select>
+      <Input value="SP" disabled className="bg-muted" />
      </div>
 
      <div className="space-y-2">
       <Label htmlFor="cidade" className="flex items-center gap-1">
        <MapPin size={14} />
-       Cidade
+       Cidade *
       </Label>
       <Input
        id="cidade"
@@ -85,31 +65,11 @@ export function AlvarasFilters({
      </div>
 
      <div className="space-y-2">
-      <Label htmlFor="dataInicio" className="flex items-center gap-1">
+      <Label htmlFor="expirationPeriod" className="flex items-center gap-1">
        <CalendarRange size={14} />
-       Data de Início
+       Período de Vencimento *
       </Label>
-      <Input
-       id="dataInicio"
-       type="date"
-       value={initDate}
-       onChange={e => setInitDate(e.target.value)}
-       className="text-foreground placeholder:text-foreground border-gray-300"
-      />
-     </div>
-
-     <div className="space-y-2">
-      <Label htmlFor="dataTermino" className="flex items-center gap-1">
-       <CalendarRange size={14} />
-       Data de Término
-      </Label>
-      <Input
-       id="dataTermino"
-       type="date"
-       value={endDate}
-       onChange={e => setEndDate(e.target.value)}
-       className="text-foreground placeholder:text-foreground border-gray-300"
-      />
+      <DatePickerWithRange date={dateRange} onDateChange={setDateRange} />
      </div>
 
      <div className="space-y-2">
@@ -119,21 +79,19 @@ export function AlvarasFilters({
       </Label>
       <select
        value={selectedType}
-       onChange={e => setSelectedType(e.target.value)}
+       onChange={e =>
+        setSelectedType(e.target.value as 'Todos' | 'AVCB' | 'CLCB')
+       }
        className="w-full h-[40px] border border-gray-300 bg-background rounded-lg px-4 py-2 focus:ring-2 focus:ring-ring focus:border-transparent outline-none text-sm"
       >
-       <option value="">Selecione o tipo</option>
+       <option value="Todos">Todos</option>
        <option value="AVCB">AVCB</option>
        <option value="CLCB">CLCB</option>
       </select>
      </div>
     </div>
 
-    <AlvarasActions
-     applyFilter={applyFilter}
-     exportList={exportList}
-     selectedAlvaras={selectedAlvaras}
-    />
+    <AlvarasActions applyFilter={applyFilter} />
    </CardContent>
   </Card>
  )
