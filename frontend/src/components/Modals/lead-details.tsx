@@ -1,23 +1,37 @@
 import { useEffect, useState } from 'react'
 import type { LeadRequest } from '@/http/types/leads'
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../ui/dialog'
 
+import { Button } from '../ui/button'
+import { Badge } from '../ui/badge'
+import { Input } from '../ui/input'
+import { EditableField } from './editable-field'
+
+import { useLead } from '@/http/use-lead'
+import { Loading } from '../Login/loading'
 import {
+ AlertTriangle,
  Building,
  Calendar,
+ Clock,
+ DollarSign,
  Edit,
  FileText,
  Mail,
  MapPin,
  Phone,
  Save,
+ Upload,
  User
 } from 'lucide-react'
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../ui/dialog'
-import { Button } from '../ui/button'
-import { Badge } from '../ui/badge'
-import { Input } from '../ui/input'
-import { useLead } from '@/http/use-lead'
-import { Loading } from '../Login/loading'
+import { getCompleteAddress, getStatusColor } from '@/services/leads'
+import { ProposalsActions } from './proposals-actions'
+import { Label } from '../ui/label'
+
+type LeadWithExtras = LeadRequest & {
+ daysInStage?: number
+ isOverdue?: boolean
+}
 
 interface LeadDetailsModalProps {
  isOpen: boolean
@@ -32,7 +46,7 @@ export function LeadDetailsModal({
 }: LeadDetailsModalProps) {
  const [isEditing, setIsEditing] = useState(false)
  const [editedLead, setEditedLead] = useState<LeadRequest | null>(null)
-
+ const [isFileUploading, setIsFileUploading] = useState(false)
  const { updateLead } = useLead()
 
  useEffect(() => {
@@ -41,17 +55,9 @@ export function LeadDetailsModal({
 
  if (!lead) return null
 
- const currentLead = editedLead || lead
+ const currentLead: LeadWithExtras = editedLead || lead
 
- const formatedPhone = currentLead.phone
-  ? currentLead.phone.replace(/\D/g, '')
-  : ''
-
- function handleEdit() {
-  if (!lead?.id) return
-  setEditedLead({ ...lead })
-  setIsEditing(true)
- }
+ const formatedPhone = currentLead.phone?.replace(/\D/g, '')
 
  function handleSave() {
   if (!editedLead) return
@@ -64,94 +70,30 @@ export function LeadDetailsModal({
   })
  }
 
- function handleCancel() {
-  setEditedLead(null)
-  setIsEditing(false)
+ function handleGanho() {
+  // lógica de marcar como ganho
+  console.log('Lead marcada como Ganho')
+ }
+
+ function handlePerdido(reason: string) {
+  // lógica de marcar como perdido
+  console.log('Lead marcada como Perdido por:', reason)
+ }
+
+ function handleFileUpload() {
+  setIsFileUploading(true)
  }
 
  function updateField<K extends keyof LeadRequest>(
   field: K,
-  value: LeadRequest[K]
+  value: string | number | undefined
  ) {
-  if (editedLead) {
-   setEditedLead({ ...editedLead, [field]: value })
+  if (field === 'service_value') {
+   setEditedLead(prev => (prev ? { ...prev, [field]: Number(value) } : null))
+  } else {
+   setEditedLead(prev => (prev ? { ...prev, [field]: value } : null))
   }
  }
-
- function getStatusColor(status: string) {
-  switch (status) {
-   case 'Lead':
-    return 'bg-gray-200 text-gray-700 dark:bg-gray-600 dark:text-gray-300'
-   case 'Primeiro contato':
-    return 'bg-blue-200 text-blue-700 dark:bg-blue-800 dark:text-blue-300'
-   case 'Follow-up':
-    return 'bg-yellow-200 text-yellow-700 dark:bg-yellow-800 dark:text-yellow-300'
-   case 'Proposta enviada':
-    return 'bg-green-200 text-green-700 dark:bg-green-800 dark:text-green-300'
-   case 'Cliente fechado':
-    return 'bg-green-100 text-green-800'
-   case 'Arquivado':
-    return 'bg-red-100 text-red-800'
-   default:
-    return 'bg-gray-100 text-gray-800'
-  }
- }
-
- function isVencimentoProximo(vencimento: string) {
-  if (!vencimento) return false
-  const hoje = new Date()
-  const dataVencimento = new Date(vencimento)
-  const diasAteVencimento = Math.ceil(
-   (dataVencimento.getTime() - hoje.getTime()) / (1000 * 3600 * 24)
-  )
-  return diasAteVencimento <= 30
- }
-
- function getCompleteAddress() {
-  const parts: string[] = []
-  if (currentLead.address) parts.push(currentLead.address)
-  if (currentLead.number) parts.push(currentLead.number)
-  if (currentLead.complement) parts.push(currentLead.complement)
-  if (currentLead.district) parts.push(currentLead.district)
-  if (currentLead.city) parts.push(currentLead.city)
-
-  const addressLine = parts.join(', ')
-  return currentLead.cep
-   ? `${addressLine} - CEP: ${currentLead.cep}`
-   : addressLine
- }
-
- const EditableField = ({
-  label,
-  field,
-  type = 'text',
-  icon
- }: {
-  label: string
-  field: keyof LeadRequest
-  type?: string
-  icon?: React.ReactNode
- }) => (
-  <div>
-   <span className="font-medium text-gray-800 flex items-center gap-1">
-    {icon}
-    {label}:
-   </span>
-   {isEditing ? (
-    <Input
-     type={type}
-     value={editedLead?.[field] || ''}
-     onChange={e => updateField(field, e.target.value)}
-     className="mt-1"
-     placeholder={`Digite ${label.toLowerCase()}`}
-    />
-   ) : (
-    <p className="text-gray-600 break-words">
-     {currentLead[field] || 'Não informado'}
-    </p>
-   )}
-  </div>
- )
 
  return (
   <Dialog open={isOpen} onOpenChange={onClose}>
@@ -165,25 +107,24 @@ export function LeadDetailsModal({
       <div className="flex gap-2">
        {isEditing ? (
         <>
-         <Button size="sm" variant="outline" onClick={handleCancel}>
+         <Button
+          size="sm"
+          variant="outline"
+          onClick={() => setIsEditing(false)}
+         >
           Cancelar
          </Button>
          <Button size="sm" onClick={handleSave} disabled={updateLead.isPending}>
           {updateLead.isPending ? (
-           <>
-            <Loading size={16} />
-            Salvando...
-           </>
+           <Loading size={16} />
           ) : (
-           <>
-            <Save size={16} className="mr-1" />
-            Salvar
-           </>
+           <Save size={16} className="mr-1" />
           )}
+          Salvar
          </Button>
         </>
        ) : (
-        <Button size="sm" variant="outline" onClick={handleEdit}>
+        <Button size="sm" variant="outline" onClick={() => setIsEditing(true)}>
          <Edit size={16} className="mr-1" />
          Editar
         </Button>
@@ -192,52 +133,112 @@ export function LeadDetailsModal({
      </DialogTitle>
     </DialogHeader>
 
+    {/* Proposals Actions */}
+    <ProposalsActions
+     isEditing={isEditing}
+     currentLead={{
+      ...currentLead,
+      company: currentLead.company || '',
+      status: currentLead.status || 'Lead'
+     }}
+     handleGanho={handleGanho}
+     handlePerdido={handlePerdido}
+    />
+
     <div className="space-y-4 sm:space-y-6">
      {/* Status e Serviço */}
      <div className="flex gap-2 sm:gap-3 flex-wrap">
       <Badge className={`${getStatusColor(currentLead.status)} capitalize`}>
        {currentLead.status}
       </Badge>
-      <Badge variant="outline" className="bg-red-100 text-red-800">
-       Serviço: {currentLead.service}
-      </Badge>
+      {currentLead.isOverdue && (
+       <Badge variant="destructive" className="flex items-center gap-1">
+        <AlertTriangle size={12} />
+        Prazo vencido
+       </Badge>
+      )}
+      {currentLead.daysInStage && (
+       <Badge variant="outline" className="flex items-center gap-1">
+        <Clock size={12} />
+        {currentLead.daysInStage} dias no estágio
+       </Badge>
+      )}
      </div>
+
      {/* Informações do Serviço */}
-     <div className="bg-red-50 p-3 sm:p-4 rounded-lg">
+
+     <div className="bg-card border border-border p-3 sm:p-4 rounded-lg">
       <h3 className="font-semibold text-gray-800 mb-3 flex items-center gap-2 text-sm sm:text-base">
        <FileText size={16} />
        Informações do Serviço
       </h3>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 text-sm">
-       <EditableField label="Serviço" field="service" />
-       <EditableField label="Licença" field="license" />
        <EditableField
-        label="Validade"
+        label="Tipo de serviço"
+        field="service"
+        value={currentLead.service}
+        isEditing={isEditing}
+        onChange={updateField}
+       />
+       <EditableField
+        label="Número da licença"
+        field="license"
+        value={currentLead.license}
+        displayValue={`${currentLead.service}-${currentLead.license}`}
+        isEditing={isEditing}
+        onChange={updateField}
+       />
+       <EditableField
+        label="Validade da licença"
         field="validity"
+        value={currentLead.validity}
         type="date"
+        isEditing={isEditing}
+        onChange={updateField}
         icon={<Calendar size={12} />}
        />
        <EditableField
         label="Valor do Serviço"
         field="service_value"
-        type="number"
+        value={currentLead.service_value}
+        isEditing={isEditing}
+        onChange={updateField}
+        icon={<DollarSign size={14} />}
        />
-       <div className="sm:col-span-2">
-        <EditableField label="Ocupação" field="occupation" />
-       </div>
+       <EditableField
+        label="Ocupação"
+        field="occupation"
+        value={currentLead.occupation}
+        isEditing={isEditing}
+        onChange={updateField}
+       />
       </div>
      </div>
 
      {/* Informações da Empresa */}
-     <div className="bg-gray-50 p-3 sm:p-4 rounded-lg">
+
+     <div className="bg-card border border-border p-3 sm:p-4 rounded-lg">
       <h3 className="font-semibold text-gray-800 mb-3 flex items-center gap-2 text-sm sm:text-base">
        <Building size={16} />
        Informações da Empresa
       </h3>
 
       <div className="grid grid-cols-1 gap-3 sm:gap-4 text-sm">
-       <EditableField label="CNPJ" field="cnpj" />
-       <EditableField label="Website" field="website" type="url" />
+       <EditableField
+        label="CNPJ"
+        field="cnpj"
+        value={currentLead.cnpj}
+        isEditing={isEditing}
+        onChange={updateField}
+       />
+       <EditableField
+        label="Website"
+        field="website"
+        value={currentLead.website}
+        type="url"
+        isEditing={isEditing}
+        onChange={updateField}
+       />
        <div>
         <span className="font-medium text-gray-800 flex items-center gap-1">
          <MapPin size={12} />
@@ -277,8 +278,8 @@ export function LeadDetailsModal({
           />
          </div>
         ) : (
-         <p className="text-gray-600 break-words">
-          {getCompleteAddress() || 'Não informado'}
+         <p className="text-gray-600 break-words bg-muted/50 p-3 rounded">
+          {getCompleteAddress(currentLead) || 'Não informado'}
          </p>
         )}
        </div>
@@ -287,112 +288,153 @@ export function LeadDetailsModal({
 
      {/* Informações de Contato */}
 
-     <div className="bg-blue-50 p-3 sm:p-4 rounded-lg">
+     <div className="bg-card border border-border p-3 sm:p-4 rounded-lg">
       <h3 className="font-semibold text-gray-800 mb-3 flex items-center gap-2 text-sm sm:text-base">
        <User size={16} />
-       Contato
+       Informações de Contato
       </h3>
-      <div className="space-y-3 text-sm">
-       <EditableField label="Nome do Contato" field="contact" />
+      <div className="space-y-4 text-sm">
        <EditableField
-        label="Telefone/WhatsApp"
-        field="phone"
-        type="tel"
-        icon={<Phone size={14} />}
+        label="Nome do Contato"
+        field="contact"
+        value={currentLead.contact}
+        isEditing={isEditing}
+        onChange={updateField}
        />
-       <EditableField
-        label="Email"
-        field="email"
-        type="email"
-        icon={<Mail size={14} />}
-       />
+       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div>
+         <EditableField
+          label="Telefone / WhatsApp"
+          field="phone"
+          value={currentLead.phone}
+          type="tel"
+          isEditing={isEditing}
+          onChange={updateField}
+          icon={<Phone size={14} />}
+         />
+         {!isEditing && currentLead.phone && (
+          <Button
+           variant="outline"
+           size="sm"
+           className="mt-2 w-full"
+           onClick={() =>
+            window.open(`https://wa.me/55${formatedPhone}`, '_blank')
+           }
+          >
+           <Phone size={14} className="mr-2" />
+           Abrir WhatsApp
+          </Button>
+         )}
+        </div>
+        <div>
+         <EditableField
+          label="Email"
+          field="email"
+          value={currentLead.email}
+          type="email"
+          isEditing={isEditing}
+          onChange={updateField}
+          icon={<Mail size={14} />}
+         />
+         {!isEditing && currentLead.email && (
+          <Button
+           variant="outline"
+           size="sm"
+           className="mt-2 w-full"
+           onClick={() => window.open(`mailto:${currentLead.email}`, '_blank')}
+          >
+           <Mail size={14} className="mr-2" />
+           Enviar E-mail
+          </Button>
+         )}
+        </div>
+       </div>
       </div>
      </div>
 
-     {/* Datas Importantes */}
-     <div className="bg-yellow-50 p-3 sm:p-4 rounded-lg">
+     {/* Informações de anexo */}
+     <div className="bg-card border border-border p-3 sm:p-4 rounded-lg">
       <h3 className="font-semibold text-gray-800 mb-3 flex items-center gap-2 text-sm sm:text-base">
-       <Calendar size={16} />
-       Datas Importantes
+       <FileText size={16} />
+       Histórico e Anexos
       </h3>
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 text-sm">
-       <div>
-        <span className="font-medium text-gray-800">Vencimento:</span>
-        {isEditing ? (
-         <Input
-          type="date"
-          value={editedLead?.expiration_date || ''}
-          onChange={e => updateField('expiration_date', e.target.value)}
-          className="mt-1"
-         />
-        ) : (
-         <p
-          className={`${
-           isVencimentoProximo(currentLead.expiration_date)
-            ? 'text-red-600 font-semibold'
-            : 'text-gray-600'
-          }`}
-         >
-          {currentLead.expiration_date
-           ? new Date(currentLead.expiration_date).toLocaleDateString('pt-BR')
-           : 'Não informado'}
-          {isVencimentoProximo(currentLead.expiration_date) && (
-           <span className="block text-xs text-red-500">
-            ⚠️ Vencimento próximo
-           </span>
-          )}
-         </p>
-        )}
-       </div>
-       <div>
-        <span className="font-medium text-gray-800">Próxima Ação:</span>
-        {isEditing ? (
-         <Input
-          type="date"
-          value={editedLead?.next_action || ''}
-          onChange={e => updateField('next_action', e.target.value)}
-          className="mt-1"
-         />
-        ) : (
-         <p className="text-gray-600">
-          {currentLead.next_action
-           ? new Date(currentLead.next_action).toLocaleDateString('pt-BR')
-           : 'Não informado'}
-         </p>
-        )}
-       </div>
-      </div>
-     </div>
 
-     {/* Ações Rápidas */}
-     {!isEditing && (
-      <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 pt-4 border-t">
-       <button
-        onClick={() =>
-         window.open(`https://wa.me/55${formatedPhone}`, '_blank')
-        }
-        title={`${
-         currentLead.phone ? `Enviar mensagem para ${currentLead.phone}` : ''
-        }`}
-        type="button"
-        className="flex-1 bg-green-100 hover:bg-green-200 text-green-700 py-3 px-4 rounded-lg transition-colors flex items-center justify-center gap-2 text-sm sm:text-base"
+      {/* Upload de arquivo */}
+      <div className="mb-4">
+       <Label
+        htmlFor={`file-modal-${currentLead.id}`}
+        className="cursor-pointer"
        >
-        <Phone size={16} />
-        Abrir WhatsApp
-       </button>
-       <button
-        onClick={() => window.open(`mailto:${currentLead.email}`, '_blank')}
-        title={`${
-         currentLead.email ? `Enviar email para ${currentLead.email}` : ''
-        }`}
-        type="button"
-        className="flex-1 bg-blue-100 hover:bg-blue-200 text-blue-700 py-3 px-4 rounded-lg transition-colors flex items-center justify-center gap-2 text-sm sm:text-base"
-       >
-        <Mail size={16} />
-        Enviar Email
-       </button>
+        <div className="flex items-center justify-center gap-2 border-2 border-dashed border-border rounded-lg p-4 hover:border-muted-foreground transition-colors">
+         <Upload size={16} className="text-muted-foreground" />
+         <span className="text-sm text-muted-foreground">
+          {isFileUploading
+           ? 'Enviando arquivo...'
+           : 'Anexar arquivo (PDF, DOC, etc.)'}
+         </span>
+        </div>
+       </Label>
+       <Input
+        id={`file-modal-${currentLead.id}`}
+        type="file"
+        accept=".pdf,.doc,.docx"
+        className="hidden"
+        onChange={handleFileUpload}
+        disabled={isFileUploading}
+       />
       </div>
-     )}
+
+      {/* Lista de anexos */}
+      {currentLead.attachments && currentLead.attachments.length > 0 && (
+       <div className="mb-4">
+        <h4 className="font-medium text-card-foreground mb-2">
+         Arquivos anexados:
+        </h4>
+        <div className="space-y-2">
+         {currentLead.attachments.map(attachment => (
+          <div
+           key={attachment.id}
+           className="flex items-center gap-2 p-2 bg-muted/50 rounded text-sm"
+          >
+           <FileText size={14} className="text-muted-foreground" />
+           <span className="flex-1 truncate">{attachment.name}</span>
+           <Button variant="ghost" size="sm" asChild>
+            <a href={attachment.url} target="_blank" rel="noopener noreferrer">
+             Abrir
+            </a>
+           </Button>
+          </div>
+         ))}
+        </div>
+       </div>
+      )}
+
+      {/* Histórico de atividades */}
+      {currentLead.activities && currentLead.activities.length > 0 && (
+       <div>
+        <h4 className="font-medium text-card-foreground mb-2">
+         Histórico de alterações:
+        </h4>
+        <div className="space-y-2 max-h-40 overflow-y-auto">
+         {currentLead.activities
+          .sort(
+           (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
+          )
+          .map(activity => (
+           <div key={activity.id} className="p-2 bg-muted/50 rounded text-sm">
+            <div className="flex justify-between items-start mb-1">
+             <span className="font-medium capitalize">{activity.type}</span>
+             <span className="text-xs text-muted-foreground">
+              {new Date(activity.date).toLocaleString('pt-BR')}
+             </span>
+            </div>
+            <p className="text-muted-foreground">{activity.description}</p>
+           </div>
+          ))}
+        </div>
+       </div>
+      )}
+     </div>
     </div>
    </DialogContent>
   </Dialog>

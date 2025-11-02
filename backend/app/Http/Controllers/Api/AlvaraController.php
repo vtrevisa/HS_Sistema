@@ -66,22 +66,66 @@ class AlvaraController extends Controller
             $query->where('city', $city);
         }
 
+        // Convert text month to number.
+
+        $months = [
+            'jan' => 1,
+            'fev' => 2,
+            'mar' => 3,
+            'abr' => 4,
+            'mai' => 5,
+            'jun' => 6,
+            'jul' => 7,
+            'ago' => 8,
+            'set' => 9,
+            'out' => 10,
+            'nov' => 11,
+            'dez' => 12
+        ];
+
+        // if ($from && $to) {
+        //     $query->where(function ($q) use ($from, $to) {
+        //         $q->where(function ($q2) use ($from) {
+        //             $q2->where('year', '>', $from['year'])
+        //                 ->orWhere(function ($q3) use ($from) {
+        //                     $q3->where('year', $from['year'])
+        //                         ->where('month', '>=', $from['month']);
+        //                 });
+        //         })->where(function ($q2) use ($to) {
+        //             $q2->where('year', '<', $to['year'])
+        //                 ->orWhere(function ($q3) use ($to) {
+        //                     $q3->where('year', $to['year'])
+        //                         ->where('month', '<=', $to['month']);
+        //                 });
+        //         });
+        //     });
+        // }
+
+
         if ($from && $to) {
-            $query->where(function ($q) use ($from, $to) {
-                $q->where(function ($q2) use ($from) {
-                    $q2->where('year', '>', $from['year'])
-                        ->orWhere(function ($q3) use ($from) {
-                            $q3->where('year', $from['year'])
-                                ->where('month', '>=', $from['month']);
-                        });
-                })->where(function ($q2) use ($to) {
-                    $q2->where('year', '<', $to['year'])
-                        ->orWhere(function ($q3) use ($to) {
-                            $q3->where('year', $to['year'])
-                                ->where('month', '<=', $to['month']);
-                        });
+            $fromYear = (int) $from['year'];
+            $toYear = (int) $to['year'];
+            $fromMonth = $months[strtolower($from['month'])] ?? null;
+            $toMonth = $months[strtolower($to['month'])] ?? null;
+
+            if ($fromMonth && $toMonth) {
+                //  Range filter (with months sorted)
+                $query->where(function ($q) use ($fromYear, $toYear, $fromMonth, $toMonth) {
+                    $q->where(function ($sub) use ($fromYear, $fromMonth) {
+                        $sub->where('year', '>', $fromYear)
+                            ->orWhere(function ($sub2) use ($fromYear, $fromMonth) {
+                                $sub2->where('year', $fromYear)
+                                    ->whereRaw('FIELD(month, "jan","fev","mar","abr","mai","jun","jul","ago","set","out","nov","dez") >= ?', [$fromMonth]);
+                            });
+                    })->where(function ($sub) use ($toYear, $toMonth) {
+                        $sub->where('year', '<', $toYear)
+                            ->orWhere(function ($sub2) use ($toYear, $toMonth) {
+                                $sub2->where('year', $toYear)
+                                    ->whereRaw('FIELD(month, "jan","fev","mar","abr","mai","jun","jul","ago","set","out","nov","dez") <= ?', [$toMonth]);
+                            });
+                    });
                 });
-            });
+            }
         }
 
         // Select fields according to the filter

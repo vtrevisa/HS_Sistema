@@ -21,6 +21,7 @@ interface AlvarasFiltersProps {
  selectedType: 'Todos' | 'AVCB' | 'CLCB'
  setSelectedType: (type: 'Todos' | 'AVCB' | 'CLCB') => void
  applyFilter: () => void
+ isLoading: boolean
 }
 
 export function AlvarasFilters({
@@ -30,7 +31,8 @@ export function AlvarasFilters({
  setDateRange,
  selectedType,
  setSelectedType,
- applyFilter
+ applyFilter,
+ isLoading
 }: AlvarasFiltersProps) {
  return (
   <Card>
@@ -91,7 +93,7 @@ export function AlvarasFilters({
      </div>
     </div>
 
-    <AlvarasActions applyFilter={applyFilter} />
+    <AlvarasActions applyFilter={applyFilter} isLoading={isLoading} />
    </CardContent>
   </Card>
  )

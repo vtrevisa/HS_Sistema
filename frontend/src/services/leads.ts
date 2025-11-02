@@ -321,3 +321,46 @@ export async function exportLeadsToExcel(leads: LeadRequest[]) {
   })
 
 }
+
+export function getStatusColor(status: string) {
+ switch (status) {
+  case 'Lead':
+   return 'bg-gray-200 text-gray-700 dark:bg-gray-600 dark:text-gray-300'
+  case 'Primeiro contato':
+   return 'bg-blue-200 text-blue-700 dark:bg-blue-800 dark:text-blue-300'
+  case 'Follow-up':
+   return 'bg-yellow-200 text-yellow-700 dark:bg-yellow-800 dark:text-yellow-300'
+  case 'Proposta enviada':
+   return 'bg-green-200 text-green-700 dark:bg-green-800 dark:text-green-300'
+  case 'Cliente fechado':
+   return 'bg-green-100 text-green-800'
+  case 'Arquivado':
+   return 'bg-red-100 text-red-800'
+  default:
+   return 'bg-gray-100 text-gray-800'
+ }
+}
+
+
+export function isVencimentoProximo(vencimento?: string) {
+ if (!vencimento) return false
+ const hoje = new Date()
+ const dataVencimento = new Date(vencimento)
+ const diasAteVencimento = Math.ceil(
+  (dataVencimento.getTime() - hoje.getTime()) / (1000 * 3600 * 24)
+ )
+ return diasAteVencimento <= 30
+}
+
+export function getCompleteAddress(lead: LeadRequest) {
+ const parts: string[] = []
+ if (lead.address) parts.push(lead.address)
+ if (lead.number) parts.push(lead.number)
+ if (lead.complement) parts.push(lead.complement)
+ if (lead.district) parts.push(lead.district)
+ if (lead.city) parts.push(lead.city)
+
+ const addressLine = parts.join(', ')
+ return lead.cep ? `${addressLine} - CEP: ${lead.cep}` : addressLine
+}
+
