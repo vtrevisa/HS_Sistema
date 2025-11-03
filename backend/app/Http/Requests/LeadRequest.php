@@ -46,7 +46,7 @@ class LeadRequest extends FormRequest
     {
         throw new HttpResponseException(response()->json([
             'status' => false,
-            'erros' => $validator->errors(),
+            'errors' => $validator->errors(),
         ], 422));
     }
 
@@ -55,30 +55,31 @@ class LeadRequest extends FormRequest
     public function rules(): array
     {
         $isUpdate = in_array($this->method(), ['PUT', 'PATCH']);
-
-        $leadId = $this->route('lead');
+        $leadId = $this->route('lead')?->id ?? null;
 
         return [
-            'company' => 'nullable|string',
-            'service'      => $isUpdate ? 'sometimes|required' : 'required',
-            'license'   => 'required|string|unique:leads,license,' . ($leadId ? $leadId->id : null),
-            'validity'  => $isUpdate ? 'sometimes|required' : 'required',
-            'address'  => $isUpdate ? 'sometimes|required' : 'required',
-            'number'    => $isUpdate ? 'sometimes|required' : 'required',
-            'city' => $isUpdate ? 'sometimes|required' : 'required',
-            'district'    => $isUpdate ? 'sometimes|required' : 'required',
-            'occupation'  => $isUpdate ? 'sometimes|required' : 'required',
-            'expiration_date' => $isUpdate ? 'sometimes|required' : 'required',
+            'company' => $isUpdate ? 'nullable|string' : 'required|string',
+            'service' => $isUpdate ? 'nullable|string' : 'required|string',
+            'license' => $isUpdate
+                ? 'nullable|string|unique:leads,license,' . $leadId
+                : 'required|string|unique:leads,license',
+            'validity' => $isUpdate ? 'nullable|date' : 'required|date',
+            'address' => $isUpdate ? 'nullable|string' : 'required|string',
+            'number' => $isUpdate ? 'nullable|string' : 'required|string',
+            'city' => $isUpdate ? 'nullable|string' : 'required|string',
+            'district' => $isUpdate ? 'nullable|string' : 'required|string',
+            'occupation' => $isUpdate ? 'nullable|string' : 'required|string',
+            'expiration_date' => $isUpdate ? 'nullable|date' : 'required|date',
             'next_action' => 'sometimes|nullable|string',
 
             // Campos opcionais no POST
             'cep' => 'nullable|string',
             'complement' => 'nullable|string',
-            'cnpj'        => 'nullable|string',
-            'website'        => 'nullable|string',
-            'contact'     => 'nullable|string',
-            'phone'    => 'nullable|string',
-            'email'       => 'nullable|email',
+            'cnpj' => 'nullable|string',
+            'website' => 'nullable|string',
+            'contact' => 'nullable|string',
+            'phone' => 'nullable|string',
+            'email' => 'nullable|email',
         ];
     }
 
@@ -95,6 +96,7 @@ class LeadRequest extends FormRequest
             'city.required' => 'Município é obrigatório..',
             'district.required' => 'Bairro é obrigatório..',
             'occupation.required' => 'Ocupação é obrigatório..',
+            'expiration_date.required' => 'Data de expiração é obrigatória.',
 
         ];
     }

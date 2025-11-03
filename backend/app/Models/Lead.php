@@ -26,6 +26,11 @@ class Lead extends Model
 		'cep',
 		'contact',
 		'phone',
-		'email'
+		'email',
+		'attachments',
+	];
+
+	protected $casts = [
+		'attachments' => 'array',
 	];
 }

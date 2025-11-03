@@ -28,9 +28,12 @@ import { getCompleteAddress, getStatusColor } from '@/services/leads'
 import { ProposalsActions } from './proposals-actions'
 import { Label } from '../ui/label'
 
+type Attachment = { id?: number; name: string; url: string }
+
 type LeadWithExtras = LeadRequest & {
  daysInStage?: number
  isOverdue?: boolean
+ attachments?: Attachment[]
 }
 
 interface LeadDetailsModalProps {
@@ -45,7 +48,7 @@ export function LeadDetailsModal({
  lead
 }: LeadDetailsModalProps) {
  const [isEditing, setIsEditing] = useState(false)
- const [editedLead, setEditedLead] = useState<LeadRequest | null>(null)
+ const [editedLead, setEditedLead] = useState<LeadWithExtras | null>(null)
  const [isFileUploading, setIsFileUploading] = useState(false)
  const { updateLead } = useLead()
 
@@ -55,7 +58,7 @@ export function LeadDetailsModal({
 
  if (!lead) return null
 
- const currentLead: LeadWithExtras = editedLead || lead
+ const currentLead: LeadWithExtras = editedLead || { ...lead, attachments: [] }
 
  const formatedPhone = currentLead.phone?.replace(/\D/g, '')
 
@@ -80,8 +83,28 @@ export function LeadDetailsModal({
   console.log('Lead marcada como Perdido por:', reason)
  }
 
- function handleFileUpload() {
+ function handleFileUpload(event: React.ChangeEvent<HTMLInputElement>) {
+  if (!event.target.files || !editedLead) return
+
+  const files = Array.from(event.target.files)
+  if (files.length === 0) return
+
   setIsFileUploading(true)
+
+  const formData = new FormData()
+  files.forEach(file => formData.append('attachments[]', file))
+
+  updateLead.mutate(
+   { id: editedLead.id, attachmentsFilesFormData: formData },
+   {
+    onSuccess: updatedLead => {
+     setEditedLead(prev =>
+      prev ? { ...prev, attachments: updatedLead.attachments } : null
+     )
+    },
+    onSettled: () => setIsFileUploading(false)
+   }
+  )
  }
 
  function updateField<K extends keyof LeadRequest>(
@@ -353,88 +376,92 @@ export function LeadDetailsModal({
      </div>
 
      {/* Informações de anexo */}
-     <div className="bg-card border border-border p-3 sm:p-4 rounded-lg">
-      <h3 className="font-semibold text-gray-800 mb-3 flex items-center gap-2 text-sm sm:text-base">
-       <FileText size={16} />
-       Histórico e Anexos
-      </h3>
 
-      {/* Upload de arquivo */}
-      <div className="mb-4">
-       <Label
-        htmlFor={`file-modal-${currentLead.id}`}
-        className="cursor-pointer"
-       >
-        <div className="flex items-center justify-center gap-2 border-2 border-dashed border-border rounded-lg p-4 hover:border-muted-foreground transition-colors">
-         <Upload size={16} className="text-muted-foreground" />
-         <span className="text-sm text-muted-foreground">
-          {isFileUploading
-           ? 'Enviando arquivo...'
-           : 'Anexar arquivo (PDF, DOC, etc.)'}
-         </span>
+     {/* Upload de arquivo */}
+     {isEditing &&
+      (!currentLead.attachments || currentLead.attachments.length === 0) && (
+       <div className="bg-card border border-border p-3 sm:p-4 rounded-lg">
+        <h3 className="font-semibold text-gray-800 mb-3 flex items-center gap-2 text-sm sm:text-base">
+         <FileText size={16} />
+         Histórico e Anexos
+        </h3>
+        <div className="mb-4">
+         <Label
+          htmlFor={`file-modal-${currentLead.id}`}
+          className="cursor-pointer"
+         >
+          <div className="flex items-center justify-center gap-2 border-2 border-dashed border-border rounded-lg p-4 hover:border-muted-foreground transition-colors">
+           <Upload size={16} className="text-muted-foreground" />
+           <span className="text-sm text-muted-foreground">
+            {isFileUploading
+             ? 'Enviando arquivo...'
+             : 'Anexar arquivo (PDF, DOC, etc.)'}
+           </span>
+          </div>
+         </Label>
+         <Input
+          id={`file-modal-${currentLead.id}`}
+          type="file"
+          accept=".pdf,.doc,.docx"
+          className="hidden"
+          multiple
+          onChange={handleFileUpload}
+          disabled={isFileUploading}
+         />
         </div>
-       </Label>
-       <Input
-        id={`file-modal-${currentLead.id}`}
-        type="file"
-        accept=".pdf,.doc,.docx"
-        className="hidden"
-        onChange={handleFileUpload}
-        disabled={isFileUploading}
-       />
-      </div>
+       </div>
+      )}
 
-      {/* Lista de anexos */}
-      {currentLead.attachments && currentLead.attachments.length > 0 && (
-       <div className="mb-4">
-        <h4 className="font-medium text-card-foreground mb-2">
-         Arquivos anexados:
-        </h4>
-        <div className="space-y-2">
-         {currentLead.attachments.map(attachment => (
-          <div
-           key={attachment.id}
-           className="flex items-center gap-2 p-2 bg-muted/50 rounded text-sm"
-          >
-           <FileText size={14} className="text-muted-foreground" />
-           <span className="flex-1 truncate">{attachment.name}</span>
-           <Button variant="ghost" size="sm" asChild>
-            <a href={attachment.url} target="_blank" rel="noopener noreferrer">
-             Abrir
-            </a>
-           </Button>
+     {/* Lista de anexos */}
+     {currentLead.attachments && currentLead.attachments.length > 0 && (
+      <div className="mb-4">
+       <h4 className="font-medium text-card-foreground mb-2">
+        Arquivos anexados:
+       </h4>
+       <div className="space-y-2">
+        {currentLead.attachments.map((attachment, index) => (
+         <div
+          key={attachment.id || index}
+          className="flex items-center gap-2 p-2 bg-muted/50 rounded text-sm"
+         >
+          <FileText size={14} className="text-muted-foreground" />
+          <span className="flex-1 truncate">{attachment.name}</span>
+          <Button variant="ghost" size="sm" asChild>
+           <a href={attachment.url} target="_blank" rel="noopener noreferrer">
+            Abrir
+           </a>
+          </Button>
+         </div>
+        ))}
+       </div>
+      </div>
+     )}
+
+     {/* Histórico de atividades */}
+     {currentLead.activities && currentLead.activities.length > 0 && (
+      <div>
+       <h4 className="font-medium text-card-foreground mb-2">
+        Histórico de alterações:
+       </h4>
+       <div className="space-y-2 max-h-40 overflow-y-auto">
+        {currentLead.activities
+         .sort(
+          (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
+         )
+         .map(activity => (
+          <div key={activity.id} className="p-2 bg-muted/50 rounded text-sm">
+           <div className="flex justify-between items-start mb-1">
+            <span className="font-medium capitalize">{activity.type}</span>
+            <span className="text-xs text-muted-foreground">
+             {new Date(activity.date).toLocaleString('pt-BR')}
+            </span>
+           </div>
+           <p className="text-muted-foreground">{activity.description}</p>
           </div>
          ))}
-        </div>
        </div>
-      )}
-
-      {/* Histórico de atividades */}
-      {currentLead.activities && currentLead.activities.length > 0 && (
-       <div>
-        <h4 className="font-medium text-card-foreground mb-2">
-         Histórico de alterações:
-        </h4>
-        <div className="space-y-2 max-h-40 overflow-y-auto">
-         {currentLead.activities
-          .sort(
-           (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
-          )
-          .map(activity => (
-           <div key={activity.id} className="p-2 bg-muted/50 rounded text-sm">
-            <div className="flex justify-between items-start mb-1">
-             <span className="font-medium capitalize">{activity.type}</span>
-             <span className="text-xs text-muted-foreground">
-              {new Date(activity.date).toLocaleString('pt-BR')}
-             </span>
-            </div>
-            <p className="text-muted-foreground">{activity.description}</p>
-           </div>
-          ))}
-        </div>
-       </div>
-      )}
-     </div>
+      </div>
+     )}
     </div>
    </DialogContent>
   </Dialog>

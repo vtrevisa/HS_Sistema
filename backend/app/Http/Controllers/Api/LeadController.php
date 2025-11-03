@@ -6,8 +6,10 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\LeadRequest;
 use App\Models\Lead;
 use Exception;
+use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 use Laravel\Sanctum\PersonalAccessToken;
 
 class LeadController extends Controller
@@ -23,6 +25,48 @@ class LeadController extends Controller
             'status' => true,
             'leads' => $leads,
         ], 200);
+    }
+
+    public function uploadAttachments(Request $request, Lead $lead): JsonResponse
+    {
+        try {
+            $attachments = $lead->attachments ?? [];
+
+            if ($request->hasFile('attachments')) {
+                $files = $request->file('attachments');
+                if (!is_array($files)) {
+                    $files = [$files];
+                }
+
+                foreach ($files as $file) {
+                    // Save on storage/public/leads
+                    $path = $file->store('leads', 'public');
+
+                    $attachments[] = [
+                        'name' => $file->getClientOriginalName(),
+                        'url' => url("storage/leads/" . basename($path)),
+                        'uploaded_at' => now()->toDateTimeString(),
+                    ];
+                }
+
+                // Atualiza somente attachments
+                $lead->attachments = $attachments;
+                $lead->save();
+            }
+
+            return response()->json([
+                'status' => true,
+                'lead' => $lead,
+                'attachments' => $attachments,
+                'message' => 'Arquivos anexados com sucesso!'
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Erro ao anexar arquivos!',
+                'error' => $e->getMessage()
+            ], 400);
+        }
     }
 
     // Show lead from db
@@ -126,7 +170,7 @@ class LeadController extends Controller
 
             // Edit lead on DB
 
-            $lead->update([
+            $leadData = [
                 'company' => strtoupper($request->input('company', '')),
                 'service' => strtoupper($request->input('service', '')),
                 'license' => $request->input('license', ''),
@@ -147,7 +191,27 @@ class LeadController extends Controller
                 'contact' => $request->input('contact', ''),
                 'phone' => $request->input('phone', ''),
                 'email' => $request->input('email', ''),
-            ]);
+            ];
+
+            // Deals with attachments
+            $existingAttachments = $lead->attachments ?? []; // Get the current attachments.
+
+            if ($request->hasFile('attachments')) {
+                foreach ($request->file('attachments') as $file) {
+                    $path = $file->store('leads'); // storage/app/leads
+                    $existingAttachments[] = [
+                        'name' => $file->getClientOriginalName(),
+                        'url' => url("storage/{$path}"), // public link for viewing
+                        'uploaded_at' => now()->toDateTimeString(),
+                    ];
+                }
+            }
+
+            // Update the attachments field.
+            $leadData['attachments'] = $existingAttachments;
+
+            // Save on DB
+            $lead->update($leadData);
 
             // Success Operation
             DB::commit();

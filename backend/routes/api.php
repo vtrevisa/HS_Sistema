@@ -27,6 +27,7 @@ Route::post('/alvaras/search', [AlvaraController::class, 'search']); //POST
 Route::get('/leads', [LeadController::class, 'index']); //GET
 Route::get('/leads/{lead}', [LeadController::class, 'show']); //GET
 Route::post('/leads', [LeadController::class, 'store']); //POST
+Route::post('/leads/{lead}/attachments', [LeadController::class, 'uploadAttachments']); //POST
 Route::put('/leads/{lead}', [LeadController::class, 'update']); //PUT
 Route::delete('/leads/{lead}', [LeadController::class, 'destroy']); //DELETE
 
