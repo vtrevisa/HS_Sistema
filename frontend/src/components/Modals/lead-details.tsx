@@ -21,6 +21,7 @@ import {
  MapPin,
  Phone,
  Save,
+ Trash2,
  Upload,
  User
 } from 'lucide-react'
@@ -106,6 +107,26 @@ export function LeadDetailsModal({
    }
   )
  }
+
+ //  async function handleRemoveAttachment(attachmentId?: number) {
+ //   if (!attachmentId || !editedLead) return
+ //   if (!confirm('Deseja remover este arquivo?')) return
+
+ //   try {
+ //    await api.delete(`/leads/${editedLead.id}/attachments/${attachmentId}`)
+ //    setEditedLead(prev =>
+ //     prev
+ //      ? {
+ //         ...prev,
+ //         attachments: prev.attachments?.filter(a => a.id !== attachmentId)
+ //        }
+ //      : null
+ //    )
+ //    toast.success('Anexo removido com sucesso!')
+ //   } catch {
+ //    toast.error('Erro ao remover o anexo.')
+ //   }
+ //  }
 
  function updateField<K extends keyof LeadRequest>(
   field: K,
@@ -431,6 +452,11 @@ export function LeadDetailsModal({
             Abrir
            </a>
           </Button>
+          {isEditing && (
+           <Button variant="destructive" size="sm" onClick={() => {}}>
+            <Trash2 size={14} />
+           </Button>
+          )}
          </div>
         ))}
        </div>
