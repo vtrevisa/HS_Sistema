@@ -30,6 +30,7 @@ Route::post('/leads', [LeadController::class, 'store']); //POST
 Route::post('/leads/{lead}/attachments', [LeadController::class, 'uploadAttachments']); //POST
 Route::put('/leads/{lead}', [LeadController::class, 'update']); //PUT
 Route::delete('/leads/{lead}', [LeadController::class, 'destroy']); //DELETE
+Route::delete('/leads/{lead}/attachments/{index}', [LeadController::class, 'deleteAttachment']); //DELETE
 
 // Companies
 Route::get('/companies', [CompanyController::class, 'index']); //GET

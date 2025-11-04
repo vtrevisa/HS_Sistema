@@ -27,6 +27,19 @@ class LeadController extends Controller
         ], 200);
     }
 
+
+    // Show lead from db
+
+    public function show(Lead $lead): JsonResponse
+    {
+        return response()->json([
+            'status' => true,
+            'lead' => $lead,
+        ], 200);
+    }
+
+    // Add attachments to db
+
     public function uploadAttachments(Request $request, Lead $lead): JsonResponse
     {
         try {
@@ -67,16 +80,6 @@ class LeadController extends Controller
                 'error' => $e->getMessage()
             ], 400);
         }
-    }
-
-    // Show lead from db
-
-    public function show(Lead $lead): JsonResponse
-    {
-        return response()->json([
-            'status' => true,
-            'lead' => $lead,
-        ], 200);
     }
 
 
@@ -232,6 +235,51 @@ class LeadController extends Controller
             ], 400);
         }
     }
+
+    // Delete attachments to db
+
+    public function deleteAttachment(Lead $lead, int $index)
+    {
+        try {
+            $attachments = $lead->attachments ?? [];
+
+            if (!isset($attachments[$index])) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Anexo não encontrado.'
+                ], 404);
+            }
+
+            $attachment = $attachments[$index];
+
+            // Extract the file path (e.g., storage/leads/file.pdf)
+            $path = str_replace(url('storage') . '/', '', $attachment['url']);
+
+            // Remove the physical file
+            if (Storage::disk('public')->exists($path)) {
+                Storage::disk('public')->delete($path);
+            }
+
+            // Remove from array and reindex.
+            array_splice($attachments, $index, 1);
+
+            // Update on DB
+            $lead->update(['attachments' => $attachments]);
+
+            return response()->json([
+                'status' => true,
+                'attachments' => $attachments,
+                'message' => 'Anexo removido com sucesso!'
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Erro ao remover o anexo.',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
 
     // Delete lead from db
 

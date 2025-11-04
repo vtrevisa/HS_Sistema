@@ -99,6 +99,24 @@ export function useLead() {
     }
   })
 
+  //Mutation to delete leads attachments
+  //eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const deleteAttachmentMutation = useMutation<{ id: number; attachments?: { id?: number; name: string; url: string }[] }, AxiosError<any>, { leadId: number; index: number }>({
+    mutationFn: async ({ leadId, index }) => {
+     const { data } = await api.delete<{ status: boolean; attachments: LeadWithAttachments['attachments'] }>(
+      `/leads/${leadId}/attachments/${index}`
+    )
+    return { id: leadId, attachments: data.attachments };
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["leads"] })
+      toast.success("Anexo removido com sucesso!")
+    },
+    onError: () => {
+      toast.error("Erro ao remover anexo!")
+    }
+  })
+
   // Mutation to delete leads
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const deleteMutation = useMutation<void, AxiosError<any>, number>({
@@ -124,6 +142,7 @@ export function useLead() {
     saveLeads: saveMutation,
     updateLead: updateMutation,
     deleteLead: deleteMutation,
+    deleteLeadAttachment: deleteAttachmentMutation,
     leadsDB,
   };
 }

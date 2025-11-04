@@ -51,7 +51,7 @@ export function LeadDetailsModal({
  const [isEditing, setIsEditing] = useState(false)
  const [editedLead, setEditedLead] = useState<LeadWithExtras | null>(null)
  const [isFileUploading, setIsFileUploading] = useState(false)
- const { updateLead } = useLead()
+ const { updateLead, deleteLeadAttachment } = useLead()
 
  useEffect(() => {
   if (lead) setEditedLead({ ...lead })
@@ -98,35 +98,44 @@ export function LeadDetailsModal({
   updateLead.mutate(
    { id: editedLead.id, attachmentsFilesFormData: formData },
    {
-    onSuccess: updatedLead => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    onSuccess: (updatedLead: any) => {
+     const leadData = updatedLead.lead ?? updatedLead
+     const updatedAttachments =
+      leadData.attachments ?? updatedLead.attachments ?? []
+
      setEditedLead(prev =>
-      prev ? { ...prev, attachments: updatedLead.attachments } : null
+      prev
+       ? {
+          ...prev,
+          attachments: updatedAttachments
+         }
+       : null
      )
+
+     event.target.value = ''
+     setIsFileUploading(false)
     },
     onSettled: () => setIsFileUploading(false)
    }
   )
  }
 
- //  async function handleRemoveAttachment(attachmentId?: number) {
- //   if (!attachmentId || !editedLead) return
- //   if (!confirm('Deseja remover este arquivo?')) return
+ async function handleRemoveAttachment(index: number) {
+  if (!editedLead || !editedLead.id) return
+  if (!confirm('Deseja remover este arquivo?')) return
 
- //   try {
- //    await api.delete(`/leads/${editedLead.id}/attachments/${attachmentId}`)
- //    setEditedLead(prev =>
- //     prev
- //      ? {
- //         ...prev,
- //         attachments: prev.attachments?.filter(a => a.id !== attachmentId)
- //        }
- //      : null
- //    )
- //    toast.success('Anexo removido com sucesso!')
- //   } catch {
- //    toast.error('Erro ao remover o anexo.')
- //   }
- //  }
+  deleteLeadAttachment.mutate(
+   { leadId: editedLead.id, index },
+   {
+    onSuccess: updatedLead => {
+     setEditedLead(prev =>
+      prev ? { ...prev, attachments: updatedLead.attachments } : null
+     )
+    }
+   }
+  )
+ }
 
  function updateField<K extends keyof LeadRequest>(
   field: K,
@@ -211,8 +220,8 @@ export function LeadDetailsModal({
 
      {/* Informações do Serviço */}
 
-     <div className="bg-card border border-border p-3 sm:p-4 rounded-lg">
-      <h3 className="font-semibold text-gray-800 mb-3 flex items-center gap-2 text-sm sm:text-base">
+     <div className="bg-card border border-border dark:border-white p-3 sm:p-4 rounded-lg">
+      <h3 className="font-semibold text-gray-800 dark:text-white mb-3 flex items-center gap-2 text-sm sm:text-base">
        <FileText size={16} />
        Informações do Serviço
       </h3>
@@ -261,8 +270,8 @@ export function LeadDetailsModal({
 
      {/* Informações da Empresa */}
 
-     <div className="bg-card border border-border p-3 sm:p-4 rounded-lg">
-      <h3 className="font-semibold text-gray-800 mb-3 flex items-center gap-2 text-sm sm:text-base">
+     <div className="bg-card border border-border dark:border-white p-3 sm:p-4 rounded-lg">
+      <h3 className="font-semibold text-gray-800 dark:text-white mb-3 flex items-center gap-2 text-sm sm:text-base">
        <Building size={16} />
        Informações da Empresa
       </h3>
@@ -284,7 +293,7 @@ export function LeadDetailsModal({
         onChange={updateField}
        />
        <div>
-        <span className="font-medium text-gray-800 flex items-center gap-1">
+        <span className="font-medium text-gray-800 dark:text-white flex items-center gap-1">
          <MapPin size={12} />
          Endereço Completo:
         </span>
@@ -322,7 +331,7 @@ export function LeadDetailsModal({
           />
          </div>
         ) : (
-         <p className="text-gray-600 break-words bg-muted/50 p-3 rounded">
+         <p className="text-gray-600 dark:text-white break-words bg-muted/50 p-3 rounded">
           {getCompleteAddress(currentLead) || 'Não informado'}
          </p>
         )}
@@ -332,8 +341,8 @@ export function LeadDetailsModal({
 
      {/* Informações de Contato */}
 
-     <div className="bg-card border border-border p-3 sm:p-4 rounded-lg">
-      <h3 className="font-semibold text-gray-800 mb-3 flex items-center gap-2 text-sm sm:text-base">
+     <div className="bg-card border border-border dark:border-white p-3 sm:p-4 rounded-lg">
+      <h3 className="font-semibold text-gray-800 dark:text-white mb-3 flex items-center gap-2 text-sm sm:text-base">
        <User size={16} />
        Informações de Contato
       </h3>
@@ -398,41 +407,6 @@ export function LeadDetailsModal({
 
      {/* Informações de anexo */}
 
-     {/* Upload de arquivo */}
-     {isEditing &&
-      (!currentLead.attachments || currentLead.attachments.length === 0) && (
-       <div className="bg-card border border-border p-3 sm:p-4 rounded-lg">
-        <h3 className="font-semibold text-gray-800 mb-3 flex items-center gap-2 text-sm sm:text-base">
-         <FileText size={16} />
-         Histórico e Anexos
-        </h3>
-        <div className="mb-4">
-         <Label
-          htmlFor={`file-modal-${currentLead.id}`}
-          className="cursor-pointer"
-         >
-          <div className="flex items-center justify-center gap-2 border-2 border-dashed border-border rounded-lg p-4 hover:border-muted-foreground transition-colors">
-           <Upload size={16} className="text-muted-foreground" />
-           <span className="text-sm text-muted-foreground">
-            {isFileUploading
-             ? 'Enviando arquivo...'
-             : 'Anexar arquivo (PDF, DOC, etc.)'}
-           </span>
-          </div>
-         </Label>
-         <Input
-          id={`file-modal-${currentLead.id}`}
-          type="file"
-          accept=".pdf,.doc,.docx"
-          className="hidden"
-          multiple
-          onChange={handleFileUpload}
-          disabled={isFileUploading}
-         />
-        </div>
-       </div>
-      )}
-
      {/* Lista de anexos */}
      {currentLead.attachments && currentLead.attachments.length > 0 && (
       <div className="mb-4">
@@ -445,7 +419,10 @@ export function LeadDetailsModal({
           key={attachment.id || index}
           className="flex items-center gap-2 p-2 bg-muted/50 rounded text-sm"
          >
-          <FileText size={14} className="text-muted-foreground" />
+          <FileText
+           size={14}
+           className="text-muted-foreground dark:text-white"
+          />
           <span className="flex-1 truncate">{attachment.name}</span>
           <Button variant="ghost" size="sm" asChild>
            <a href={attachment.url} target="_blank" rel="noopener noreferrer">
@@ -453,12 +430,51 @@ export function LeadDetailsModal({
            </a>
           </Button>
           {isEditing && (
-           <Button variant="destructive" size="sm" onClick={() => {}}>
+           <Button
+            variant="destructive"
+            size="sm"
+            onClick={() => handleRemoveAttachment(index)}
+            disabled={deleteLeadAttachment.isPending}
+           >
             <Trash2 size={14} />
            </Button>
           )}
          </div>
         ))}
+       </div>
+      </div>
+     )}
+
+     {/* Upload de arquivo */}
+     {isEditing && (
+      <div className="bg-card border border-border dark:border-white p-3 sm:p-4 rounded-lg">
+       <h3 className="font-semibold text-gray-800 dark:text-white mb-3 flex items-center gap-2 text-sm sm:text-base">
+        <FileText size={16} />
+        Adicionar novos anexos
+       </h3>
+       <div className="mb-4">
+        <Label
+         htmlFor={`file-modal-${currentLead.id}`}
+         className="cursor-pointer"
+        >
+         <div className="flex items-center justify-center gap-2 border-2 border-dashed border-border dark:border-white rounded-lg p-4 hover:border-muted-foreground transition-colors">
+          <Upload size={16} className="text-muted-foreground" />
+          <span className="text-sm text-muted-foreground dark:text-white">
+           {isFileUploading
+            ? 'Enviando arquivo...'
+            : 'Anexar arquivo (PDF, DOC, etc.)'}
+          </span>
+         </div>
+        </Label>
+        <Input
+         id={`file-modal-${currentLead.id}`}
+         type="file"
+         accept=".pdf,.doc,.docx"
+         className="hidden"
+         multiple
+         onChange={handleFileUpload}
+         disabled={isFileUploading}
+        />
        </div>
       </div>
      )}

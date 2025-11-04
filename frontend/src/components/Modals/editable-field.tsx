@@ -27,7 +27,7 @@ export function EditableField({
 }: EditableFieldProps) {
  return (
   <div>
-   <span className="font-medium text-gray-800 flex items-center gap-1">
+   <span className="font-medium text-gray-800 dark:text-white flex items-center gap-1">
     {icon} {label}:
    </span>
    {isEditing ? (
@@ -39,7 +39,7 @@ export function EditableField({
      placeholder={`Digite ${label.toLowerCase()}`}
     />
    ) : (
-    <p className="text-gray-600 break-words">
+    <p className="text-gray-600 dark:text-white break-words">
      {displayValue ??
       (typeof value === 'string'
        ? value.trim() || 'Não informado'
