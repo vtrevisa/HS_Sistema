@@ -221,7 +221,7 @@ export function ImportAlvarasModal({
           disabled={isLoading}
          />
          {selectedFile && (
-          <p className="text-sm text-gray-600">
+          <p className="text-sm text-muted-foreground">
            Arquivo selecionado: {selectedFile.name}
           </p>
          )}
@@ -243,11 +243,6 @@ export function ImportAlvarasModal({
        {isLoading && importProgress.total > 0 && (
         <div className="space-y-2">
          <div className="flex justify-between text-sm">
-          {/* <span>
-           {config
-            ? 'Processando e enriquecendo alvarás...'
-            : 'Processando alvarás...'}
-          </span> */}
           <span>Processando alvarás...</span>
           <span>
            {importProgress.current}/{importProgress.total}
@@ -273,18 +268,16 @@ export function ImportAlvarasModal({
          disabled={
           isLoading || (importType === 'sheets' ? !sheetsUrl : !selectedFile)
          }
-         className="bg-green-600 hover:bg-green-700"
+         className="bg-green-600 hover:bg-green-700 dark:text-white"
         >
          {isLoading ? (
           <>
            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-           {/* {config ? 'Enriquecendo...' : 'Importando...'} */}
            Importando..
           </>
          ) : (
           <>
            <Download className="h-4 w-4 mr-2" />
-           {/* {config ? 'Importar e Enriquecer' : 'Importar Dados'} */}
            Importar Dados
           </>
          )}
@@ -301,7 +294,6 @@ export function ImportAlvarasModal({
        </h3>
        <p className="text-gray-600">
         Os alvarás foram importados com os dados especificados.
-        {/* {config && ' Dados enriquecidos via APIs reais.'} */}
        </p>
       </div>
      )}
@@ -309,10 +301,10 @@ export function ImportAlvarasModal({
      {importStatus === 'error' && (
       <div className="text-center py-6">
        <AlertCircle className="h-16 w-16 text-red-500 mx-auto mb-4" />
-       <h3 className="text-lg font-semibold text-gray-900 mb-2">
+       <h3 className="text-lg font-semibold text-muted-foreground mb-2">
         Erro na Importação
        </h3>
-       <p className="text-gray-600 mb-4">
+       <p className="text-muted-foreground mb-4">
         Verifique se a planilha está pública e se a URL está correta.
        </p>
        <Button variant="outline" onClick={() => setImportStatus('idle')}>

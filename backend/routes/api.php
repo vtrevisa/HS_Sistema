@@ -42,7 +42,8 @@ Route::post('/companies/search/address', [CompanyController::class, 'searchCompa
 Route::post('/companies/search/cnpj', [CompanyController::class, 'searchCompanyByCnpj']); //POST
 
 // Proposals
-Route::get('/archived-proposals', [ArchivedProposalController::class, 'index']);
+Route::get('/archived-proposals', [ArchivedProposalController::class, 'index']); //GET
+Route::post('/archived-proposals/archive', [ArchivedProposalController::class, 'store']); //POST
 
 
 // Manage Sheets

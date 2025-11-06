@@ -69,6 +69,7 @@ export interface ArchivedProposal {
   archived_at: string;
   reason?: string; // For lost proposals
   processId?: number; // For won proposals
+  message?: string
 }
 
 export interface ColumnSummary {

@@ -24,8 +24,14 @@ export function ProposalsActions({
  handlePerdido
 }: ProposalsActionsProps) {
  const [lossReason, setLossReason] = useState('')
+ const [open, setOpen] = useState(false)
 
- if (isEditing || currentLead.status === 'Cliente Fechado') return null
+ if (
+  isEditing ||
+  currentLead.status === 'Cliente Fechado' ||
+  currentLead.status === 'Arquivado'
+ )
+  return null
 
  return (
   <div className="bg-green-50 dark:bg-green-950/20 border border-green-200 dark:border-green-800 rounded-lg p-4">
@@ -44,7 +50,7 @@ export function ProposalsActions({
      Marcar como Ganho
     </Button>
 
-    <Dialog>
+    <Dialog open={open} onOpenChange={setOpen}>
      <DialogTrigger asChild>
       <Button variant="destructive">
        <UserX size={16} className="mr-2" />
@@ -70,7 +76,14 @@ export function ProposalsActions({
         <DialogTrigger asChild>
          <Button variant="outline">Cancelar</Button>
         </DialogTrigger>
-        <Button variant="destructive" onClick={() => handlePerdido(lossReason)}>
+        <Button
+         variant="destructive"
+         onClick={() => {
+          handlePerdido(lossReason)
+          setOpen(false)
+          setLossReason('')
+         }}
+        >
          Confirmar Perda
         </Button>
        </div>

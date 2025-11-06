@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react'
+import { IMaskInput } from 'react-imask'
 import type { LeadRequest } from '@/http/types/leads'
+import { useProposals } from '@/http/use-proposals'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../ui/dialog'
 
 import { Button } from '../ui/button'
@@ -52,6 +54,7 @@ export function LeadDetailsModal({
  const [editedLead, setEditedLead] = useState<LeadWithExtras | null>(null)
  const [isFileUploading, setIsFileUploading] = useState(false)
  const { updateLead, deleteLeadAttachment } = useLead()
+ const { saveProposal } = useProposals({})
 
  useEffect(() => {
   if (lead) setEditedLead({ ...lead })
@@ -75,13 +78,40 @@ export function LeadDetailsModal({
  }
 
  function handleGanho() {
-  // lógica de marcar como ganho
-  console.log('Lead marcada como Ganho')
+  saveProposal.mutate(
+   {
+    lead_id: currentLead.id,
+    status: 'Ganho',
+    company: currentLead.company,
+    type: currentLead.service,
+    value: Number(currentLead.service_value)
+   },
+   {
+    onSuccess: () => {
+     setEditedLead(prev =>
+      prev ? { ...prev, status: 'Cliente Fechado' } : prev
+     )
+    }
+   }
+  )
  }
 
  function handlePerdido(reason: string) {
-  // lógica de marcar como perdido
-  console.log('Lead marcada como Perdido por:', reason)
+  saveProposal.mutate(
+   {
+    lead_id: currentLead.id,
+    status: 'Perdido',
+    company: currentLead.company,
+    type: currentLead.service,
+    value: Number(currentLead.service_value),
+    reason
+   },
+   {
+    onSuccess: () => {
+     setEditedLead(prev => (prev ? { ...prev, status: 'Arquivado' } : prev))
+    }
+   }
+  )
  }
 
  function handleFileUpload(event: React.ChangeEvent<HTMLInputElement>) {
@@ -163,6 +193,7 @@ export function LeadDetailsModal({
          <Button
           size="sm"
           variant="outline"
+          className="dark:hover:bg-red-600 dark:hover:border-red-600"
           onClick={() => setIsEditing(false)}
          >
           Cancelar
@@ -177,7 +208,12 @@ export function LeadDetailsModal({
          </Button>
         </>
        ) : (
-        <Button size="sm" variant="outline" onClick={() => setIsEditing(true)}>
+        <Button
+         size="sm"
+         variant="outline"
+         className="dark:hover:bg-red-600 dark:hover:border-red-600"
+         onClick={() => setIsEditing(true)}
+        >
          <Edit size={16} className="mr-1" />
          Editar
         </Button>
@@ -324,10 +360,11 @@ export function LeadDetailsModal({
            value={editedLead?.city || ''}
            onChange={e => updateField('city', e.target.value)}
           />
-          <Input
-           placeholder="CEP"
+          <IMaskInput
+           mask="00000-000"
            value={editedLead?.cep || ''}
-           onChange={e => updateField('cep', e.target.value)}
+           onAccept={(value: string) => updateField('cep', value)}
+           className="mt-1 flex h-10 w-full rounded-md border border-input dark:border-white bg-background px-3 py-2 text-base ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm"
           />
          </div>
         ) : (
@@ -480,7 +517,7 @@ export function LeadDetailsModal({
      )}
 
      {/* Histórico de atividades */}
-     {currentLead.activities && currentLead.activities.length > 0 && (
+     {/* {currentLead.activities && currentLead.activities.length > 0 && (
       <div>
        <h4 className="font-medium text-card-foreground mb-2">
         Histórico de alterações:
@@ -503,7 +540,7 @@ export function LeadDetailsModal({
          ))}
        </div>
       </div>
-     )}
+     )} */}
     </div>
    </DialogContent>
   </Dialog>

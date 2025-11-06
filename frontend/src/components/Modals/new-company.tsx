@@ -345,7 +345,12 @@ export function NewCompanyModal({
       </div>
      </div>
      <div className="flex justify-end gap-2 mt-4">
-      <Button type="button" variant="outline" onClick={onClose}>
+      <Button
+       type="button"
+       variant="outline"
+       className="dark:hover:bg-red-600 dark:hover:border-red-600"
+       onClick={onClose}
+      >
        Cancelar
       </Button>
       <Button

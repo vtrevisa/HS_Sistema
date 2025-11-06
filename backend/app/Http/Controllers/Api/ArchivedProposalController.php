@@ -3,7 +3,9 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\ArchivedProposalRequest;
 use App\Models\ArchivedProposal;
+use App\Models\Lead;
 use Illuminate\Http\Request;
 
 class ArchivedProposalController extends Controller
@@ -44,6 +46,42 @@ class ArchivedProposalController extends Controller
         return response()->json([
             'status' => true,
             'proposals' => $proposals
+        ]);
+    }
+
+    // Add proposals
+
+    public function store(ArchivedProposalRequest $request)
+    {
+        $data = $request->validated();
+
+        if ($data['status'] === 'Perdido' && empty($data['reason'])) {
+            return response()->json([
+                'status' => false,
+                'message' => 'O motivo é obrigatório quando a proposta é marcada como Perdido.'
+            ], 422);
+        }
+
+
+        $proposal = ArchivedProposal::create([
+            ...$data,
+            'archived_at' => now()
+        ]);
+
+        $lead = Lead::find($data['lead_id']);
+
+        if ($data['status'] === 'Ganho') {
+            $lead->status = 'Cliente Fechado';
+        } else {
+            $lead->status = 'Arquivado';
+        }
+
+        $lead->save();
+
+        return response()->json([
+            'status' => true,
+            'message' => 'Proposta arquivada com sucesso!',
+            'proposal' => $proposal
         ]);
     }
 }

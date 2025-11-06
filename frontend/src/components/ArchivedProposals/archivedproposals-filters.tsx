@@ -57,12 +57,12 @@ export function ArchivedProposalsFilters({
 
      {/* Filtro de Cidade */}
      <div className="space-y-2">
-      <Label htmlFor="cidade" className="flex items-center gap-1">
+      <Label htmlFor="city" className="flex items-center gap-1">
        <MapPin size={14} />
        Cidade
       </Label>
       <Input
-       id="cidade"
+       id="city"
        value={filters.cidade}
        onChange={e => setFilters({ ...filters, cidade: e.target.value })}
        placeholder="Digite a cidade..."
@@ -72,11 +72,12 @@ export function ArchivedProposalsFilters({
 
      {/* Filtro de Tipo de Serviço */}
      <div className="space-y-2">
-      <Label htmlFor="tipoServico" className="flex items-center gap-1">
+      <Label htmlFor="service" className="flex items-center gap-1">
        <FileText size={14} />
        Tipo de Serviço
       </Label>
       <select
+       id="service"
        value={filters.tipoServico}
        onChange={e => setFilters({ ...filters, tipoServico: e.target.value })}
        className="w-full h-[40px] border border-gray-300 bg-background rounded-lg px-4 py-2 focus:ring-2 focus:ring-ring focus:border-transparent outline-none text-sm"
@@ -89,12 +90,12 @@ export function ArchivedProposalsFilters({
 
      {/* Data Inicial */}
      <div className="space-y-2">
-      <Label htmlFor="dataInicio" className="flex items-center gap-1">
+      <Label htmlFor="initDate" className="flex items-center gap-1">
        <CalendarRange size={14} />
        Data Inicial
       </Label>
       <Input
-       id="dataInicio"
+       id="initDate"
        value={filters.dataInicio}
        onChange={e => setFilters({ ...filters, dataInicio: e.target.value })}
        type="date"
@@ -104,12 +105,12 @@ export function ArchivedProposalsFilters({
 
      {/* Data Final */}
      <div className="space-y-2">
-      <Label htmlFor="dataTermino" className="flex items-center gap-1">
+      <Label htmlFor="endDate" className="flex items-center gap-1">
        <CalendarRange size={14} />
        Data Final
       </Label>
       <Input
-       id="dataTermino"
+       id="endDate"
        value={filters.dataTermino}
        onChange={e => setFilters({ ...filters, dataTermino: e.target.value })}
        type="date"

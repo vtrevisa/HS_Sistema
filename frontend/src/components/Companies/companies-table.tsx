@@ -3,6 +3,7 @@ import {
  Building,
  CheckCircle,
  Globe,
+ Loader2,
  Mail,
  MapPin,
  Pencil,
@@ -22,6 +23,7 @@ interface CompaniesTableProps {
  enhanceData: (company: CompanyRequest) => void
  onCompanyClick?: (company: CompanyRequest) => void
  gererateNewLead: (company: CompanyRequest) => void
+ loadingCompanyId: string | number | null
 }
 
 export function CompaniesTable({
@@ -29,7 +31,8 @@ export function CompaniesTable({
  processingEnrichment,
  enhanceData,
  onCompanyClick,
- gererateNewLead
+ gererateNewLead,
+ loadingCompanyId
 }: CompaniesTableProps) {
  return (
   <Card>
@@ -100,9 +103,9 @@ export function CompaniesTable({
           <td className="p-4 align-middle [&:has([role=checkbox])]:pr-0 font-medium">
            {company.company}
           </td>
-          <td className="p-4 align-middle [&:has([role=checkbox])]:pr-0">
+          <td className="p-4 align-middle [&:has([role=checkbox])]:pr-0 capitalize">
            {[
-            company.address,
+            company.address.toLowerCase(),
             company.number,
             company.district,
             company.city,
@@ -143,6 +146,7 @@ export function CompaniesTable({
               variant="outline"
               onClick={() => enhanceData(company)}
               disabled={processingEnrichment.includes(company.id)}
+              className="dark:hover:bg-red-600 dark:hover:border-red-600"
              >
               {processingEnrichment.includes(company.id) ? (
                <RefreshCw className="h-3 w-3 animate-spin" />
@@ -155,6 +159,7 @@ export function CompaniesTable({
              size="sm"
              variant="outline"
              onClick={() => onCompanyClick?.(company)}
+             className="dark:hover:bg-red-600 dark:hover:border-red-600"
             >
              <Pencil size={14} />
             </Button>
@@ -164,10 +169,19 @@ export function CompaniesTable({
            <Button
             size="sm"
             onClick={() => gererateNewLead(company)}
+            disabled={loadingCompanyId === company.id}
             className="bg-blue-600 hover:bg-blue-700 dark:text-white"
            >
-            <UserPlus className="h-3 w-3 mr-1" />
-            Gerar Lead
+            {loadingCompanyId === company.id ? (
+             <>
+              <Loader2 className="h-3 w-3 mr-1 animate-spin" />
+             </>
+            ) : (
+             <>
+              <UserPlus className="h-3 w-3 mr-1" />
+              Gerar Lead
+             </>
+            )}
            </Button>
           </td>
          </tr>

@@ -10,6 +10,8 @@ class ArchivedProposal extends Model
 
     use HasFactory;
 
+    public $timestamps = false;
+
     protected $fillable = [
         'lead_id',
         'company',

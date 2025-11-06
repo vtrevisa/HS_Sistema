@@ -327,11 +327,11 @@ export function getStatusColor(status: string) {
   case 'Lead':
    return 'bg-gray-200 text-gray-700 dark:bg-gray-600 dark:text-gray-300'
   case 'Primeiro contato':
-   return 'bg-blue-200 text-blue-700 dark:bg-blue-800 dark:text-blue-300'
+   return 'bg-blue-200 text-blue-700 dark:bg-blue-600 dark:text-blue-300'
   case 'Follow-up':
-   return 'bg-yellow-200 text-yellow-700 dark:bg-yellow-800 dark:text-yellow-300'
+   return 'bg-yellow-200 text-yellow-700 dark:bg-yellow-600 dark:text-yellow-300'
   case 'Proposta enviada':
-   return 'bg-green-200 text-green-700 dark:bg-green-800 dark:text-green-300'
+   return 'bg-green-200 text-green-700 dark:bg-green-600 dark:text-green-300'
   case 'Cliente fechado':
    return 'bg-green-100 text-green-800'
   case 'Arquivado':

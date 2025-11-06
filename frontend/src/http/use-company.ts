@@ -131,7 +131,7 @@ export function useCompany() {
 
       if (!data.places || data.places.length === 0) {
         toast.error(
-          `Não foi possível enriquecer os dados da empresa ${company.company}, tente editar os dados manualmente.`
+          `Não foi possível enriquecer os dados dessa empresa, tente editar os dados manualmente.`
         );
         return;
       }
@@ -149,7 +149,7 @@ export function useCompany() {
 
       if (!matchedPlace) {
         toast.error(
-          `Não foi possível enriquecer os dados da empresa ${company.company}, tente editar os dados manualmente.`
+          `Não foi possível enriquecer os dados dessa empresa, tente editar os dados manualmente.`
         );
         return;
       }
@@ -192,7 +192,7 @@ export function useCompany() {
     }
 
      setTimeout(() => {
-      toast.success("Enriquecimento concluído para todas as empresas pendentes.");
+      toast.success("Enriquecimento concluído.");
     }, pendingCompanies.length * 2000);
 
   };

@@ -10,6 +10,8 @@ import { DeleteLeadsModal } from '../Modals/delete-leads'
 import { exportLeadsToExcel } from '@/services/leads'
 import { useLead } from '@/http/use-lead'
 
+import { useQueryClient } from '@tanstack/react-query'
+
 export function Leads() {
  const [searchTerm, setSearchTerm] = useState('')
  const [selectedFilter, setSelectedFilter] = useState('todos')
@@ -18,6 +20,8 @@ export function Leads() {
  const [isLeadDetailsModalOpen, setIsLeadDetailsModalOpen] = useState(false)
  const [isDeleteLeadModalOpen, setIsDeleteLeadModalOpen] = useState(false)
  const [selectedLead, setSelectedLead] = useState<LeadRequest | null>(null)
+
+ const queryClient = useQueryClient()
 
  const { leadsDB, saveLeads } = useLead()
 
@@ -62,6 +66,8 @@ export function Leads() {
  function closeLeadDetails() {
   setSelectedLead(null)
   setIsLeadDetailsModalOpen(false)
+
+  queryClient.invalidateQueries({ queryKey: ['leads'] })
 
   navigate('/dashboard/gestao-leads', { replace: true })
  }

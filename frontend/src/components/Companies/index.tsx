@@ -18,6 +18,9 @@ export function Companies() {
  const [isCompanyDetailsModalOpen, setIsCompanyDetailsModalOpen] =
   useState(false)
  const [isImportModalOpen, setIsImportModalOpen] = useState(false)
+ const [loadingCompanyId, setLoadingCompanyId] = useState<
+  string | number | null
+ >(null)
 
  const {
   companies,
@@ -39,6 +42,8 @@ export function Companies() {
  // Generate new company
  function gererateNewLead(company: CompanyRequest) {
   if (!company) return
+
+  setLoadingCompanyId(company.id)
 
   const validityDate = company.validity
    ? new Date(company.validity)
@@ -69,21 +74,17 @@ export function Companies() {
    status: 'Lead'
   }
 
-  saveLeads.mutate([newLead])
+  saveLeads.mutate([newLead], {
+   onSettled: () => {
+    setTimeout(() => {
+     setLoadingCompanyId(null)
+    }, 3200)
+   }
+  })
  }
 
  function handleImportComplete(importedAlvaras: CompanyRequest[]) {
   const processedAlvaras = importedAlvaras.map(alvara => {
-   //  const completeAddress = [
-   //   alvara.address,
-   //   alvara.number,
-   //   alvara.complement,
-   //   alvara.district,
-   //   alvara.city
-   //  ]
-   //   .filter(Boolean)
-   //   .join(', ')
-
    return {
     ...alvara,
     address: alvara.address,
@@ -118,6 +119,7 @@ export function Companies() {
      enhanceData={enhanceData}
      processingEnrichment={processingEnrichment}
      gererateNewLead={gererateNewLead}
+     loadingCompanyId={loadingCompanyId}
      onCompanyClick={company => {
       setSelectedCompany(company)
       setIsCompanyDetailsModalOpen(true)
