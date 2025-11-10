@@ -129,12 +129,36 @@ class AuthController extends Controller
             // Retrieves the user associated with the token
             $accessToken = PersonalAccessToken::findToken($token);
 
+            if (!$accessToken) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Token não encontrado.',
+                ], 401);
+            }
+
             $user = $accessToken->tokenable;
+
+            // Load user plan
+            $user->load('plan');
+
+            $filteredUser = [
+                'id' => $user->id,
+                'name' => $user->name,
+                'plan_id' => $user->plan_id,
+                'credits' => $user->credits,
+                'plan_renews_at' => $user->plan_renews_at,
+                'last_renewal_at' => $user->last_renewal_at,
+                'plan' => $user->plan ? [
+                    'id' => $user->plan->id,
+                    'name' => $user->plan->name,
+                    'monthly_credits' => $user->plan->monthly_credits,
+                ] : null,
+            ];
 
             return response()->json([
                 'status' => true,
                 //'token' => $token,
-                'user' => $user,
+                'user' => $filteredUser,
             ], 200);
         } catch (Exception $e) {
             return response()->json([

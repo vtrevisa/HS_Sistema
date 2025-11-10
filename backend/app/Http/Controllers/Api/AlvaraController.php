@@ -4,7 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Alvara;
-use Illuminate\Support\Facades\DB;
+use Laravel\Sanctum\PersonalAccessToken;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -83,25 +83,6 @@ class AlvaraController extends Controller
             'dez' => 12
         ];
 
-        // if ($from && $to) {
-        //     $query->where(function ($q) use ($from, $to) {
-        //         $q->where(function ($q2) use ($from) {
-        //             $q2->where('year', '>', $from['year'])
-        //                 ->orWhere(function ($q3) use ($from) {
-        //                     $q3->where('year', $from['year'])
-        //                         ->where('month', '>=', $from['month']);
-        //                 });
-        //         })->where(function ($q2) use ($to) {
-        //             $q2->where('year', '<', $to['year'])
-        //                 ->orWhere(function ($q3) use ($to) {
-        //                     $q3->where('year', $to['year'])
-        //                         ->where('month', '<=', $to['month']);
-        //                 });
-        //         });
-        //     });
-        // }
-
-
         if ($from && $to) {
             $fromYear = (int) $from['year'];
             $toYear = (int) $to['year'];
@@ -141,6 +122,61 @@ class AlvaraController extends Controller
 
         return response()->json([
             'alvaras' => $alvaras
+        ]);
+    }
+
+    public function release(Request $request): JsonResponse
+    {
+        $token = $request->cookie('auth-token');
+
+        if (!$token) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Token de autenticação é inválido ou não fornecido.',
+            ], 401);
+        }
+
+        // Retrieves the user associated with the token
+        $accessToken = PersonalAccessToken::findToken($token);
+
+        if (!$accessToken) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Token não encontrado.',
+            ], 401);
+        }
+
+        $user = $accessToken->tokenable;
+
+        if (!$user) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Usuário não autenticado.'
+            ], 401);
+        }
+
+        $totalToRelease = (int) $request->input('totalToRelease', 0);
+
+        if ($totalToRelease <= 0) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Quantidade inválida de alvarás a liberar.'
+            ], 400);
+        }
+
+        // Calcula créditos consumidos e extras necessários
+        $creditsAvailable = $user->credits;
+        $creditsUsed = min($creditsAvailable, $totalToRelease);
+        $extraNeeded = max($totalToRelease - $creditsAvailable, 0);
+
+        // Atualiza créditos do usuário
+        $user->credits -= $creditsUsed;
+        $user->save();
+
+        return response()->json([
+            'creditsUsed' => $creditsUsed,
+            'creditsAvailable' => $user->credits,
+            'extraNeeded' => $extraNeeded
         ]);
     }
 }

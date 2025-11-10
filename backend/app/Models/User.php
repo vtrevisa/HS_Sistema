@@ -22,6 +22,11 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
+
+        'plan_id',
+        'credits',
+        'plan_renews_at',
+        'last_renewal_at',
     ];
 
     /**
@@ -44,6 +49,32 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+
+            'plan_renews_at' => 'datetime',
+            'last_renewal_at' => 'datetime',
         ];
+    }
+
+    public function plan()
+    {
+        return $this->belongsTo(Plan::class);
+    }
+
+    public function creditPurchases()
+    {
+        return $this->hasMany(CreditPurchase::class);
+    }
+
+
+    public function consumeCredits(int $amount = 1)
+    {
+        if ($this->credits < $amount) {
+            return false;
+        }
+
+        $this->credits -= $amount;
+        $this->save();
+
+        return true;
     }
 }

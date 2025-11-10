@@ -2,8 +2,18 @@ import type { Dispatch, SetStateAction } from 'react'
 import type { DateRange } from 'react-day-picker'
 import type { SearchAlvarasPayload } from '@/http/types/alvaras'
 import type { FlowState } from '@/http/use-alvaras'
+import type { UseMutationResult } from "@tanstack/react-query";
 
 type SearchResults = { totalFound: number; available: number } | null
+
+interface ReleaseParams {
+  releaseAlvaras: UseMutationResult<
+    { creditsUsed: number; creditsAvailable: number; extraNeeded: number },
+    Error,
+    { totalToRelease: number }
+  >;
+  totalFound: number;
+}
 
 export function buildSearchPayload(
   city: string,
@@ -30,8 +40,8 @@ export function calculateExtraAmount(totalFound: number, available: number) {
   return Math.max(totalFound - available, 0) * 5
 }
 
-export function handleReleaseAlvaras(setFlowState: Dispatch<SetStateAction<FlowState>>) {
-  setFlowState('alvaras-released')
+export function handleReleaseAlvaras({ releaseAlvaras, totalFound }: ReleaseParams) {
+  releaseAlvaras.mutate({ totalToRelease: totalFound });
 }
 
 export function handlePaymentSuccess(

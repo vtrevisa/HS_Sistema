@@ -37,3 +37,11 @@ export interface SearchAlvarasPayload {
   from: { year: number; month: string };
   to: { year: number; month: string };
 }
+
+export interface AlvarasFake {
+  id: number;
+  service: string;
+  endDate: Date;
+  address: string;
+  occupation: string;
+}

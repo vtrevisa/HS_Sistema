@@ -7,7 +7,9 @@ use App\Http\Controllers\Api\LeadController;
 use App\Http\Controllers\Api\CompanyController;
 use App\Http\Controllers\Api\GoogleSheetsController;
 use App\Http\Controllers\Api\UserController;
-
+use App\Http\Controllers\Api\PlanController;
+use App\Http\Controllers\Api\SubscriptionController;
+use App\Http\Controllers\Api\CreditPurchaseController;
 use Illuminate\Support\Facades\Route;
 
 // Auth
@@ -16,12 +18,22 @@ Route::post('/auth', [AuthController::class, 'login']); //POST
 // Profile 
 Route::get('/auth/me', [AuthController::class, 'me']); //GET 
 
+// Plans
+Route::get('/plans', [PlanController::class, 'index']); //GET 
+
+// Subscriptions
+Route::post('/subscription/start', [SubscriptionController::class, 'start']); //POST
+
+// Buying more credits
+Route::post('/credits/purchase', [CreditPurchaseController::class, 'store']); //POST
+
 // Logout
 Route::post('/auth/logout', [AuthController::class, 'logout']); //POST
 
 // Alvaras
 Route::get('/alvaras', [AlvaraController::class, 'index']); //GET
 Route::post('/alvaras/search', [AlvaraController::class, 'search']); //POST
+Route::post('/alvaras/release', [AlvaraController::class, 'release']); //POST
 
 // Leads
 Route::get('/leads', [LeadController::class, 'index']); //GET

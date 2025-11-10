@@ -2,7 +2,10 @@ import { useState } from 'react'
 import { toast } from 'sonner'
 import { AlertCircle } from 'lucide-react'
 import type { DateRange } from 'react-day-picker'
+
+import { useUser } from '@/http/use-user'
 import { useAlvaras } from '@/http/use-alvaras'
+
 import {
  buildSearchPayload,
  calculateExtraAmount,
@@ -28,23 +31,41 @@ export function Alvaras() {
  >('Todos')
  const [showPaymentModal, setShowPaymentModal] = useState(false)
 
- const [subscriptionData] = useState({
-  planName: 'Premium',
-  monthlyLimit: 200,
-  used: 50,
-  resetDate: new Date(2025, 10, 1)
- })
+ const { data: authUser, isLoading: loadingUser } = useUser()
+
+ const safePlan = authUser?.plan ?? {
+  name: '',
+  monthly_credits: 0
+ }
+
+ const subscriptionData = {
+  planName: safePlan.name,
+  monthlyLimit: safePlan.monthly_credits,
+  used: safePlan.monthly_credits - (authUser?.credits ?? 0),
+  resetDate: authUser?.plan_renews_at
+   ? new Date(authUser.plan_renews_at)
+   : new Date()
+ }
 
  const {
   alvarasData,
   searchAlvaras,
   searchResults,
   setSearchResults,
+  releaseAlvaras,
   isActive,
   isLoading,
   flowState,
   setFlowState
  } = useAlvaras(subscriptionData)
+
+ if (loadingUser) {
+  return <p>Carregando...</p>
+ }
+
+ if (!authUser) {
+  return <p>Erro ao carregar usuário.</p>
+ }
 
  const extraAmount = searchResults
   ? calculateExtraAmount(searchResults.totalFound, searchResults.available)
@@ -82,8 +103,8 @@ export function Alvaras() {
   }
  }
 
- // Conditional rendering based on the flow's state.
- if (flowState === 'no-subscription') {
+ // Conditional rendering based on the user plan.
+ if (!authUser.plan) {
   return (
    <div className="p-4 lg:p-6 space-y-6">
     <h1 className="text-2xl lg:text-3xl font-bold text-blue-600 dark:text-white">
@@ -184,7 +205,12 @@ export function Alvaras() {
      <AlvarasCounter
       totalFound={searchResults.totalFound}
       available={searchResults.available}
-      onRelease={() => handleReleaseAlvaras(setFlowState)}
+      onRelease={() =>
+       handleReleaseAlvaras({
+        releaseAlvaras,
+        totalFound: searchResults.totalFound
+       })
+      }
       onPayment={() => setShowPaymentModal(true)}
      />
     )}
