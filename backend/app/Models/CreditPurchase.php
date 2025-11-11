@@ -13,7 +13,8 @@ class CreditPurchase extends Model
         'user_id',
         'credits_purchased',
         'amount_paid',
-        'payment_method'
+        'payment_method',
+        'transaction_id'
     ];
 
     public function user()

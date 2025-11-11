@@ -164,19 +164,25 @@ class AlvaraController extends Controller
             ], 400);
         }
 
-        // Calcula créditos consumidos e extras necessários
+        // Dados do plano
         $creditsAvailable = $user->credits;
+
         $creditsUsed = min($creditsAvailable, $totalToRelease);
         $extraNeeded = max($totalToRelease - $creditsAvailable, 0);
 
-        // Atualiza créditos do usuário
+        // Atualiza CREDITOS
         $user->credits -= $creditsUsed;
+
+        // ✅ Atualiza USO MENSAL
+        $user->monthly_used += $creditsUsed;
+
         $user->save();
 
         return response()->json([
             'creditsUsed' => $creditsUsed,
             'creditsAvailable' => $user->credits,
-            'extraNeeded' => $extraNeeded
+            'extraNeeded' => $extraNeeded,
+            'monthly_used' => $user->monthly_used
         ]);
     }
 }

@@ -146,6 +146,7 @@ class AuthController extends Controller
                 'name' => $user->name,
                 'plan_id' => $user->plan_id,
                 'credits' => $user->credits,
+                'monthly_used' => $user->monthly_used,
                 'plan_renews_at' => $user->plan_renews_at,
                 'last_renewal_at' => $user->last_renewal_at,
                 'plan' => $user->plan ? [

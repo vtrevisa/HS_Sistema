@@ -4,7 +4,7 @@ import type { SearchAlvarasPayload } from '@/http/types/alvaras'
 import type { FlowState } from '@/http/use-alvaras'
 import type { UseMutationResult } from "@tanstack/react-query";
 
-type SearchResults = { totalFound: number; available: number } | null
+type SearchResults = { totalFound: number; available: number; } | null
 
 interface ReleaseParams {
   releaseAlvaras: UseMutationResult<
@@ -44,11 +44,19 @@ export function handleReleaseAlvaras({ releaseAlvaras, totalFound }: ReleasePara
   releaseAlvaras.mutate({ totalToRelease: totalFound });
 }
 
-export function handlePaymentSuccess(
-  setFlowState: Dispatch<SetStateAction<FlowState>>
-) {
-  setFlowState('alvaras-released')
-  // aqui você pode adicionar integração com backend se necessário
+export async function handlePaymentSuccess({ releaseAlvaras, totalToRelease, setFlowState }) {
+ try {
+    // Atualiza o user com os novos créditos
+    setFlowState("subscription-active")
+
+    // ✅ Agora sim: liberação automática
+    await releaseAlvaras.mutateAsync({ totalToRelease })
+
+    setFlowState("alvaras-released")
+
+  } catch (err) {
+    console.error(err)
+  }
 }
 
 export function handleNewQuery(

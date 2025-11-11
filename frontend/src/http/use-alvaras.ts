@@ -23,7 +23,11 @@ export function useAlvaras({ monthlyLimit, used }: Plan) {
   const queryClient = useQueryClient();
   const [isSearching, setIsSearching] = useState(false);
   const [alvarasData, setAlvarasData] = useState<AlvarasFake[]>([]);
-  const [searchResults, setSearchResults] = useState<{ totalFound: number; available: number } | null>(null);
+  const [searchResults, setSearchResults] = useState<{
+  totalFound: number;
+  available: number;
+  extraNeeded?: number;
+} | null>(null);
   const [flowState, setFlowState] = useState<FlowState>("subscription-active");
 
   // Mutation para buscar alvarás filtrados
@@ -76,12 +80,19 @@ export function useAlvaras({ monthlyLimit, used }: Plan) {
 
   // Mutation para liberar alvarás e consumir créditos
  
-  const releaseMutation = useMutation<{ creditsUsed: number; creditsAvailable: number; extraNeeded: number },Error,{ totalToRelease: number }>({
+  const releaseMutation = useMutation<{ creditsUsed: number; creditsAvailable: number; extraNeeded: number;  monthlyUsed: number; },Error,{ totalToRelease: number }>({
     mutationFn: async ({ totalToRelease }) => {
       const { data } = await api.post("/alvaras/release", { totalToRelease });
       return data;
     },
-    onSuccess: ({ extraNeeded }) => {
+    onSuccess: ({ creditsUsed, creditsAvailable, extraNeeded }) => {
+     
+      setSearchResults({
+        totalFound: creditsUsed + extraNeeded, 
+        available: creditsAvailable,                 
+        extraNeeded                            
+      });
+
       queryClient.invalidateQueries({ queryKey: ["authUser"] });
 
       if (extraNeeded > 0) {

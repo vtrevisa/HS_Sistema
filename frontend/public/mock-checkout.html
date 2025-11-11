@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+ <head>
+  <meta charset="UTF-8" />
+  <title>Checkout - Simulado Hotmart</title>
+
+  <style>
+   body {
+    margin: 0;
+    background: #f7f9fc;
+    font-family: Arial, sans-serif;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 30px;
+   }
+
+   .checkout-container {
+    width: 100%;
+    max-width: 420px;
+    background: white;
+    padding: 30px;
+    border-radius: 14px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+   }
+
+   .logo {
+    width: 160px;
+    opacity: 0.9;
+    margin: 0 auto 20px auto;
+    display: block;
+   }
+
+   h2 {
+    margin-bottom: 6px;
+    text-align: center;
+    font-size: 22px;
+    color: #333;
+   }
+
+   p.subtitle {
+    color: #666;
+    text-align: center;
+    margin-bottom: 24px;
+   }
+
+   .summary-box {
+    background: #f1f5f9;
+    padding: 16px;
+    border-radius: 10px;
+    margin-bottom: 25px;
+    font-size: 14px;
+    display: none;
+   }
+
+   .summary-row {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 6px;
+   }
+
+   label {
+    font-size: 14px;
+    font-weight: bold;
+    display: block;
+    margin-top: 15px;
+   }
+
+   input,
+   select {
+    width: 100%;
+    padding: 12px;
+    margin-top: 6px;
+    border-radius: 8px;
+    border: 1px solid #cfd6e1;
+    font-size: 15px;
+   }
+
+   button {
+    width: 100%;
+    padding: 15px;
+    margin-top: 25px;
+    background: #4f46e5;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 17px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: 0.2s;
+   }
+
+   button:hover {
+    background: #4338ca;
+   }
+
+   footer {
+    margin-top: 25px;
+    font-size: 12px;
+    color: #666;
+    text-align: center;
+   }
+
+   .payment-section {
+    display: none;
+   }
+  </style>
+ </head>
+
+ <body>
+  <div class="checkout-container">
+   <img src="https://help.hotmart.com/images/hotmart-logo.svg" class="logo" />
+
+   <h2>Finalizar Pagamento</h2>
+   <p class="subtitle">Simulação de checkout Hotmart</p>
+
+   <!-- ✅ Resumo -->
+   <div class="summary-box">
+    <div class="summary-row">
+     <strong>Créditos:</strong>
+     <span id="credits">0</span>
+    </div>
+
+    <div class="summary-row">
+     <strong>Total:</strong>
+     <span id="price">R$ 0,00</span>
+    </div>
+   </div>
+
+   <!-- ✅ Seleção do tipo de pagamento -->
+   <label>Forma de Pagamento</label>
+   <select id="paymentMethod" onchange="togglePaymentFields()">
+    <option value="card">Cartão de Crédito</option>
+    <option value="pix">Pix</option>
+    <option value="boleto">Boleto</option>
+    <option value="balance">Saldo Hotmart (UP)</option>
+   </select>
+
+   <!-- ✅ Seção: cartão -->
+   <div id="cardSection" class="payment-section">
+    <label>Nome no cartão</label>
+    <input id="cardName" placeholder="João da Silva" />
+
+    <label>Número do cartão</label>
+    <input id="cardNumber" placeholder="1234 5678 9123 0000" />
+
+    <label>Validade (MM/AA)</label>
+    <input id="cardExpiry" placeholder="09/29" />
+
+    <label>CVV</label>
+    <input id="cardCvv" placeholder="123" />
+   </div>
+
+   <!-- ✅ Pix -->
+   <div id="pixSection" class="payment-section">
+    <p>Clique em confirmar e o pagamento será aprovado automaticamente.</p>
+   </div>
+
+   <!-- ✅ Boleto -->
+   <div id="boletoSection" class="payment-section">
+    <p>O boleto será gerado (fake) e o pagamento será aprovado em seguida.</p>
+   </div>
+
+   <!-- ✅ Saldo -->
+   <div id="balanceSection" class="payment-section">
+    <p>Será usado o saldo simulado da sua conta Hotmart.</p>
+   </div>
+
+   <button onclick="confirmPayment()">Confirmar Pagamento</button>
+  </div>
+
+  <footer>Este é um checkout simulado. Nenhum valor real será cobrado.</footer>
+
+  <script>
+   // ✅ Preenche valores recebidos por query params
+   const urlParams = new URLSearchParams(window.location.search)
+   document.getElementById('price').textContent =
+    'R$ ' + (urlParams.get('price') || '0,00')
+   document.getElementById('credits').textContent =
+    urlParams.get('credits') || '0'
+
+   // ✅ Exibe o método padrão: cartão
+   document.getElementById('cardSection').style.display = 'block'
+
+   // ✅ Alterna os campos conforme o método escolhido
+   function togglePaymentFields() {
+    const method = document.getElementById('paymentMethod').value
+
+    document
+     .querySelectorAll('.payment-section')
+     .forEach(el => (el.style.display = 'none'))
+
+    document.getElementById(method + 'Section').style.display = 'block'
+   }
+
+   // ✅ Simula o pagamento para seu frontend
+   function confirmPayment() {
+    window.parent.postMessage({ status: 'paid' }, '*')
+   }
+  </script>
+ </body>
+</html>

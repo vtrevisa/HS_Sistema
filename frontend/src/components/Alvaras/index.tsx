@@ -8,7 +8,6 @@ import { useAlvaras } from '@/http/use-alvaras'
 
 import {
  buildSearchPayload,
- calculateExtraAmount,
  handleNewQuery,
  handlePaymentSuccess,
  handleReleaseAlvaras
@@ -30,6 +29,10 @@ export function Alvaras() {
   'Todos' | 'AVCB' | 'CLCB'
  >('Todos')
  const [showPaymentModal, setShowPaymentModal] = useState(false)
+ const [selectedCreditsPackage, setSelectedCreditsPackage] = useState<{
+  credits: number
+  price: number
+ } | null>(null)
 
  const { data: authUser, isLoading: loadingUser } = useUser()
 
@@ -38,10 +41,20 @@ export function Alvaras() {
   monthly_credits: 0
  }
 
+ const monthlyLimit = safePlan.monthly_credits
+ const totalCredits = authUser?.credits ?? 0
+
+ const usedMonthly =
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  typeof (authUser as any)?.monthly_used === 'number'
+   ? // eslint-disable-next-line @typescript-eslint/no-explicit-any
+     (authUser as any).monthly_used
+   : Math.max(monthlyLimit - Math.min(totalCredits, monthlyLimit), 0)
+
  const subscriptionData = {
   planName: safePlan.name,
-  monthlyLimit: safePlan.monthly_credits,
-  used: safePlan.monthly_credits - (authUser?.credits ?? 0),
+  monthlyLimit,
+  used: usedMonthly,
   resetDate: authUser?.plan_renews_at
    ? new Date(authUser.plan_renews_at)
    : new Date()
@@ -67,9 +80,7 @@ export function Alvaras() {
   return <p>Erro ao carregar usuário.</p>
  }
 
- const extraAmount = searchResults
-  ? calculateExtraAmount(searchResults.totalFound, searchResults.available)
-  : 0
+ console.log(flowState)
 
  async function handleSearchAlvaras() {
   if (!city.trim()) {
@@ -204,24 +215,34 @@ export function Alvaras() {
     (flowState === 'search-result' || flowState === 'payment-required') && (
      <AlvarasCounter
       totalFound={searchResults.totalFound}
-      available={searchResults.available}
+      creditsAvailable={searchResults.available}
+      extraNeeded={searchResults.extraNeeded ?? 0}
       onRelease={() =>
        handleReleaseAlvaras({
         releaseAlvaras,
         totalFound: searchResults.totalFound
        })
       }
-      onPayment={() => setShowPaymentModal(true)}
+      onPayment={pkg => {
+       setSelectedCreditsPackage(pkg)
+       setShowPaymentModal(true)
+      }}
      />
     )}
 
    {/* Modal de Pagamento */}
-   {flowState === 'payment-required' && (
+   {flowState === 'payment-required' && selectedCreditsPackage && (
     <PaymentDetails
      isOpen={showPaymentModal}
      onClose={() => setShowPaymentModal(false)}
-     amount={extraAmount}
-     onSuccess={() => handlePaymentSuccess(setFlowState)}
+     creditsPackage={selectedCreditsPackage}
+     onSuccess={() =>
+      handlePaymentSuccess({
+       setFlowState,
+       releaseAlvaras,
+       totalToRelease: searchResults?.totalFound
+      })
+     }
     />
    )}
 

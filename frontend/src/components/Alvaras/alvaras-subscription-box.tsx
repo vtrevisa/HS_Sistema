@@ -1,6 +1,7 @@
 import { AlertCircle, CheckCircle2 } from 'lucide-react'
 import { Card } from '../ui/card'
 import { Badge } from '../ui/badge'
+import { motion } from 'framer-motion'
 
 interface AlvarasSubscriptionBoxProps {
  isActive: boolean
@@ -17,8 +18,9 @@ export function AlvarasSubscriptionBox({
  used,
  resetDate
 }: AlvarasSubscriptionBoxProps) {
- const available = monthlyLimit - used
- const usagePercentage = (used / monthlyLimit) * 100
+ const available = Math.max(monthlyLimit - used, 0)
+ const usagePercentage =
+  monthlyLimit > 0 ? Math.min((used / monthlyLimit) * 100, 100) : 0
 
  return (
   <Card className="p-4 mb-6 bg-gradient-to-r from-primary/5 to-primary/10 border-primary/20">
@@ -64,11 +66,13 @@ export function AlvarasSubscriptionBox({
         <span className="text-muted-foreground">Uso do plano</span>
         <span className="font-medium">{usagePercentage.toFixed(0)}%</span>
        </div>
-       <div className="w-full bg-muted rounded-full h-2.5">
-        <div
-         className="bg-primary h-2.5 rounded-full transition-all"
-         style={{ width: `${Math.min(usagePercentage, 100)}%` }}
-        ></div>
+       <div className="w-full bg-muted rounded-full h-3 overflow-hidden">
+        <motion.div
+         className="bg-primary h-3 rounded-full"
+         initial={{ width: 0 }}
+         animate={{ width: `${usagePercentage}%` }}
+         transition={{ duration: 0.6, ease: 'easeOut' }}
+        />
        </div>
        <p className="text-xs text-muted-foreground">
         Renovação em: {resetDate.toLocaleDateString('pt-BR')}
