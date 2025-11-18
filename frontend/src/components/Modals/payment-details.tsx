@@ -30,12 +30,14 @@ export function PaymentDetails({
  useEffect(() => {
   function handleMessage(event: MessageEvent) {
    if (event.data?.status === 'paid') {
+    const transactionId = event.data?.transaction_id || `TID-${Date.now()}`
+
     // ✅ REGISTRAR A COMPRA NO BACKEND
     purchaseCredits.mutate({
      credits: creditsPackage.credits,
      amount_paid: creditsPackage.price,
      payment_method: 'mock-hotmart',
-     transaction_id: null
+     transaction_id: transactionId
     })
 
     // ✅ feedback visual / avançar fluxo
@@ -46,8 +48,13 @@ export function PaymentDetails({
 
   window.addEventListener('message', handleMessage)
   return () => window.removeEventListener('message', handleMessage)
-  // eslint-disable-next-line react-hooks/exhaustive-deps
- }, [])
+ }, [
+  purchaseCredits,
+  creditsPackage.credits,
+  creditsPackage.price,
+  onClose,
+  onSuccess
+ ])
 
  return (
   <Dialog open={isOpen} onOpenChange={onClose}>

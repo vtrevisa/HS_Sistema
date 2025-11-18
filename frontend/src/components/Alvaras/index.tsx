@@ -67,7 +67,8 @@ export function Alvaras() {
   setSearchResults,
   releaseAlvaras,
   isActive,
-  isLoading,
+  isSearching,
+  isReleasing,
   flowState,
   setFlowState
  } = useAlvaras(subscriptionData)
@@ -79,8 +80,6 @@ export function Alvaras() {
  if (!authUser) {
   return <p>Erro ao carregar usuário.</p>
  }
-
- console.log(flowState)
 
  async function handleSearchAlvaras() {
   if (!city.trim()) {
@@ -192,6 +191,7 @@ export function Alvaras() {
     monthlyLimit={subscriptionData.monthlyLimit}
     used={subscriptionData.used}
     resetDate={subscriptionData.resetDate}
+    flowState={flowState}
    />
 
    {/* Filtros */}
@@ -206,7 +206,7 @@ export function Alvaras() {
      selectedType={selectedTypeFilter}
      setSelectedType={setSelectedTypeFilter}
      applyFilter={handleSearchAlvaras}
-     isLoading={isLoading}
+     isLoading={isSearching}
     />
    )}
 
@@ -217,6 +217,8 @@ export function Alvaras() {
       totalFound={searchResults.totalFound}
       creditsAvailable={searchResults.available}
       extraNeeded={searchResults.extraNeeded ?? 0}
+      isLoading={isReleasing}
+      flowState={flowState}
       onRelease={() =>
        handleReleaseAlvaras({
         releaseAlvaras,
@@ -238,7 +240,6 @@ export function Alvaras() {
      creditsPackage={selectedCreditsPackage}
      onSuccess={() =>
       handlePaymentSuccess({
-       setFlowState,
        releaseAlvaras,
        totalToRelease: searchResults?.totalFound
       })

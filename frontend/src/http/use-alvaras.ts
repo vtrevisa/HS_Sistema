@@ -22,6 +22,7 @@ interface Plan {
 export function useAlvaras({ monthlyLimit, used }: Plan) {
   const queryClient = useQueryClient();
   const [isSearching, setIsSearching] = useState(false);
+  const [isReleasing, setIsReleasing] = useState(false);
   const [alvarasData, setAlvarasData] = useState<AlvarasFake[]>([]);
   const [searchResults, setSearchResults] = useState<{
   totalFound: number;
@@ -85,37 +86,42 @@ export function useAlvaras({ monthlyLimit, used }: Plan) {
       const { data } = await api.post("/alvaras/release", { totalToRelease });
       return data;
     },
-    onSuccess: ({ creditsUsed, creditsAvailable, extraNeeded }) => {
+    onMutate: () => setIsReleasing(true),
+    onSuccess: (data) => {
      
-      setSearchResults({
-        totalFound: creditsUsed + extraNeeded, 
-        available: creditsAvailable,                 
-        extraNeeded                            
-      });
+      setSearchResults(prev => ({
+        totalFound: prev?.totalFound || data.creditsUsed, 
+        available: data.creditsAvailable,                 
+        extraNeeded: data.extraNeeded                            
+      }));
 
       queryClient.invalidateQueries({ queryKey: ["authUser"] });
 
-      if (extraNeeded > 0) {
+      if (data.extraNeeded > 0) {
         setFlowState("payment-required");
         toast.info("Créditos insuficientes", {
-          description: `Você precisa comprar ${extraNeeded} créditos extras.`,
+          description: `Você precisa comprar ${data.extraNeeded} créditos extras.`,
         });
       } else {
-        setFlowState("alvaras-released");
-        toast.success("Alvarás liberados com sucesso!");
+        setTimeout(() => {
+          setFlowState("alvaras-released");
+          toast.success("Alvarás liberados com sucesso!");
+          setIsReleasing(false)
+        }, 2000);
       }
     },
     onError: () => {
       toast.error("Erro ao liberar alvarás");
-    },
+    }
   });
   
   // Here we create the "isActive" based on the flowState.
-  const isActive = flowState !== 'payment-required';
+  const isActive = flowState !== 'no-subscription';
 
   return {
     //alvaras: alvarasDB.data || [],
-    isLoading: isSearching,
+    isSearching,
+    isReleasing,
     alvarasData,
     searchAlvaras: searchMutation,
     releaseAlvaras: releaseMutation,

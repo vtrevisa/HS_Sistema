@@ -4,6 +4,8 @@ import type { SearchAlvarasPayload } from '@/http/types/alvaras'
 import type { FlowState } from '@/http/use-alvaras'
 import type { UseMutationResult } from "@tanstack/react-query";
 
+import { toast } from 'sonner'
+
 type SearchResults = { totalFound: number; available: number; } | null
 
 interface ReleaseParams {
@@ -44,17 +46,21 @@ export function handleReleaseAlvaras({ releaseAlvaras, totalFound }: ReleasePara
   releaseAlvaras.mutate({ totalToRelease: totalFound });
 }
 
-export async function handlePaymentSuccess({ releaseAlvaras, totalToRelease, setFlowState }) {
+export async function handlePaymentSuccess({ releaseAlvaras, totalToRelease }) {
  try {
-    // Atualiza o user com os novos créditos
-    setFlowState("subscription-active")
+    toast.info("Pagamento registrado", { 
+      description: "Finalizando liberação dos alvarás..." 
+    });
 
-    // ✅ Agora sim: liberação automática
     await releaseAlvaras.mutateAsync({ totalToRelease })
 
-    setFlowState("alvaras-released")
-
   } catch (err) {
+    console.error("Erro ao finalizar a liberação após pagamento.", err);
+
+    toast.error('Falha na liberação', {
+      description: 'Ocorreu um erro ao processar a liberação final. Se o pagamento foi efetuado, contate o suporte.'
+    });
+
     console.error(err)
   }
 }

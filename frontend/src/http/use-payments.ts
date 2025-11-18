@@ -1,4 +1,4 @@
-import { useMutation } from '@tanstack/react-query'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { api } from '@/lib/api'
 
 import { toast } from 'sonner'
@@ -11,21 +11,20 @@ interface PurchaseCreditsPayload {
 }
 
 export function usePayments() {
+  const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async (payload: PurchaseCreditsPayload) => {
       const response = await api.post('/credits/purchase', payload)
       return response.data
     },
-    onSuccess: (data) => {
-      toast.success('Créditos adicionados!', {
-        description: `Seu novo saldo é de ${data.user_credits} créditos.`
-      })
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["authUser"] });
     },
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     onError: (error: any) => {
       toast.error('Erro ao registrar pagamento', {
-        description: error?.response?.data?.message || 'Tente novamente.'
+        description: error?.response?.data?.message || 'Tente novamente. Se o valor foi debitado, contate o suporte.'
       })
     }
   })

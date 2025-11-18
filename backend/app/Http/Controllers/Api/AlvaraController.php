@@ -7,6 +7,7 @@ use App\Models\Alvara;
 use Laravel\Sanctum\PersonalAccessToken;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class AlvaraController extends Controller
 {
@@ -164,25 +165,40 @@ class AlvaraController extends Controller
             ], 400);
         }
 
-        // Dados do plano
+        // O saldo atual do usuário antes de qualquer operação
         $creditsAvailable = $user->credits;
 
-        $creditsUsed = min($creditsAvailable, $totalToRelease);
+        // O valor que falta para a transação
         $extraNeeded = max($totalToRelease - $creditsAvailable, 0);
 
-        // Atualiza CREDITOS
-        $user->credits -= $creditsUsed;
+        // O quanto seria consumido se a transação fosse parcial (usado no retorno de erro)
+        $creditsConsumedIncomplete = min($creditsAvailable, $totalToRelease);
 
-        // ✅ Atualiza USO MENSAL
-        $user->monthly_used += $creditsUsed;
+        if ($extraNeeded === 0) {
+            // ✅ FLUXO DE SUCESSO: Créditos suficientes ou saldo exato.
+            return DB::transaction(function () use ($user, $totalToRelease) {
 
-        $user->save();
+                // 1. DÉBITO: O valor usado é o total solicitado ($totalToRelease)
+                $user->credits -= $totalToRelease;
+                $user->monthly_used += $totalToRelease;
+                $user->save();
 
-        return response()->json([
-            'creditsUsed' => $creditsUsed,
-            'creditsAvailable' => $user->credits,
-            'extraNeeded' => $extraNeeded,
-            'monthly_used' => $user->monthly_used
-        ]);
+                return response()->json([
+                    'creditsUsed' => $totalToRelease, // Usou o total solicitado
+                    'creditsAvailable' => $user->credits, // Novo saldo
+                    'extraNeeded' => 0,
+                    'monthly_used' => $user->monthly_used
+                ]);
+            });
+        } else {
+            // 🛑 FLUXO DE PAGAMENTO REQUERIDO: Informa a necessidade, mas NÃO debita NADA no DB.
+
+            return response()->json([
+                'creditsUsed' => $creditsConsumedIncomplete, // Valor parcial que seria usado
+                'creditsAvailable' => $creditsAvailable, // Saldo no DB PERMANECE o mesmo
+                'extraNeeded' => $extraNeeded, // Valor que precisa ser comprado
+                'monthly_used' => $user->monthly_used + $creditsConsumedIncomplete
+            ]);
+        }
     }
 }

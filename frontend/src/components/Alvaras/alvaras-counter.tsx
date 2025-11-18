@@ -1,12 +1,15 @@
-import { useState } from 'react'
-import { AlertTriangle, CheckCircle, FileText } from 'lucide-react'
+import { useEffect, useState } from 'react'
+import { AlertTriangle, CheckCircle, FileText, Loader2 } from 'lucide-react'
 import { Card } from '../ui/card'
 import { Button } from '../ui/button'
+import type { FlowState } from '@/http/use-alvaras'
 
 interface AlvarasCounterProps {
  totalFound: number
  creditsAvailable: number
  extraNeeded: number
+ flowState: FlowState
+ isLoading: boolean
  onRelease?: () => void
  onPayment?: (creditsPackage: { credits: number; price: number }) => void
 }
@@ -15,11 +18,46 @@ export function AlvarasCounter({
  totalFound,
  creditsAvailable,
  extraNeeded,
+ flowState,
+ isLoading,
  onRelease,
  onPayment
 }: AlvarasCounterProps) {
- const safeCreditsAvailable = Math.max(creditsAvailable, 0)
- const needsPayment = extraNeeded > 0
+ const [displayedAvailable, setDisplayedAvailable] = useState(creditsAvailable)
+ const [displayedExtraNeeded, setDisplayedExtraNeeded] = useState(extraNeeded)
+
+ useEffect(() => {
+  const isStableState =
+   flowState === 'alvaras-released' ||
+   flowState === 'subscription-active' ||
+   flowState === 'payment-required' ||
+   flowState === 'no-subscription'
+
+  if (isStableState) {
+   if (displayedAvailable !== creditsAvailable) {
+    setDisplayedAvailable(creditsAvailable)
+   }
+   if (displayedExtraNeeded !== extraNeeded) {
+    setDisplayedExtraNeeded(extraNeeded)
+   }
+  } else if (
+   flowState === 'search-result' &&
+   displayedAvailable === 0 &&
+   creditsAvailable > 0
+  ) {
+   setDisplayedAvailable(creditsAvailable)
+   setDisplayedExtraNeeded(extraNeeded)
+  }
+ }, [
+  flowState,
+  creditsAvailable,
+  extraNeeded,
+  displayedAvailable,
+  displayedExtraNeeded
+ ])
+
+ const safeCreditsAvailable = Math.max(displayedAvailable, 0)
+ const needsPayment = displayedExtraNeeded > 0
 
  const creditPackages = [
   { credits: 50, price: 250 },
@@ -116,8 +154,17 @@ export function AlvarasCounter({
      <div className="flex flex-col md:flex-row gap-3">
       {!needsPayment ? (
        <Button onClick={onRelease} size="lg">
-        <CheckCircle className="mr-2 h-4 w-4" />
-        Liberar Alvarás
+        {isLoading ? (
+         <>
+          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+          Liberando alvarás...
+         </>
+        ) : (
+         <>
+          <CheckCircle className="mr-2 h-4 w-4" />
+          Liberar Alvarás
+         </>
+        )}
        </Button>
       ) : (
        <>
