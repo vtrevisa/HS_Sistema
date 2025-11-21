@@ -1,50 +1,73 @@
-import { useMemo } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { useLead } from "@/http/use-lead";
+import type { LeadRequest } from "./types/leads";
+import { usePipelineAutomation } from "./use-pipeline-automation";
 
 export function useCRM(){
   const { leadsDB, updateLead } = useLead()
+  const { runAutomations } = usePipelineAutomation();
 
-  const leads = leadsDB.data ?? [];
+  const leads = useMemo(() => leadsDB.data ?? [], [leadsDB.data]);
 
-  const statusToColumnId: Record<string, string> = {
-    Lead: 'lead',
-    'Primeiro contato': 'contato-automatico',
-    'Follow-up': 'contato-manual',
-    'Proposta enviada': 'proposta-followup',
-    'Cliente fechado': 'cliente-fechado',
-    Arquivado: 'arquivado'
-  }
+  const statusMap = useMemo(() => ({
+    lead: "Lead",
+    "contato-automatico": "Primeiro contato",
+    "contato-manual": "Follow-up",
+    "proposta-followup": "Proposta enviada",
+    "cliente-fechado": "Cliente fechado",
+    arquivado: "Arquivado",
+  } as const),
+    []
+  );
+
+  const statusIdFromLabel = useMemo(() => {
+    return Object.fromEntries(
+      Object.entries(statusMap).map(([id, label]) => [label, id])
+    ) as Record<string, string>;
+  }, [statusMap]);
+
+   
+  const [draggingLead, setDraggingLead] = useState<LeadRequest | null>(null)
 
   const pipelineLeads = useMemo(() => {
-    return leads.map(lead => {
-      const updatedAt = new Date(lead.updated_at || lead.created_at || Date.now())
-      const now = new Date()
+    return leads.map((lead) => {
+      const statusId = statusIdFromLabel[lead.status] ?? "lead";
+
+      const updatedAt = new Date(lead.updated_at || lead.created_at || Date.now());
+      const now = new Date();
+
       const daysInStage = Math.floor(
         (now.getTime() - updatedAt.getTime()) / (1000 * 60 * 60 * 24)
-      )
+      );
 
-      const statusDeadlines: Record<string, number | null> = {
-        Lead: 7,
-        'Primeiro contato': 7,
-        'Follow-up': 30,
-        'Proposta enviada': 60,
-        'Cliente fechado': null,
-        Arquivado: null
-      }
+      const deadlines: Record<string, number | null> = {
+        lead: 7,
+        "contato-automatico": 7,
+        "contato-manual": 30,
+        "proposta-followup": 60,
+        "cliente-fechado": null,
+        arquivado: null,
+      };
 
-      const deadline = statusDeadlines[lead.status] || null
-      const isOverdue = deadline !== null ? daysInStage > deadline : false
+      const deadline = deadlines[statusId];
+      const isOverdue = deadline ? daysInStage > deadline : false;
 
-      return { ...lead, daysInStage, isOverdue }
-    })
-  }, [leads])
+      return {
+        ...lead,
+        statusId,        
+        daysInStage,
+        isOverdue,
+      };
+    });
 
-  const getLeadsByStatus = (columnId: string) =>
-    pipelineLeads.filter(lead => statusToColumnId[lead.status] === columnId)
+  }, [leads, statusIdFromLabel]);
+
+  const getLeadsByStatus = (statusId: string) =>
+    pipelineLeads.filter((lead) => lead.statusId === statusId)
 
 
-  const getColumnSummary = (status: string) => {
-    const columnLeads = getLeadsByStatus(status)
+  const getColumnSummary = (statusId: string) => {
+   const columnLeads = getLeadsByStatus(statusId);
     return {
       count: columnLeads.length,
       totalValue: columnLeads.reduce(
@@ -53,27 +76,68 @@ export function useCRM(){
       )
     }
   }
+  
+  const updateLeadStatus = useCallback(
+    async (leadId: number, newStatusId: string) => {
+      const lead = leads.find((lead) => lead.id === leadId);
+      if (!lead) return;
 
-  async function updateLeadStatus(leadId: number, newStatus: string) {
-    const lead = leads.find(lead => lead.id === leadId)
-    if (!lead) return
+      const newStatusLabel = statusMap[newStatusId];
+      const updatedLead = { ...lead, status: newStatusLabel };
 
-    const leadToUpdate = { ...lead, status: newStatus }
+      try {
+        await updateLead.mutate(updatedLead);
+        console.log(`✅ Lead #${leadId} movido para: ${newStatusLabel}`);
 
-    try {
-      // Atualiza no backend
-      await updateLead.mutate(leadToUpdate)
-      console.log(`✅ Lead #${leadId} movido para: ${newStatus}`)
-    } catch (error) {
-      console.error('Erro ao atualizar status do lead:', error)
-    }
-  }
+        await runAutomations(updatedLead, newStatusId);
+      } catch (error) {
+        console.error("Erro ao atualizar status do lead:", error);
+      }
+    },
+    [leads, statusMap, updateLead, runAutomations] 
+  );
+
+
+  const handleDragStart = useCallback((lead: LeadRequest) => {
+    setDraggingLead(lead);
+  }, []);
+
+
+  const handleDragOver = useCallback((e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+  }, []);
+
+  const handleDrop = useCallback(
+    async (newStatusId: string) => {
+      if (!draggingLead) return;
+        await updateLeadStatus(draggingLead.id!, newStatusId);
+      setDraggingLead(null);
+    },
+    [draggingLead, updateLeadStatus]
+  );
+
+  const getColumnColor = useCallback((statusId: string) => {
+    const colors: Record<string, string> = {
+      lead: "bg-muted border-border",
+      "contato-automatico": "bg-blue-500/10 border-blue-500/20 dark:bg-blue-500/20",
+      "contato-manual": "bg-yellow-500/10 border-yellow-500/20 dark:bg-yellow-500/20",
+      "proposta-followup": "bg-orange-500/10 border-orange-500/20 dark:bg-orange-500/20",
+      "cliente-fechado": "bg-green-500/10 border-green-500/20 dark:bg-green-500/20",
+      arquivado: "bg-muted border-border",
+    };
+    return colors[statusId] ?? "";
+  }, []);
 
   return {
     pipelineLeads,
     getLeadsByStatus,
     getColumnSummary,
-    updateLeadStatus
+    updateLeadStatus,
+    handleDragStart,
+    handleDragOver,
+    handleDrop,
+    draggingLead,
+    getColumnColor,
   }
 
 }

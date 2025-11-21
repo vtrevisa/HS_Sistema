@@ -1,22 +1,31 @@
 import { useState } from 'react'
 import { Plus } from 'lucide-react'
+
 import { useCRM } from '@/http/use-crm'
 import { useLead } from '@/http/use-lead'
 
 import { PipelineActions } from './pipeline-actions'
 import { NewLeadModal } from '../Modals/new-leads'
 import { LeadDetailsModal } from '../Modals/lead-details'
-
 import { PipelineLeadCard } from './pipeline-lead-card'
+
 import type { LeadRequest } from '@/http/types/leads'
 
 export function Pipeline() {
- const { getLeadsByStatus, getColumnSummary, updateLeadStatus } = useCRM()
+ const {
+  getLeadsByStatus,
+  getColumnSummary,
+  handleDragStart,
+  handleDragOver,
+  handleDrop,
+  getColumnColor
+ } = useCRM()
+
  const { saveLeads } = useLead()
+
  const [isNewLeadModalOpen, setIsNewLeadModalOpen] = useState(false)
  const [selectedLead, setSelectedLead] = useState<LeadRequest | null>(null)
  const [isLeadDetailsModalOpen, setIsLeadDetailsModalOpen] = useState(false)
- const [draggedLead, setDraggedLead] = useState<LeadRequest | null>(null)
 
  const CRM_STATUSES = [
   { id: 'lead', title: 'Lead / Contato', deadline: 7 },
@@ -26,30 +35,6 @@ export function Pipeline() {
   { id: 'cliente-fechado', title: 'Cliente Fechado', deadline: null }
  ] as const
 
- const columns = CRM_STATUSES.map(status => ({
-  id: status.id,
-  title: status.title,
-  deadline: status.deadline,
-  color: getColumnColor(status.id)
- }))
-
- function getColumnColor(statusId: string) {
-  switch (statusId) {
-   case 'lead':
-    return 'bg-muted border-border'
-   case 'contato-automatico':
-    return 'bg-blue-500/10 border-blue-500/20 dark:bg-blue-500/20'
-   case 'contato-manual':
-    return 'bg-yellow-500/10 border-yellow-500/20 dark:bg-yellow-500/20'
-   case 'proposta-followup':
-    return 'bg-orange-500/10 border-orange-500/20 dark:bg-orange-500/20'
-   case 'cliente-fechado':
-    return 'bg-green-500/10 border-green-500/20 dark:bg-green-500/20'
-   default:
-    return 'bg-muted border-border'
-  }
- }
-
  function handleNewLead(leadData: Omit<LeadRequest, 'id'>) {
   saveLeads.mutate([leadData])
   console.log('Novo lead criado:', leadData)
@@ -58,45 +43,6 @@ export function Pipeline() {
  function handleLeadClick(lead: LeadRequest) {
   setSelectedLead(lead)
   setIsLeadDetailsModalOpen(true)
- }
-
- // Inicia o arraste de um lead
- function handleDragStart(e: React.DragEvent, lead: LeadRequest) {
-  setDraggedLead(lead)
-  e.dataTransfer.effectAllowed = 'move'
- }
-
- // Permite que o drop aconteça
- function handleDragOver(e: React.DragEvent) {
-  e.preventDefault()
-  e.dataTransfer.dropEffect = 'move'
- }
-
- // Solta o lead em uma nova coluna
- function handleDrop(e: React.DragEvent, columnId: string) {
-  e.preventDefault()
-  if (!draggedLead) return
-
-  if (draggedLead) {
-   const statusMap: Record<string, string> = {
-    lead: 'Lead',
-    'contato-automatico': 'Primeiro contato',
-    'contato-manual': 'Follow-up',
-    'proposta-followup': 'Proposta enviada',
-    'cliente-fechado': 'Cliente fechado',
-    arquivado: 'Arquivado'
-   }
-
-   const newStatus = statusMap[columnId]
-
-   if (newStatus && draggedLead.status !== newStatus) {
-    // Atualiza o status via UseLead
-    updateLeadStatus(draggedLead.id!, newStatus)
-    console.log(`Lead movido para ${newStatus}: ${draggedLead.company}`)
-   }
-  }
-
-  setDraggedLead(null)
  }
 
  return (
@@ -111,16 +57,18 @@ export function Pipeline() {
    {/* Mobile: Scrollable horizontal layout */}
    <div className="lg:hidden">
     <div className="grid sm-max:grid-cols-1 md-min:grid-cols-2 gap-4 overflow-x-auto pb-4">
-     {columns.map(column => {
+     {CRM_STATUSES.map(column => {
       const columnLeads = getLeadsByStatus(column.id)
       const summary = getColumnSummary(column.id)
 
       return (
        <div
         key={column.id}
-        className={`${column.color} rounded-lg p-4 min-h-[400px] min-w-[280px] flex-shrink-0`}
+        className={`${getColumnColor(
+         column.id
+        )} rounded-lg p-4 min-h-[400px] min-w-[280px] flex-shrink-0`}
         onDragOver={handleDragOver}
-        onDrop={e => handleDrop(e, column.id)}
+        onDrop={() => handleDrop(column.id)}
        >
         <div className="mb-4">
          <div className="flex justify-between items-center mb-2">
@@ -149,7 +97,7 @@ export function Pipeline() {
           <div
            key={lead.id}
            draggable
-           onDragStart={e => handleDragStart(e, lead)}
+           onDragStart={() => handleDragStart(lead)}
           >
            <PipelineLeadCard lead={lead} onLeadClick={handleLeadClick} />
           </div>
@@ -171,16 +119,16 @@ export function Pipeline() {
 
    {/* Desktop: Grid layout */}
    <div className="hidden lg:grid lg:grid-cols-3 xl-max:grid-cols-4 2xl:grid-cols-5 gap-4">
-    {columns.map(column => {
+    {CRM_STATUSES.map(column => {
      const columnLeads = getLeadsByStatus(column.id)
      const summary = getColumnSummary(column.id)
 
      return (
       <div
        key={column.id}
-       className={`${column.color} rounded-lg p-4 min-h-[600px]`}
+       className={`${getColumnColor(column.id)} rounded-lg p-4 min-h-[600px]`}
        onDragOver={handleDragOver}
-       onDrop={e => handleDrop(e, column.id)}
+       onDrop={() => handleDrop(column.id)}
       >
        <div className="mb-4">
         <div className="flex justify-between items-center mb-2">
@@ -207,11 +155,7 @@ export function Pipeline() {
 
        <div className="space-y-3">
         {columnLeads.map(lead => (
-         <div
-          key={lead.id}
-          draggable
-          onDragStart={e => handleDragStart(e, lead)}
-         >
+         <div key={lead.id} draggable onDragStart={() => handleDragStart(lead)}>
           <PipelineLeadCard lead={lead} onLeadClick={handleLeadClick} />
          </div>
         ))}
