@@ -171,6 +171,11 @@ class LeadController extends Controller
 
         try {
 
+            // Get Lead Status
+
+            $oldStatus = $lead->status;
+            $newStatus = $request->input('status', '');
+
             // Edit lead on DB
 
             $leadData = [
@@ -188,7 +193,7 @@ class LeadController extends Controller
                 'city' => ucwords(strtolower($request->input('city', ''))),
                 'district' => ucwords(strtolower($request->input('district', ''))),
                 'occupation' => $request->input('occupation', ''),
-                'status' => $request->input('status', ''),
+                'status' => $newStatus,
                 'cnpj' => $request->input('cnpj', ''),
                 'website' => $request->input('website', ''),
                 'contact' => $request->input('contact', ''),
@@ -215,6 +220,11 @@ class LeadController extends Controller
 
             // Save on DB
             $lead->update($leadData);
+
+            if ($oldStatus !== $newStatus) {
+                app(\App\Http\Controllers\Api\AutomationController::class)
+                    ->handleStatusAutomation($lead);
+            }
 
             // Success Operation
             DB::commit();
