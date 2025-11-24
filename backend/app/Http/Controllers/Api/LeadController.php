@@ -221,9 +221,17 @@ class LeadController extends Controller
             // Save on DB
             $lead->update($leadData);
 
-            if ($oldStatus !== $newStatus) {
+            // Refresh lead status
+            $lead->refresh();
+
+            info("🔄 Status antigo: {$oldStatus} | Status novo: {$lead->status}");
+
+            if ($oldStatus !== $lead->status) {
+                info("🚀 Disparando automação...");
                 app(\App\Http\Controllers\Api\AutomationController::class)
                     ->handleStatusAutomation($lead);
+            } else {
+                info("ℹ Nenhuma automação executada. Status não mudou.");
             }
 
             // Success Operation

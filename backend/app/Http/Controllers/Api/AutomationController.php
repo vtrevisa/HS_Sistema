@@ -11,19 +11,23 @@ use Illuminate\Support\Facades\Mail;
 class AutomationController extends Controller
 {
 
-    private $wasellerToken;
-    private $wasellerUrl;
+    private $wascriptToken;
+    private $wascriptUrl;
 
     public function __construct()
     {
 
-        $this->wasellerToken = env('WASELLER_TOKEN');
-        $this->wasellerUrl = 'https://api.waseller.com.br/v1/messages/sendText';
+        $this->wascriptToken = env('WASELLER_TOKEN');
+        $this->wascriptUrl = 'https://api-whatsapp.wascript.com.br/api/enviar-texto/';
     }
 
 
     public function handleStatusAutomation(Lead $lead)
+
     {
+
+        info("STATUS ATUAL NA AUTOMATION: " . $lead->status);
+
         if ($lead->status === 'Primeiro contato') {
             $this->sendFirstEmail($lead);
             $this->sendWhatsApp($lead);
@@ -51,54 +55,73 @@ class AutomationController extends Controller
         });
     }
 
-    private function sendWhatsApp(Lead $lead)
+    private function normalizePhone($phone)
     {
-        $message = "Olá {$lead->company}! Recebemos seu contato e em breve retornaremos.";
 
-        $phone = preg_replace('/\D+/', '', $lead->phone);
-        if (substr($phone, 0, 2) !== '55') {
-            $phone = '55' . $phone;
+        $digits = preg_replace('/\D+/', '', $phone);
+
+
+        if (substr($digits, 0, 2) !== '55') {
+            $digits = '55' . $digits;
         }
 
-        info("📱 Simulando envio de WhatsApp para {$phone}");
+        return $digits;
+    }
 
-        // Aqui você só faz um log ou chama o webhook de teste
-        $webhookUrl = 'https://webhook.site/2a2e44de-bd7d-43d3-a394-d816b6ddce6d/api/whatsapp/webhook';
+    private function sendWhatsApp(Lead $lead)
+    {
+        $message = "Olá {$lead->company}! Tudo bem ?";
+        $phone = $this->normalizePhone($lead->phone);
 
-        $response = Http::post($webhookUrl, [
-            'phone' => $phone,
-            'message' => $message,
-        ]);
+        info("📱 Enviando WhatsApp via Wascript para: {$phone}");
 
+        $url = $this->wascriptUrl . $this->wascriptToken;
 
-        // $response = Http::withHeaders([
-        //     'Authorization' => "Bearer {$this->wasellerToken}",
-        //     'Content-Type' => 'application/json',
-        // ])->post($this->wasellerUrl, [
-        //     'phone' => $phone,
-        //     'message' => $message,
-        // ]);
+        try {
+            $response = Http::get($url, [
+                'phone'   => $phone,
+                'message' => $message,
+            ]);
 
-        if ($response->successful()) {
-            info("✅ WhatsApp enviado para {$phone}");
-        } else {
-            info("❌ Erro ao enviar WhatsApp para {$phone}: " . $response->body());
+            if ($response->successful()) {
+                info("✅ WhatsApp enviado via Wascript para {$phone}. Resposta: " . $response->body());
+            } else {
+                info("❌ Erro ao enviar WhatsApp para {$phone}. Status: {$response->status()}. Resposta: " . $response->body());
+            }
+        } catch (\Exception $e) {
+            info("🔥 EXCEPTION ao enviar WhatsApp: " . $e->getMessage());
         }
     }
 
     public function receiveWhatsAppWebhook(Request $request)
     {
-        $data = $request->all(); // Dados enviados pelo Waseller
-        // Exemplo de dados: $data['phone'], $data['message']
+        $data = $request->all();
 
-        info("Mensagem recebida via WhatsApp: " . json_encode($data));
+        info("📩 Webhook recebido da Wascript: " . json_encode($data));
 
-        // Aqui você pode atualizar o lead ou criar notificações
-        $lead = Lead::where('phone', $data['phone'])->first();
-        if ($lead) {
-            // Exemplo: adicionar log
-            $lead->update(['last_message' => $data['message']]);
+        if (empty($data['phone']) || empty($data['message'])) {
+            info("⚠️ Webhook ignorado: numero ou mensagem ausentes");
+            return response()->json(['ignored' => true]);
         }
+
+        $cleanPhone = preg_replace('/\D+/', '', $data['phone']);
+
+        // Busca o lead pelo telefone
+        $lead = Lead::whereRaw("
+        REPLACE(REPLACE(REPLACE(phone, '+', ''), '-', ''), ' ', '') LIKE ?
+    ", ["%$cleanPhone%"])->first();
+
+        if (!$lead) {
+            info("⚠️ Nenhum lead encontrado para o telefone: {$cleanPhone}");
+            return response()->json(['lead_found' => false]);
+        }
+
+        $lead->update([
+            'last_message' => $data['message'],
+            'status' => 'Follow-up',
+        ]);
+
+        info("✅ Lead {$lead->id} atualizado após resposta do WhatsApp");
 
         return response()->json(['success' => true]);
     }

@@ -74,15 +74,16 @@ Route::post('/users', [UserController::class, 'store']); //POST
 Route::put('/users/{user}', [UserController::class, 'update']); //PUT
 Route::delete('/users/{user}', [UserController::class, 'destroy']); //DELETE
 
+// Webhook
 Route::post('/whatsapp/webhook', [AutomationController::class, 'receiveWhatsAppWebhook']);
 
-Route::post('/mock-waseller', function (Illuminate\Http\Request $request) {
-  Log::info('Mock Waseller recebeu:', $request->all());
-  return response()->json([
-    'success' => true,
-    'message' => 'Mensagem simulada enviada com sucesso!'
-  ]);
-});
+// Route::post('/mock-waseller', function (Illuminate\Http\Request $request) {
+//   Log::info('Mock Waseller recebeu:', $request->all());
+//   return response()->json([
+//     'success' => true,
+//     'message' => 'Mensagem simulada enviada com sucesso!'
+//   ]);
+// });
 
 
 // Route::group(['middleware' => ['auth:sanctum']], function () {
