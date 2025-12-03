@@ -22,8 +22,9 @@ export function useLead() {
       const { data } = await api.get<{ status: boolean; leads: LeadRequest[] }>("/leads");
       return data.leads;
     },
-    staleTime: 1 * 60 * 1000, 
-    gcTime: 30 * 60 * 1000,
+    refetchOnWindowFocus: true,       
+    refetchOnReconnect: true,         
+    staleTime: 0,                
   });
 
   // Mutation to save leads

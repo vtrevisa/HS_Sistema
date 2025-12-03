@@ -75,6 +75,7 @@ Route::put('/users/{user}', [UserController::class, 'update']); //PUT
 Route::delete('/users/{user}', [UserController::class, 'destroy']); //DELETE
 
 // Webhook
+//https://webhook.site/2a2e44de-bd7d-43d3-a394-d816b6ddce6d
 Route::post('/whatsapp/webhook', [AutomationController::class, 'receiveWhatsAppWebhook']);
 
 // Route::post('/mock-waseller', function (Illuminate\Http\Request $request) {

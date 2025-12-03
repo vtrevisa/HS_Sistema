@@ -4,7 +4,9 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Lead;
+use App\Models\WasellerContact;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Mail;
 
@@ -72,56 +74,85 @@ class AutomationController extends Controller
     {
         $message = "Olá {$lead->company}! Tudo bem ?";
         $phone = $this->normalizePhone($lead->phone);
-
-        info("📱 Enviando WhatsApp via Wascript para: {$phone}");
-
         $url = $this->wascriptUrl . $this->wascriptToken;
 
         try {
             $response = Http::get($url, [
-                'phone'   => $phone,
+                'phone' => $phone,
                 'message' => $message,
             ]);
 
-            if ($response->successful()) {
-                info("✅ WhatsApp enviado via Wascript para {$phone}. Resposta: " . $response->body());
-            } else {
-                info("❌ Erro ao enviar WhatsApp para {$phone}. Status: {$response->status()}. Resposta: " . $response->body());
-            }
+            $json = $response->json();
+            info("🚀 Envio Wascript resposta: " . json_encode($json, JSON_PRETTY_PRINT));
+
+            $remoteId = $json['remote'] ?? uniqid('tmp_');
+
+            Cache::put('waseller_mapping_' . $remoteId, $lead->id, now()->addMinutes(30));
+            info("⚠️ ID interno do Wascript será atualizado via webhook de envio (cache setado)");
         } catch (\Exception $e) {
-            info("🔥 EXCEPTION ao enviar WhatsApp: " . $e->getMessage());
+            info("🔥 ERRO envio Wascript: " . $e->getMessage());
         }
     }
+
+
 
     public function receiveWhatsAppWebhook(Request $request)
     {
         $data = $request->all();
+        info('📩 Webhook RECEBIDO RAW: ' . json_encode($data));
 
-        info("📩 Webhook recebido da Wascript: " . json_encode($data));
-
-        if (empty($data['phone']) || empty($data['message'])) {
-            info("⚠️ Webhook ignorado: numero ou mensagem ausentes");
-            return response()->json(['ignored' => true]);
+        if (!isset($data['eventDetails'])) {
+            info('⚠️ eventDetails ausente no webhook');
+            return response()->json(['success' => false]);
         }
 
-        $cleanPhone = preg_replace('/\D+/', '', $data['phone']);
+        $event = $data['eventDetails'];
+        $fromMe = $event['id']['fromMe'] ?? false;
+        $remoteId = $event['id']['remote'] ?? null;
+        $body = $event['body'] ?? null;
 
-        // Busca o lead pelo telefone
-        $lead = Lead::whereRaw("
-        REPLACE(REPLACE(REPLACE(phone, '+', ''), '-', ''), ' ', '') LIKE ?
-    ", ["%$cleanPhone%"])->first();
 
-        if (!$lead) {
-            info("⚠️ Nenhum lead encontrado para o telefone: {$cleanPhone}");
-            return response()->json(['lead_found' => false]);
+
+        if ($fromMe) {
+            if (!$remoteId) {
+                info("⚠️ RemoteId ausente no evento fromMe");
+                return response()->json(['success' => true]);
+            }
+
+            $leadId = Cache::get('waseller_mapping_' . $remoteId);
+
+            if (!$leadId) {
+                info("❌ Lead não encontrado no cache para remoteId: {$remoteId}");
+                return response()->json(['success' => true]);
+            }
+
+            WasellerContact::updateOrCreate(
+                ['lead_id' => $leadId],
+                ['waseller_id' => $remoteId]
+            );
+
+            info("💾 Lead {$leadId} mapeado com ID Waseller: {$remoteId}");
+        } else {
+            $fromPhone = $this->normalizePhone(str_replace(['@c.us', '@lid'], '', $event['from'] ?? ''));
+
+            $mapping = WasellerContact::all()->first(function ($c) use ($fromPhone) {
+                return $c->lead && $this->normalizePhone($c->lead->phone) === $fromPhone;
+            });
+
+            if (!$mapping) {
+                info("❌ Lead não encontrado para número normalizado: {$fromPhone}");
+                return response()->json(['success' => true]);
+            }
+
+            $lead = $mapping->lead;
+
+            $lead->update([
+                'last_message' => $body,
+                'status' => 'Follow-up', // ajuste conforme lógica
+            ]);
+
+            info("✅ Lead {$lead->id} atualizado pelo webhook.");
         }
-
-        $lead->update([
-            'last_message' => $data['message'],
-            'status' => 'Follow-up',
-        ]);
-
-        info("✅ Lead {$lead->id} atualizado após resposta do WhatsApp");
 
         return response()->json(['success' => true]);
     }
