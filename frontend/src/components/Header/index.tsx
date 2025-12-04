@@ -6,7 +6,8 @@ import {
  Users,
  Search,
  Trello,
- FileText
+ FileText,
+ UserCircle
  //  Shield,
  //  Calculator,
  //  Zap,
@@ -93,6 +94,15 @@ export function Header() {
   // { id: 'settings', label: 'Configurações', icon: Cog }
  ]
 
+ const systemItems = [
+  {
+   id: 'user-profile',
+   label: 'Minha Conta',
+   icon: UserCircle,
+   href: '/dashboard/minha-conta'
+  }
+ ]
+
  const activeTab = comercialItems.find(
   item => item.href === location.pathname
  )?.id
@@ -117,6 +127,7 @@ export function Header() {
    </SidebarHeader>
 
    <SidebarContent>
+    {/* Gestão Comercial (CRM) */}
     <SidebarGroup>
      <SidebarGroupLabel className="text-blue-600 font-semibold flex items-center gap-2">
       <Target className="h-4 w-4" />
@@ -140,6 +151,27 @@ export function Header() {
          </SidebarMenuItem>
         )
        })}
+      </SidebarMenu>
+     </SidebarGroupContent>
+    </SidebarGroup>
+
+    <SidebarGroup>
+     <SidebarGroupLabel>Sistema</SidebarGroupLabel>
+     <SidebarGroupContent>
+      <SidebarMenu>
+       {systemItems.map(item => (
+        <SidebarMenuItem key={item.id}>
+         <Link to={item.href}>
+          <SidebarMenuButton
+           isActive={activeTab === item.id}
+           tooltip={isCollapsed ? item.label : undefined}
+          >
+           <item.icon className="h-4 w-4" />
+           <span>{item.label}</span>
+          </SidebarMenuButton>
+         </Link>
+        </SidebarMenuItem>
+       ))}
       </SidebarMenu>
      </SidebarGroupContent>
     </SidebarGroup>

@@ -12,6 +12,7 @@ import { Companies } from './pages/app/busca-dados'
 import { Leads } from './pages/app/gestao-leads'
 import { Pipeline } from './pages/app/pipeline-crm'
 import { ArchivedProposals } from './pages/app/archived-proposals'
+import { Profile } from './pages/app/profile'
 
 const queryClient = new QueryClient()
 
@@ -34,6 +35,7 @@ export function App() {
          path="/dashboard/propostas-arquivadas"
          element={<ArchivedProposals />}
         />
+        <Route path="/dashboard/minha-conta" element={<Profile />} />
        </Route>
       </Route>
      </Routes>
