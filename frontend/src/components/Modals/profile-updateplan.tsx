@@ -3,9 +3,10 @@ import {
  Dialog,
  DialogDescription,
  DialogHeader,
+ DialogContent,
  DialogTitle
 } from '../ui/dialog'
-import { DialogContent } from '@radix-ui/react-dialog'
+
 import { cn } from '@/lib/utils'
 import { Badge } from '../ui/badge'
 import { Button } from '../ui/button'

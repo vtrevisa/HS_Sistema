@@ -4,11 +4,12 @@ import { IMaskInput } from 'react-imask'
 export interface ProfileRequest {
  id?: number
  name: string
- email: string
+ email?: string
  phone: string
  company?: string
  cnpj?: string
  address: string
+ last_renewal_at: string
 }
 
 interface ProfileFieldProps {

@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { ProfileData } from './profile-data'
 import { ProfileSubscription } from './profile-subscription'
 import { ProfileUpdatePlan } from '../Modals/profile-updateplan'
-import { ProfilePlan } from './profile-plan'
+import { ProfileTabs } from './profile-tabs'
 
 const mockSubscription = {
  planId: 1,
@@ -40,20 +40,18 @@ export function Profile() {
     />
    </div>
 
-   <ProfilePlan />
+   <ProfileTabs />
 
-   {showPlanSelectorModal && (
-    <ProfileUpdatePlan
-     currentPlanId={subscription.planId}
-     isOpen={showPlanSelectorModal}
-     onClose={() => setShowPlanSelectorModal(false)}
-     onSelectPlan={(planId: number) => {
-      // TODO: Integrate with backend
-      console.log(planId)
-      setShowPlanSelectorModal(false)
-     }}
-    />
-   )}
+   <ProfileUpdatePlan
+    currentPlanId={subscription.planId}
+    isOpen={showPlanSelectorModal}
+    onClose={() => setShowPlanSelectorModal(false)}
+    onSelectPlan={(planId: number) => {
+     // TODO: Integrate with backend
+     console.log(planId)
+     setShowPlanSelectorModal(false)
+    }}
+   />
   </div>
  )
 }
