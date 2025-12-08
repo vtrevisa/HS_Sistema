@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { ProfileData } from './profile-data'
 import { ProfileSubscription } from './profile-subscription'
 import { ProfileUpdatePlan } from '../Modals/profile-updateplan'
+import { ProfilePlan } from './profile-plan'
 
 const mockSubscription = {
  planId: 1,
@@ -38,6 +39,8 @@ export function Profile() {
      onOpenPlanSelector={() => setShowPlanSelectorModal(true)}
     />
    </div>
+
+   <ProfilePlan />
 
    {showPlanSelectorModal && (
     <ProfileUpdatePlan

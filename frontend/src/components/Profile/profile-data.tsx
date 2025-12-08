@@ -73,12 +73,6 @@ export function ProfileData() {
         Cancelar
        </Button>
        <Button size="sm" onClick={handleSaveProfile}>
-        {/* {updateLead.isPending ? (
-         <Loading size={16} />
-        ) : (
-         <Save size={16} className="mr-1" />
-        )}
-        Salvar */}
         <Save size={16} className="mr-1" />
         Salvar
        </Button>
@@ -94,14 +88,6 @@ export function ProfileData() {
        Editar
       </Button>
      )}
-
-     {/* <Button
-      variant={isEditing ? 'default' : 'outline'}
-      onClick={() => (isEditing ? handleSaveProfile() : setIsEditing(true))}
-      className="dark:hover:bg-red-600 dark:hover:border-red-600"
-     >
-      {isEditing ? 'Salvar' : 'Editar'}
-     </Button> */}
     </div>
    </CardHeader>
    <CardContent className="space-y-4">
