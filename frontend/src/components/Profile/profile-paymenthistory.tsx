@@ -7,60 +7,67 @@ import {
  CardTitle
 } from '../ui/card'
 import { Badge } from '../ui/badge'
+import { useInvoice } from '@/http/use-invoice'
 //import { Button } from '../ui/button'
 
-const mockPayments = [
- {
-  id: 1,
-  date: '2024-12-04',
-  description: 'Assinatura Plano Profissional - Dezembro/2024',
-  amount: 800.0,
-  status: 'paid',
-  invoiceUrl: '#'
- },
- {
-  id: 2,
-  date: '2024-11-04',
-  description: 'Assinatura Plano Profissional - Novembro/2024',
-  amount: 800.0,
-  status: 'paid',
-  invoiceUrl: '#'
- },
- {
-  id: 3,
-  date: '2024-11-15',
-  description: 'Alvarás Excedentes - 50 unidades',
-  amount: 250.0,
-  status: 'paid',
-  invoiceUrl: '#'
- },
- {
-  id: 4,
-  date: '2024-10-04',
-  description: 'Assinatura Plano Profissional - Outubro/2024',
-  amount: 800.0,
-  status: 'paid',
-  invoiceUrl: '#'
- },
- {
-  id: 5,
-  date: '2024-09-04',
-  description: 'Assinatura Plano Profissional - Setembro/2024',
-  amount: 800.0,
-  status: 'paid',
-  invoiceUrl: '#'
- },
- {
-  id: 6,
-  date: '2025-01-04',
-  description: 'Assinatura Plano Profissional - Janeiro/2025',
-  amount: 800.0,
-  status: 'pending',
-  invoiceUrl: '#'
- }
-]
+// const mockPayments = [
+//  {
+//   id: 1,
+//   date: '2024-12-04',
+//   description: 'Assinatura Plano Profissional - Dezembro/2024',
+//   amount: 800.0,
+//   status: 'paid',
+//   invoiceUrl: '#'
+//  },
+//  {
+//   id: 2,
+//   date: '2024-11-04',
+//   description: 'Assinatura Plano Profissional - Novembro/2024',
+//   amount: 800.0,
+//   status: 'paid',
+//   invoiceUrl: '#'
+//  },
+//  {
+//   id: 3,
+//   date: '2024-11-15',
+//   description: 'Alvarás Excedentes - 50 unidades',
+//   amount: 250.0,
+//   status: 'paid',
+//   invoiceUrl: '#'
+//  },
+//  {
+//   id: 4,
+//   date: '2024-10-04',
+//   description: 'Assinatura Plano Profissional - Outubro/2024',
+//   amount: 800.0,
+//   status: 'paid',
+//   invoiceUrl: '#'
+//  },
+//  {
+//   id: 5,
+//   date: '2024-09-04',
+//   description: 'Assinatura Plano Profissional - Setembro/2024',
+//   amount: 800.0,
+//   status: 'paid',
+//   invoiceUrl: '#'
+//  },
+//  {
+//   id: 6,
+//   date: '2025-01-04',
+//   description: 'Assinatura Plano Profissional - Janeiro/2025',
+//   amount: 800.0,
+//   status: 'pending',
+//   invoiceUrl: '#'
+//  }
+// ]
 
 export function ProfilePaymentHistory() {
+ const { data: invoices, isLoading, isPending } = useInvoice()
+
+ if (isLoading) {
+  return <p>Carregando faturas...</p>
+ }
+
  const getStatusBadge = (status: string) => {
   switch (status) {
    case 'paid':
@@ -95,9 +102,11 @@ export function ProfilePaymentHistory() {
  //   console.log(paymentId)
  //  }
 
- const totalPaid = mockPayments
-  .filter(payment => payment.status === 'paid')
-  .reduce((acc, payment) => acc + payment.amount, 0)
+ const totalPaidRaw = invoices
+  ?.filter(invoice => invoice.status === 'paid')
+  .reduce((acc, invoice) => acc + Number(invoice.amount || 0), 0)
+
+ const totalPaid = Number(totalPaidRaw) || 0
 
  return (
   <Card>
@@ -122,9 +131,14 @@ export function ProfilePaymentHistory() {
    </CardHeader>
    <CardContent>
     <div className="space-y-3">
-     {mockPayments.map(payment => (
+     {invoices?.length === 0 && (
+      <p className="text-muted-foreground text-sm">
+       Nenhuma fatura encontrada.
+      </p>
+     )}
+     {invoices?.map(invoice => (
       <div
-       key={payment.id}
+       key={invoice.id}
        className="flex flex-col-reverse lg:flex-row items-start lg:items-center justify-between p-4 gap-4 rounded-lg border bg-card hover:bg-muted/50 transition-colors"
       >
        <div className="flex items-start lg:items-center gap-4">
@@ -132,19 +146,30 @@ export function ProfilePaymentHistory() {
          <FileText className="h-5 w-5 text-muted-foreground" />
         </div>
         <div>
-         <p className="font-medium text-sm">{payment.description}</p>
+         <p className="font-medium text-sm">{invoice.description}</p>
          <p className="text-xs text-muted-foreground">
-          {new Date(payment.date).toLocaleDateString('pt-BR')}
+          {new Date(invoice.due_date).toLocaleDateString('pt-BR')}
          </p>
         </div>
        </div>
-       <div className="flex items-start self-end lg:items-center gap-4">
+       <div className="flex flex-col self-end items-end gap-4">
         <div className="text-right">
          <p className="font-semibold">
-          R$ {payment.amount.toFixed(2).replace('.', ',')}
+          R$ {invoice.amount.toFixed(2).replace('.', ',')}
          </p>
-         {getStatusBadge(payment.status)}
+         {getStatusBadge(invoice.status)}
         </div>
+        {invoice.status === 'pending' && (
+         <div>
+          <button
+           onClick={() => {}}
+           disabled={isPending}
+           className="px-3 py-1 rounded bg-primary text-white hover:bg-primary/80"
+          >
+           {isPending ? 'Processando...' : 'Pagar agora'}
+          </button>
+         </div>
+        )}
         {/* <Button
          variant="ghost"
          size="icon"

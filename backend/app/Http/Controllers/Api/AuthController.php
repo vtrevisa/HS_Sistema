@@ -112,6 +112,7 @@ class AuthController extends Controller
         }
     }
 
+
     public function me(Request $request)
     {
 
@@ -144,15 +145,21 @@ class AuthController extends Controller
             $filteredUser = [
                 'id' => $user->id,
                 'name' => $user->name,
-                'plan_id' => $user->plan_id,
-                'credits' => $user->credits,
-                'monthly_used' => $user->monthly_used,
-                'plan_renews_at' => $user->plan_renews_at,
-                'last_renewal_at' => $user->last_renewal_at,
+                'email' => $user->email,
+                'cnpj' => $user->cnpj,
+                'company' => $user->company,
+                'phone' => $user->phone,
+                'address' => $user->address,
+                'created_at' => $user->created_at,
+                'plan_active' => $user->isPlanActive(),
                 'plan' => $user->plan ? [
                     'id' => $user->plan->id,
                     'name' => $user->plan->name,
                     'monthly_credits' => $user->plan->monthly_credits,
+                    'monthly_used' => $user->monthly_used,
+                    'price' => $user->plan->price,
+                    'plan_renews_at' => $user->plan_renews_at,
+                    'last_renewal_at' => $user->last_renewal_at,
                 ] : null,
             ];
 

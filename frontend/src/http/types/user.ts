@@ -7,11 +7,10 @@ export interface UserPlan {
 export interface UserProfile {
   id: number
   name: string
-  email?: string
-  plan_id: number
-  credits: number
-  monthly_used: number
-  plan_renews_at: string
-  last_renewal_at: string
-  plan: UserPlan
+  email: string
+  phone: string
+  company: string
+  cnpj: string
+  address: string
+  created_at: string
 }

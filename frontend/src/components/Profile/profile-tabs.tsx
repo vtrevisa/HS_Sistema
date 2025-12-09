@@ -30,10 +30,6 @@ export function ProfileTabs() {
      <Receipt className="h-4 w-4" />
      <span className="hidden sm:inline">Pagamentos</span>
     </TabsTrigger>
-    {/* <TabsTrigger value="notifications" className="flex items-center gap-2">
-     <Bell className="h-4 w-4" />
-     <span className="hidden sm:inline">Notificações</span>
-    </TabsTrigger> */}
     <TabsTrigger value="security" className="flex items-center gap-2">
      <Lock className="h-4 w-4" />
      <span className="hidden sm:inline">Segurança</span>

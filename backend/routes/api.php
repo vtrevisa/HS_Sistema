@@ -11,6 +11,7 @@ use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\Api\PlanController;
 use App\Http\Controllers\Api\SubscriptionController;
 use App\Http\Controllers\Api\CreditPurchaseController;
+use App\Http\Controllers\Api\InvoiceController;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Route;
 
@@ -73,6 +74,10 @@ Route::get('/users/{user}', [UserController::class, 'show']); //GET
 Route::post('/users', [UserController::class, 'store']); //POST
 Route::put('/users/{user}', [UserController::class, 'update']); //PUT
 Route::delete('/users/{user}', [UserController::class, 'destroy']); //DELETE
+
+// Invoices
+Route::get('/invoices', [InvoiceController::class, 'index']);
+Route::post('/invoices/{id}/pay', [InvoiceController::class, 'pay']);
 
 // Webhook
 //https://webhook.site/2a2e44de-bd7d-43d3-a394-d816b6ddce6d

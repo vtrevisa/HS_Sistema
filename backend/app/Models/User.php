@@ -22,6 +22,10 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
+        'cnpj',
+        'company',
+        'phone',
+        'address',
 
         'plan_id',
         'credits',
@@ -60,10 +64,26 @@ class User extends Authenticatable
         return $this->belongsTo(Plan::class);
     }
 
+    public function invoices()
+    {
+        return $this->hasMany(Invoice::class);
+    }
+
+    public function isPlanActive()
+    {
+        if (!$this->plan_id || !$this->plan_renews_at) {
+            return false;
+        }
+
+        return now()->lte($this->plan_renews_at);
+    }
+
     public function creditPurchases()
     {
         return $this->hasMany(CreditPurchase::class);
     }
+
+
 
 
     public function consumeCredits(int $amount = 1)

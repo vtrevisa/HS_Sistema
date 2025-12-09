@@ -20,21 +20,26 @@ import {
 import { Button } from '../ui/button'
 import { Separator } from '../ui/separator'
 import { ProfileField, type ProfileRequest } from './profile-field'
+import type { UserProfile } from '@/http/types/user'
 
-const mockUserData = {
- id: '1',
- name: 'João Silva',
- email: 'joao.silva@empresa.com',
- phone: '(11) 99999-9999',
- company: 'AVCB Certo Consultoria',
- cnpj: '12.345.678/0001-90',
- address: 'Av. Paulista, 1000 - São Paulo, SP',
- createdAt: '2024-01-15'
+interface ProfileDataProps {
+ user: UserProfile
 }
 
-export function ProfileData() {
+// const mockUserData = {
+//  id: '1',
+//  name: 'João Silva',
+//  email: 'joao.silva@empresa.com',
+//  phone: '(11) 99999-9999',
+//  company: 'AVCB Certo Consultoria',
+//  cnpj: '12.345.678/0001-90',
+//  address: 'Av. Paulista, 1000 - São Paulo, SP',
+//  createdAt: '2024-01-15'
+// }
+
+export function ProfileData({ user }: ProfileDataProps) {
  const [isEditing, setIsEditing] = useState(false)
- const [userData, setUserData] = useState(mockUserData)
+ const [userData, setUserData] = useState(user)
 
  function handleSaveProfile() {
   if (!userData) return
@@ -116,13 +121,13 @@ export function ProfileData() {
      </div>
      <div className="space-y-2">
       <ProfileField
-       label="Telefone"
-       field="phone"
-       value={userData.phone}
+       label="CNPJ"
+       field="cnpj"
+       value={userData.cnpj}
        type="text"
        isEditing={isEditing}
        onChange={updateField}
-       icon={<Phone className="h-4 w-4 text-muted-foreground" />}
+       icon={<CreditCard className="h-4 w-4 text-muted-foreground" />}
       />
      </div>
      <div className="space-y-2">
@@ -138,13 +143,13 @@ export function ProfileData() {
      </div>
      <div className="space-y-2">
       <ProfileField
-       label="CNPJ"
-       field="cnpj"
-       value={userData.cnpj}
+       label="Telefone"
+       field="phone"
+       value={userData.phone}
        type="text"
        isEditing={isEditing}
        onChange={updateField}
-       icon={<CreditCard className="h-4 w-4 text-muted-foreground" />}
+       icon={<Phone className="h-4 w-4 text-muted-foreground" />}
       />
      </div>
      <div className="space-y-2">
@@ -165,7 +170,7 @@ export function ProfileData() {
     <div className="flex items-center gap-2 text-sm text-muted-foreground">
      <Calendar className="h-4 w-4" />
      <span>
-      Membro desde: {new Date(userData.createdAt).toLocaleDateString('pt-BR')}
+      Membro desde: {new Date(userData.created_at).toLocaleDateString('pt-BR')}
      </span>
     </div>
    </CardContent>
