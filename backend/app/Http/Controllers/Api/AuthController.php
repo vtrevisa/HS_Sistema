@@ -3,14 +3,19 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\ChangePasswordRequest;
+use App\Traits\AuthenticatesWithToken;
 use Exception;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
 use Laravel\Sanctum\PersonalAccessToken;
 
 class AuthController extends Controller
 {
+
+    use AuthenticatesWithToken;
     // Auth
 
     public function login(Request $request): JsonResponse
@@ -29,7 +34,13 @@ class AuthController extends Controller
         $field = filter_var($login, FILTER_VALIDATE_EMAIL) ? 'email' : 'name';
         $credentials = [$field => $login, 'password' => $password];
 
-        if (Auth::attempt($credentials)) {
+        if (!Auth::attempt($credentials)) {
+            return response()->json([
+                'status' => false,
+                'message' => "Credenciais inválidas",
+            ], 401);
+        } else {
+
 
             // Get user from DB
             $user = $request->user();
@@ -56,11 +67,6 @@ class AuthController extends Controller
                 'message' => "Usuário logado com sucesso",
                 'token' => $token,
             ], 200)->withCookie($cookie);
-        } else {
-            return response()->json([
-                'status' => false,
-                'message' => "Credenciais inválidas",
-            ], 401);
         }
     }
 
@@ -70,22 +76,22 @@ class AuthController extends Controller
     {
         try {
 
-            $token = $request->cookie('auth-token');
+            $user = $this->getAuthenticatedUser($request);
 
-            if (!$token) {
+            if (!$user) {
                 return response()->json([
                     'status' => false,
-                    'message' => 'Token de autenticação não fornecido ou inválido.',
+                    'message' => 'Token inválido ou não fornecido.',
                 ], 401);
             }
 
-            // Delete token from user
-            $accessToken = PersonalAccessToken::findToken($token);
+            // Delete token
+            $accessToken = $user->currentAccessToken();
             if ($accessToken) {
                 $accessToken->delete();
             }
 
-            // Clean cookie
+            // Remove cookie
             $cookie = cookie(
                 'auth-token',
                 '',
@@ -106,7 +112,7 @@ class AuthController extends Controller
 
             return response()->json([
                 'status' => false,
-                'message' => 'Usuário não deslogado.',
+                'message' => 'Erro ao deslogar.',
                 'error' => $e->getMessage(),
             ], 500);
         }
@@ -118,55 +124,40 @@ class AuthController extends Controller
 
         try {
 
-            $token = $request->cookie('auth-token');
+            $user = $this->getAuthenticatedUser($request);
 
-            if (!$token) {
+            if (!$user) {
                 return response()->json([
                     'status' => false,
                     'message' => 'Token de autenticação é inválido ou não fornecido.',
                 ], 401);
             }
 
-            // Retrieves the user associated with the token
-            $accessToken = PersonalAccessToken::findToken($token);
-
-            if (!$accessToken) {
-                return response()->json([
-                    'status' => false,
-                    'message' => 'Token não encontrado.',
-                ], 401);
-            }
-
-            $user = $accessToken->tokenable;
-
             // Load user plan
             $user->load('plan');
 
-            $filteredUser = [
-                'id' => $user->id,
-                'name' => $user->name,
-                'email' => $user->email,
-                'cnpj' => $user->cnpj,
-                'company' => $user->company,
-                'phone' => $user->phone,
-                'address' => $user->address,
-                'created_at' => $user->created_at,
-                'plan_active' => $user->isPlanActive(),
-                'plan' => $user->plan ? [
-                    'id' => $user->plan->id,
-                    'name' => $user->plan->name,
-                    'monthly_credits' => $user->plan->monthly_credits,
-                    'monthly_used' => $user->monthly_used,
-                    'price' => $user->plan->price,
-                    'plan_renews_at' => $user->plan_renews_at,
-                    'last_renewal_at' => $user->last_renewal_at,
-                ] : null,
-            ];
-
             return response()->json([
                 'status' => true,
-                //'token' => $token,
-                'user' => $filteredUser,
+                'user' => [
+                    'id' => $user->id,
+                    'name' => $user->name,
+                    'email' => $user->email,
+                    'cnpj' => $user->cnpj,
+                    'company' => $user->company,
+                    'phone' => $user->phone,
+                    'address' => $user->address,
+                    'created_at' => $user->created_at,
+                    'plan_active' => $user->isPlanActive(),
+                    'plan' => $user->plan ? [
+                        'id' => $user->plan->id,
+                        'name' => $user->plan->name,
+                        'monthly_credits' => $user->plan->monthly_credits,
+                        'monthly_used' => $user->monthly_used,
+                        'price' => $user->plan->price,
+                        'plan_renews_at' => $user->plan_renews_at,
+                        'last_renewal_at' => $user->last_renewal_at,
+                    ] : null,
+                ],
             ], 200);
         } catch (Exception $e) {
             return response()->json([
@@ -175,5 +166,34 @@ class AuthController extends Controller
                 'error' => $e->getMessage(),
             ], 500);
         }
+    }
+
+    public function changePassword(ChangePasswordRequest $request)
+    {
+        $user = $this->getAuthenticatedUser($request);
+
+        if (!$user) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Token inválido ou não fornecido.',
+            ], 401);
+        }
+
+        // Check current password
+        if (!Hash::check($request->current_password, $user->password)) {
+            return response()->json([
+                'status' => false,
+                'message' => 'A senha atual está incorreta.'
+            ], 422);
+        }
+
+        // Save new password
+        $user->password = Hash::make($request->password);
+        $user->save();
+
+        return response()->json([
+            'status' => true,
+            'message' => 'Senha alterada com sucesso.'
+        ], 200);
     }
 }

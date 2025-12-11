@@ -20,6 +20,7 @@ Route::post('/auth', [AuthController::class, 'login']); //POST
 
 // Profile 
 Route::get('/auth/me', [AuthController::class, 'me']); //GET 
+Route::put('/auth/me/password/update', [AuthController::class, 'changePassword']); //PUT 
 
 // Plans
 Route::get('/plans', [PlanController::class, 'index']); //GET 

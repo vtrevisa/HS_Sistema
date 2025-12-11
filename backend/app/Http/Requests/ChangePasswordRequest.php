@@ -6,7 +6,7 @@ use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Http\Exceptions\HttpResponseException;
 
-class UserRequest extends FormRequest
+class ChangePasswordRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -30,31 +30,21 @@ class UserRequest extends FormRequest
         ], 422));
     }
 
-
     public function rules(): array
     {
-        $userId = $this->route('user')->id;
-
         return [
-            'name' => 'required|string',
-            'cnpj' => 'nullable|string',
-            'company' => 'nullable|string',
-            'phone' => 'nullable|string',
-            'address' => 'nullable|string',
-
-            'email' => 'sometimes|email|unique:users,email,' . $userId,
-
-            'password' => 'nullable|min:6'
+            'current_password' => 'required|string',
+            'password' => 'required|min:6|confirmed',
         ];
     }
 
     public function messages(): array
     {
         return [
-            'name.required' => 'Nome é obrigatório!',
-            'email.email' => 'Necessário endereço de e-mail válido!',
-            'email.unique' => 'O e-mail já está cadastrado!',
-            'password.min' => 'Senha com no mínimo :min caracteres!',
+            'current_password.required' => 'Informe a senha atual.',
+            'password.required' => 'Informe a nova senha.',
+            'password.min' => 'A nova senha deve ter no mínimo :min caracteres.',
+            'password.confirmed' => 'A confirmação da senha não confere.',
         ];
     }
 }

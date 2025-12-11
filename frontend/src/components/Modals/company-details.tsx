@@ -63,6 +63,7 @@ export function CompanyDetailsModal({
   }, 500)
 
   return () => clearTimeout(timeout)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
  }, [editedCompany?.cnpj, originalCnpj])
 
  if (!company) return null

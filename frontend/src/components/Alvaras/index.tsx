@@ -34,30 +34,28 @@ export function Alvaras() {
   price: number
  } | null>(null)
 
- const { data: authUser, isLoading: loadingUser } = useUser()
+ const { user, isLoading: loadingUser } = useUser()
 
- const safePlan = authUser?.plan ?? {
+ const safePlan = user?.plan ?? {
   name: '',
   monthly_credits: 0
  }
 
  const monthlyLimit = safePlan.monthly_credits
- const totalCredits = authUser?.credits ?? 0
+ const totalCredits = user?.credits ?? 0
 
  const usedMonthly =
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  typeof (authUser as any)?.monthly_used === 'number'
+  typeof (user as any)?.monthly_used === 'number'
    ? // eslint-disable-next-line @typescript-eslint/no-explicit-any
-     (authUser as any).monthly_used
+     (user as any).monthly_used
    : Math.max(monthlyLimit - Math.min(totalCredits, monthlyLimit), 0)
 
  const subscriptionData = {
   planName: safePlan.name,
   monthlyLimit,
   used: usedMonthly,
-  resetDate: authUser?.plan_renews_at
-   ? new Date(authUser.plan_renews_at)
-   : new Date()
+  resetDate: user?.plan_renews_at ? new Date(user.plan_renews_at) : new Date()
  }
 
  const {
@@ -77,7 +75,7 @@ export function Alvaras() {
   return <p>Carregando...</p>
  }
 
- if (!authUser) {
+ if (!user) {
   return <p>Erro ao carregar usuário.</p>
  }
 
@@ -114,7 +112,7 @@ export function Alvaras() {
  }
 
  // Conditional rendering based on the user plan.
- if (!authUser.plan) {
+ if (!user.plan) {
   return (
    <div className="p-4 lg:p-6 space-y-6">
     <h1 className="text-2xl lg:text-3xl font-bold text-blue-600 dark:text-white">

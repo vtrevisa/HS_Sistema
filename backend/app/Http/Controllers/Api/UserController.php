@@ -84,8 +84,10 @@ class UserController extends Controller
 
             $user->update([
                 'name' => $request->name,
-                'email' => $request->email,
-                'password' => $request->password,
+                'cnpj' => $request->cnpj,
+                'company' => $request->company,
+                'phone'    => $request->phone,
+                'address' => $request->address
             ]);
 
             // Success Operation
@@ -106,6 +108,7 @@ class UserController extends Controller
             ], 400);
         }
     }
+
 
     // Delete user from db
 

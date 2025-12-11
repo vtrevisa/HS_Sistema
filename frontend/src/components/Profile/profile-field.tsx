@@ -8,6 +8,8 @@ export interface ProfileRequest {
  phone: string
  company?: string
  cnpj?: string
+ cep?: string | number | undefined
+ number?: string
  address: string
  last_renewal_at: string
 }
@@ -17,6 +19,7 @@ interface ProfileFieldProps {
  field: keyof ProfileRequest
  value?: string | number
  displayValue?: string
+ disabled?: boolean
  isEditing: boolean
  onChange: (
   field: keyof ProfileRequest,
@@ -31,10 +34,10 @@ const maskCNPJ = (value: string) => ({
  value
 })
 
-// const maskCEP = (value: string) => ({
-//  mask: '00000-000',
-//  value
-// })
+const maskCEP = (value: string) => ({
+ mask: '00000-000',
+ value
+})
 
 const maskPhone = (value: string) => ({
  mask: [{ mask: '(00) 0000-0000' }, { mask: '(00) 00000-0000' }],
@@ -46,6 +49,7 @@ export function ProfileField({
  field,
  value,
  displayValue,
+ disabled,
  isEditing,
  onChange,
  type = 'text',
@@ -56,6 +60,8 @@ export function ProfileField({
  const fieldMask =
   field === 'cnpj'
    ? maskCNPJ(currentValue as string)
+   : field === 'cep'
+   ? maskCEP(currentValue as string)
    : field === 'phone'
    ? maskPhone(currentValue as string)
    : null
@@ -76,9 +82,10 @@ export function ProfileField({
      <Input
       type={type}
       value={value || ''}
+      disabled={!isEditing || disabled}
       onChange={e => onChange(field, e.target.value)}
       className="mt-1"
-      placeholder={`Digite ${label.toLowerCase()}`}
+      placeholder={`Digite o ${label.toLowerCase()}`}
      />
     )
    ) : (

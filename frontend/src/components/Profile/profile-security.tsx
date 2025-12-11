@@ -1,4 +1,5 @@
 import { useState } from 'react'
+
 import { Eye, EyeOff, Lock } from 'lucide-react'
 import {
  Card,
@@ -10,19 +11,47 @@ import {
 import { Button } from '../ui/button'
 import { Label } from '../ui/label'
 import { Input } from '../ui/input'
+import { useUser } from '@/http/use-user'
+import { useForm } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { z } from 'zod'
+import { cn } from '@/lib/utils'
+
+const changePasswordSchema = z
+ .object({
+  current_password: z.string().min(1, 'Digite sua senha atual'),
+  password: z.string().min(6, 'A nova senha deve ter pelo menos 6 caracteres'),
+  password_confirmation: z.string().min(1, 'Confirme a nova senha')
+ })
+ .refine(data => data.password === data.password_confirmation, {
+  path: ['password_confirmation'],
+  message: 'As senhas não conferem'
+ })
+
+type ChangePasswordData = z.infer<typeof changePasswordSchema>
 
 export function ProfileSecurity() {
- const [currentPassword, setCurrentPassword] = useState('')
- const [newPassword, setNewPassword] = useState('')
- const [confirmPassword, setConfirmPassword] = useState('')
+ const { updateUserPassword } = useUser()
+
  const [showCurrentPassword, setShowCurrentPassword] = useState(false)
  const [showNewPassword, setShowNewPassword] = useState(false)
  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
 
- const [isLoading, setIsLoading] = useState(false)
+ const {
+  register,
+  handleSubmit,
+  formState: { errors },
+  reset
+ } = useForm<ChangePasswordData>({
+  resolver: zodResolver(changePasswordSchema)
+ })
 
- function handleSaveProfileSecurity() {
-  setIsLoading(true)
+ function handleSaveProfileSecurity(data: ChangePasswordData) {
+  updateUserPassword.mutate(data, {
+   onSuccess: () => {
+    reset()
+   }
+  })
  }
 
  return (
@@ -39,16 +68,24 @@ export function ProfileSecurity() {
     </div>
    </CardHeader>
    <CardContent>
-    <form onSubmit={handleSaveProfileSecurity} className="space-y-4">
+    <form
+     onSubmit={handleSubmit(handleSaveProfileSecurity)}
+     className="space-y-4"
+    >
      <div className="space-y-2">
       <Label htmlFor="current-password">Senha Atual</Label>
       <div className="relative">
        <Input
         id="current-password"
         type={showCurrentPassword ? 'text' : 'password'}
-        value={currentPassword}
-        onChange={e => setCurrentPassword(e.target.value)}
-        placeholder="Digite sua senha atual"
+        {...register('current_password')}
+        className={cn(
+         errors.current_password &&
+          'focus-visible:ring-red-500 ring-2 ring-red-500 ring-offset-2'
+        )}
+        placeholder={`${
+         errors.current_password ? '' : 'Digite sua senha atual'
+        }`}
        />
        <Button
         type="button"
@@ -64,6 +101,11 @@ export function ProfileSecurity() {
         )}
        </Button>
       </div>
+      {errors.current_password && (
+       <span className="text-red-500 text-sm">
+        {errors.current_password.message}
+       </span>
+      )}
      </div>
      <div className="space-y-2">
       <Label htmlFor="new-password">Nova Senha</Label>
@@ -71,9 +113,12 @@ export function ProfileSecurity() {
        <Input
         id="new-password"
         type={showNewPassword ? 'text' : 'password'}
-        value={newPassword}
-        onChange={e => setNewPassword(e.target.value)}
-        placeholder="Digite a nova senha"
+        {...register('password')}
+        className={cn(
+         errors.password &&
+          'focus-visible:ring-red-500 ring-2 ring-red-500 ring-offset-2'
+        )}
+        placeholder={`${errors.password ? '' : 'Digite a nova senha'}`}
        />
        <Button
         type="button"
@@ -89,6 +134,9 @@ export function ProfileSecurity() {
         )}
        </Button>
       </div>
+      {errors.password && (
+       <span className="text-red-500 text-sm">{errors.password.message}</span>
+      )}
      </div>
 
      <div className="space-y-2">
@@ -97,9 +145,14 @@ export function ProfileSecurity() {
        <Input
         id="confirm-password"
         type={showConfirmPassword ? 'text' : 'password'}
-        value={confirmPassword}
-        onChange={e => setConfirmPassword(e.target.value)}
-        placeholder="Confirme a nova senha"
+        {...register('password_confirmation')}
+        className={cn(
+         errors.password_confirmation &&
+          'focus-visible:ring-red-500 ring-2 ring-red-500 ring-offset-2'
+        )}
+        placeholder={`${
+         errors.password_confirmation ? '' : 'Confirme a nova senha'
+        }`}
        />
        <Button
         type="button"
@@ -115,14 +168,19 @@ export function ProfileSecurity() {
         )}
        </Button>
       </div>
+      {errors.password_confirmation && (
+       <span className="text-red-500 text-sm">
+        {errors.password_confirmation.message}
+       </span>
+      )}
      </div>
 
      <Button
       type="submit"
       className="w-full"
-      disabled={!currentPassword || isLoading}
+      disabled={updateUserPassword.isPending}
      >
-      {isLoading ? 'Alterando...' : 'Alterar Senha'}
+      {updateUserPassword.isPending ? 'Alterando...' : 'Alterar Senha'}
      </Button>
     </form>
    </CardContent>

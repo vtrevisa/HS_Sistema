@@ -18,20 +18,20 @@ import { useUser } from '@/http/use-user'
 export function Profile() {
  const [showPlanSelectorModal, setShowPlanSelectorModal] = useState(false)
 
- const { data: authUser, isLoading } = useUser()
+ const { user, isLoading } = useUser()
 
  if (isLoading) return <p>Carregando...</p>
 
- if (!authUser) return null
+ if (!user) return null
 
  const subscription = {
-  planId: authUser.plan.id,
-  planName: authUser.plan.name,
-  status: authUser.plan_active ? 'active' : 'inactive',
-  creditsLimit: authUser.plan.monthly_credits,
-  alvarasUsed: authUser.plan.monthly_used,
-  nextBillingDate: authUser.plan.plan_renews_at,
-  price: Number(authUser.plan.price)
+  planId: user.plan.id,
+  planName: user.plan.name,
+  status: user.plan_active ? 'active' : 'inactive',
+  creditsLimit: user.plan.monthly_credits,
+  alvarasUsed: user.plan.monthly_used,
+  nextBillingDate: user.plan.plan_renews_at,
+  price: Number(user.plan.price)
  }
 
  return (
@@ -48,7 +48,7 @@ export function Profile() {
    </div>
 
    <div className="grid gap-6 lg:grid-cols-3">
-    <ProfileData user={authUser} />
+    <ProfileData user={user} />
 
     <ProfileSubscription
      subscriptionInfo={subscription}

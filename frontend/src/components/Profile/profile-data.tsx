@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import {
  Building,
  Calendar,
@@ -20,10 +20,12 @@ import {
 import { Button } from '../ui/button'
 import { Separator } from '../ui/separator'
 import { ProfileField, type ProfileRequest } from './profile-field'
-import type { UserProfile } from '@/http/types/user'
+import type { UserRequest } from '@/http/types/user'
+import { useUser } from '@/http/use-user'
+import { useCompany } from '@/http/use-company'
 
 interface ProfileDataProps {
- user: UserProfile
+ user: UserRequest
 }
 
 // const mockUserData = {
@@ -40,11 +42,57 @@ interface ProfileDataProps {
 export function ProfileData({ user }: ProfileDataProps) {
  const [isEditing, setIsEditing] = useState(false)
  const [userData, setUserData] = useState(user)
+ const [cepData, setCepData] = useState({
+  street: '',
+  district: '',
+  city: '',
+  state: ''
+ })
+
+ const { updateUser } = useUser()
+ const { searchByCnpj } = useCompany()
+
+ const originalCnpj = user?.cnpj ?? null
+
+ useEffect(() => {
+  const cnpj = userData?.cnpj
+  if (!cnpj) return
+
+  const cleanCnpj = cnpj.replace(/\D/g, '')
+
+  // Só busca quando tiver 14 dígitos
+  if (cleanCnpj.length !== 14) return
+
+  const originalClean = originalCnpj?.replace(/\D/g, '')
+
+  // Evita buscar se o CNPJ não mudou
+  if (cleanCnpj === originalClean) return
+
+  const timeout = setTimeout(() => {
+   searchByCnpj.mutate(cleanCnpj, {
+    onSuccess: data => {
+     setUserData(prev => ({
+      ...prev,
+      company: data.nome_fantasia || data.razao_social || prev.company,
+      phone: data.telefone?.split('/')[0].trim() ?? prev.phone
+     }))
+    }
+   })
+  }, 500)
+
+  return () => clearTimeout(timeout)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+ }, [userData?.cnpj, originalCnpj])
 
  function handleSaveProfile() {
   if (!userData) return
   setIsEditing(false)
-  //onClose()
+
+  updateUser.mutate(userData, {
+   onSuccess: () => {
+    setIsEditing(false)
+   }
+  })
  }
 
  function updateField<K extends keyof ProfileRequest>(
@@ -52,7 +100,50 @@ export function ProfileData({ user }: ProfileDataProps) {
   value: string | number | undefined
  ) {
   setUserData(prev => ({ ...prev, [field]: value }))
+
+  // Se for o campo CEP, chamar a busca
+  if (field === 'cep' && typeof value === 'string') {
+   searchCEP(value)
+  }
  }
+
+ async function searchCEP(cep: string | number | undefined) {
+  const cleanCEP = String(cep ?? '').replace(/\D/g, '')
+  if (cleanCEP.length !== 8) return
+
+  try {
+   const response = await fetch(`https://viacep.com.br/ws/${cleanCEP}/json/`)
+   const data = await response.json()
+
+   if (!data.erro) {
+    setCepData({
+     street: data.logradouro || '',
+     district: data.bairro || '',
+     city: data.localidade || '',
+     state: data.uf || ''
+    })
+   }
+  } catch (error) {
+   console.error('Erro ao buscar CEP:', error)
+  }
+ }
+
+ useEffect(() => {
+  if (
+   cepData.street &&
+   cepData.district &&
+   cepData.city &&
+   cepData.state &&
+   userData.number
+  ) {
+   const formattedAddress = `${cepData.street}, ${userData.number}, ${cepData.district}, ${cepData.city} - ${cepData.state}`
+
+   setUserData(prev => ({
+    ...prev,
+    address: formattedAddress
+   }))
+  }
+ }, [cepData, userData.number])
 
  return (
   <Card className="lg:col-span-2">
@@ -116,6 +207,7 @@ export function ProfileData({ user }: ProfileDataProps) {
        type="email"
        isEditing={isEditing}
        onChange={updateField}
+       disabled={true}
        icon={<Mail className="h-4 w-4 text-muted-foreground" />}
       />
      </div>
@@ -152,6 +244,35 @@ export function ProfileData({ user }: ProfileDataProps) {
        icon={<Phone className="h-4 w-4 text-muted-foreground" />}
       />
      </div>
+     {isEditing && (
+      <>
+       <div className="space-y-2">
+        <ProfileField
+         label="CEP"
+         field="cep"
+         value={userData.cep}
+         type="text"
+         isEditing={isEditing}
+         onChange={(field, value) => {
+          updateField(field, value)
+          searchCEP(value)
+         }}
+         icon={<MapPin className="h-4 w-4 text-muted-foreground" />}
+        />
+       </div>
+       <div className="space-y-2">
+        <ProfileField
+         label="Número"
+         field="number"
+         value={userData.number}
+         type="text"
+         isEditing={isEditing}
+         onChange={updateField}
+         icon={<MapPin className="h-4 w-4 text-muted-foreground" />}
+        />
+       </div>
+      </>
+     )}
      <div className="space-y-2">
       <ProfileField
        label="Endereço"
