@@ -115,13 +115,20 @@ export function ProfileUpdatePlan({
         )}
        >
         {plan.popular && (
-         <Badge className="absolute -top-3 left-1/2 -translate-x-1/2 bg-primary">
+         <Badge
+          className="absolute -top-3 left-1/2 -translate-x-1/2 bg-primary"
+          aria-label="Plano mais popular"
+         >
           Mais Popular
          </Badge>
         )}
 
         {isCurrent && (
-         <Badge variant="secondary" className="absolute -top-3 right-4">
+         <Badge
+          variant="secondary"
+          className="absolute -top-3 right-4"
+          aria-label="Plano atual"
+         >
           Atual
          </Badge>
         )}
@@ -132,6 +139,7 @@ export function ProfileUpdatePlan({
            'h-10 w-10 rounded-lg flex items-center justify-center',
            plan.popular ? 'bg-primary text-primary-foreground' : 'bg-muted'
           )}
+          aria-hidden="true"
          >
           {plan.icon}
          </div>
@@ -158,10 +166,17 @@ export function ProfileUpdatePlan({
          </>
         </div>
 
-        <div className="flex-1 space-y-2 mb-4">
+        <div className="flex-1 space-y-2 mb-4" role="list">
          {plan.features.map((feature, index) => (
-          <div key={index} className="flex items-center gap-2 text-sm">
-           <Check className="h-4 w-4 text-green-500 flex-shrink-0" />
+          <div
+           key={index}
+           className="flex items-center gap-2 text-sm"
+           role="list"
+          >
+           <Check
+            className="h-4 w-4 text-green-500 flex-shrink-0"
+            aria-hidden="true"
+           />
            <span>{feature}</span>
           </div>
          ))}
@@ -174,6 +189,11 @@ export function ProfileUpdatePlan({
          className="w-full"
          disabled={isCurrent}
          onClick={() => onSelectPlan(plan.id)}
+         aria-label={
+          isCurrent
+           ? `Plano atual: ${plan.name}`
+           : `Selecionar plano ${plan.name}`
+         }
         >
          {isCurrent ? 'Plano Atual' : 'Selecionar'}
         </Button>

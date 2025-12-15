@@ -28,17 +28,6 @@ interface ProfileDataProps {
  user: UserRequest
 }
 
-// const mockUserData = {
-//  id: '1',
-//  name: 'João Silva',
-//  email: 'joao.silva@empresa.com',
-//  phone: '(11) 99999-9999',
-//  company: 'AVCB Certo Consultoria',
-//  cnpj: '12.345.678/0001-90',
-//  address: 'Av. Paulista, 1000 - São Paulo, SP',
-//  createdAt: '2024-01-15'
-// }
-
 export function ProfileData({ user }: ProfileDataProps) {
  const [isEditing, setIsEditing] = useState(false)
  const [userData, setUserData] = useState(user)
@@ -55,6 +44,8 @@ export function ProfileData({ user }: ProfileDataProps) {
  const originalCnpj = user?.cnpj ?? null
 
  useEffect(() => {
+  if (!isEditing) return
+
   const cnpj = userData?.cnpj
   if (!cnpj) return
 
@@ -82,7 +73,7 @@ export function ProfileData({ user }: ProfileDataProps) {
 
   return () => clearTimeout(timeout)
   // eslint-disable-next-line react-hooks/exhaustive-deps
- }, [userData?.cnpj, originalCnpj])
+ }, [userData?.cnpj, isEditing])
 
  function handleSaveProfile() {
   if (!userData) return
@@ -102,12 +93,14 @@ export function ProfileData({ user }: ProfileDataProps) {
   setUserData(prev => ({ ...prev, [field]: value }))
 
   // Se for o campo CEP, chamar a busca
-  if (field === 'cep' && typeof value === 'string') {
+  if (isEditing && field === 'cep') {
    searchCEP(value)
   }
  }
 
  async function searchCEP(cep: string | number | undefined) {
+  if (!isEditing) return
+
   const cleanCEP = String(cep ?? '').replace(/\D/g, '')
   if (cleanCEP.length !== 8) return
 
@@ -129,6 +122,8 @@ export function ProfileData({ user }: ProfileDataProps) {
  }
 
  useEffect(() => {
+  if (!isEditing) return
+
   if (
    cepData.street &&
    cepData.district &&
@@ -143,7 +138,7 @@ export function ProfileData({ user }: ProfileDataProps) {
     address: formattedAddress
    }))
   }
- }, [cepData, userData.number])
+ }, [cepData, userData.number, isEditing])
 
  return (
   <Card className="lg:col-span-2">
@@ -164,7 +159,16 @@ export function ProfileData({ user }: ProfileDataProps) {
         size="sm"
         variant="outline"
         className="dark:hover:bg-red-600 dark:hover:border-red-600"
-        onClick={() => setIsEditing(false)}
+        onClick={() => {
+         setUserData(user)
+         setCepData({
+          street: '',
+          district: '',
+          city: '',
+          state: ''
+         })
+         setIsEditing(false)
+        }}
        >
         Cancelar
        </Button>
@@ -253,10 +257,7 @@ export function ProfileData({ user }: ProfileDataProps) {
          value={userData.cep}
          type="text"
          isEditing={isEditing}
-         onChange={(field, value) => {
-          updateField(field, value)
-          searchCEP(value)
-         }}
+         onChange={updateField}
          icon={<MapPin className="h-4 w-4 text-muted-foreground" />}
         />
        </div>

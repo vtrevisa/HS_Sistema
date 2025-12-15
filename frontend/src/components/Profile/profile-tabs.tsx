@@ -5,6 +5,7 @@ import { ProfilePlan } from './profile-plan'
 import { ProfilePaymentHistory } from './profile-paymenthistory'
 import { ProfileSecurity } from './profile-security'
 import { ProfileCancelSubscription } from './profile-cancelsubscription'
+import type { UserRequest } from '@/http/types/user'
 
 const mockSubscription = {
  planId: 1,
@@ -16,7 +17,11 @@ const mockSubscription = {
  price: 800
 }
 
-export function ProfileTabs() {
+interface ProfileTabsProps {
+ user: UserRequest
+}
+
+export function ProfileTabs({ user }: ProfileTabsProps) {
  const [subscription] = useState(mockSubscription)
 
  return (
@@ -43,7 +48,7 @@ export function ProfileTabs() {
     </TabsTrigger>
    </TabsList>
    <TabsContent value="plan-features" className="mt-6">
-    <ProfilePlan />
+    <ProfilePlan user={user} />
    </TabsContent>
    <TabsContent value="payments" className="mt-6">
     <ProfilePaymentHistory />

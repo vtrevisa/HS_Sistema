@@ -24,6 +24,7 @@ Route::put('/auth/me/password/update', [AuthController::class, 'changePassword']
 
 // Plans
 Route::get('/plans', [PlanController::class, 'index']); //GET 
+Route::post('/plans/update', [PlanController::class, 'update']); //POST 
 
 // Subscriptions
 Route::post('/subscription/start', [SubscriptionController::class, 'start']); //POST

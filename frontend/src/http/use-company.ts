@@ -18,6 +18,7 @@ export function useCompany() {
       const { data } = await api.get<{ status: boolean; companies: CompanyRequest[] }>("/companies");
       return data.companies;
     },
+    enabled: false,
     staleTime: 1 * 60 * 1000, 
     gcTime: 30 * 60 * 1000,
     refetchOnWindowFocus: "always",
@@ -200,6 +201,7 @@ export function useCompany() {
 
   return {
     companies: companiesDB.data || [],
+    refetchCompanies: companiesDB.refetch,
     isLoading: companiesDB.isLoading,
     saveCompanies: saveMutation,
     updateCompany: updateMutation,

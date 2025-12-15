@@ -18,17 +18,23 @@ interface Plan {
   resetDate?: Date;
 }
 
-
-export function useAlvaras({ monthlyLimit, used }: Plan) {
-  const queryClient = useQueryClient();
-  const [isSearching, setIsSearching] = useState(false);
-  const [isReleasing, setIsReleasing] = useState(false);
-  const [alvarasData, setAlvarasData] = useState<AlvarasFake[]>([]);
-  const [searchResults, setSearchResults] = useState<{
+interface SearchResults {
   totalFound: number;
   available: number;
   extraNeeded?: number;
-} | null>(null);
+}
+
+
+export function useAlvaras({ monthlyLimit, used }: Plan) {
+  const queryClient = useQueryClient();
+
+  const [isSearching, setIsSearching] = useState(false);
+  const [isReleasing, setIsReleasing] = useState(false);
+
+  const [allAlvaras, setAllAlvaras] = useState<AlvarasFake[]>([])
+  const [alvarasData, setAlvarasData] = useState<AlvarasFake[]>([])
+
+  const [searchResults, setSearchResults] = useState<SearchResults | null>(null);
   const [flowState, setFlowState] = useState<FlowState>("subscription-active");
 
   // Mutation para buscar alvarás filtrados
@@ -63,8 +69,8 @@ export function useAlvaras({ monthlyLimit, used }: Plan) {
         }
       })
 
-      setAlvarasData(fakeArray);
-
+      setAllAlvaras(fakeArray);
+      setAlvarasData([]);
 
       // Update flowState based on search results
       setFlowState(totalFound <= available ? 'search-result' : 'payment-required');
@@ -87,32 +93,37 @@ export function useAlvaras({ monthlyLimit, used }: Plan) {
       return data;
     },
     onMutate: () => setIsReleasing(true),
-    onSuccess: (data) => {
-     
-      setSearchResults(prev => ({
-        totalFound: prev?.totalFound || data.creditsUsed, 
-        available: data.creditsAvailable,                 
-        extraNeeded: data.extraNeeded                            
-      }));
+    onSuccess: (data, variables) => {
+      const { totalToRelease } = variables;
+
+      setAlvarasData(allAlvaras.slice(0, totalToRelease));
+
+      setSearchResults(prev => prev
+        ? {
+            ...prev,
+            available: data.creditsAvailable,
+            extraNeeded: data.extraNeeded
+          }
+        : null
+      )
 
       queryClient.invalidateQueries({ queryKey: ["authUser"] });
 
       if (data.extraNeeded > 0) {
-        setFlowState("payment-required");
-        toast.info("Créditos insuficientes", {
-          description: `Você precisa comprar ${data.extraNeeded} créditos extras.`,
-        });
-      } else {
-        setTimeout(() => {
-          setFlowState("alvaras-released");
-          toast.success("Alvarás liberados com sucesso!");
-          setIsReleasing(false)
-        }, 2000);
+        setFlowState('payment-required')
+        toast.info('Créditos insuficientes', {
+          description: `Você precisa comprar ${data.extraNeeded} créditos extras.`
+        })
+        return
       }
+
+      setFlowState('alvaras-released')
+      toast.success('Alvarás liberados com sucesso!')
     },
     onError: () => {
       toast.error("Erro ao liberar alvarás");
-    }
+    },
+    onSettled: () => setIsReleasing(false)
   });
   
   // Here we create the "isActive" based on the flowState.
@@ -122,15 +133,15 @@ export function useAlvaras({ monthlyLimit, used }: Plan) {
     //alvaras: alvarasDB.data || [],
     isSearching,
     isReleasing,
+    flowState,
+    isActive,
+    allAlvaras,
     alvarasData,
+    searchResults,
     searchAlvaras: searchMutation,
     releaseAlvaras: releaseMutation,
-    searchResults,
     setSearchResults,
-    isActive,
-    flowState,
-    setFlowState,
-
+    setFlowState
   };
 
 }

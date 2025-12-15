@@ -4,6 +4,7 @@ export interface UserPlan {
   monthly_credits: number
 }
 
+
 export interface UserRequest {
   id: number
   name: string
@@ -15,6 +16,7 @@ export interface UserRequest {
   number?: string
   address: string
   created_at: string
+  plan: UserPlan
 }
 
 export interface UpdateUserPasswordRequest {

@@ -1,6 +1,13 @@
+import { useMemo, useState } from 'react'
 import { Button } from '../ui/button'
 import { Card } from '../ui/card'
 import { Badge } from '../ui/badge'
+import {
+ getPaginatedData,
+ getTotalPages,
+ handleItemsPerPageChange,
+ handlePageChange
+} from '@/services/alvaras'
 
 interface AlvarasTableProps {
  alvarasData: {
@@ -12,13 +19,63 @@ interface AlvarasTableProps {
  }[]
 }
 
+const PAGE_SIZE_OPTIONS = [25, 50, 100, 250, 500]
+
 export function AlvarasTable({ alvarasData }: AlvarasTableProps) {
+ const [currentPage, setCurrentPage] = useState(1)
+ const [itemsPerPage, setItemsPerPage] = useState(25)
+
+ const totalItems = alvarasData.length
+ const totalPages = getTotalPages(totalItems, itemsPerPage)
+
+ const paginatedData = useMemo(() => {
+  return getPaginatedData({ data: alvarasData, currentPage, itemsPerPage })
+ }, [alvarasData, currentPage, itemsPerPage])
+
+ const handlePrev = () => {
+  setCurrentPage(prev => handlePageChange(prev - 1, totalPages))
+ }
+
+ const handleNext = () => {
+  setCurrentPage(prev => handlePageChange(prev + 1, totalPages))
+ }
+
+ const handleItemsPerPageSelect = (e: React.ChangeEvent<HTMLSelectElement>) => {
+  const value = handleItemsPerPageChange(e.target.value, setCurrentPage)
+  setItemsPerPage(value)
+ }
+
  return (
   <Card className="p-6">
    <div className="flex flex-row items-center justify-between mb-4">
     <h2 className="text-xl font-semibold">Alvarás Liberados</h2>
     <Button onClick={() => {}}>Exportar Alvarás</Button>
    </div>
+
+   <div className="flex flex-row items-center justify-between gap-4 mb-4">
+    <div className="flex items-center gap-2 text-sm">
+     <label htmlFor="itemsPerPage" className="mr-2">
+      Itens por página:
+     </label>
+     <select
+      id="itemsPerPage"
+      value={itemsPerPage}
+      onChange={handleItemsPerPageSelect}
+      className="border rounded px-2 py-1 dark:text-black"
+     >
+      {PAGE_SIZE_OPTIONS.map(option => (
+       <option key={option} value={String(option)}>
+        {option}
+       </option>
+      ))}
+     </select>
+    </div>
+
+    <div className="text-sm text-muted-foreground dark:text-white">
+     Página {currentPage} de {totalPages} • Total: {totalItems}
+    </div>
+   </div>
+
    <div className="rounded-md border overflow-x-auto">
     <table className="w-full caption-bottom text-sm">
      <thead className="[&_tr]:border-b">
@@ -38,7 +95,7 @@ export function AlvarasTable({ alvarasData }: AlvarasTableProps) {
       </tr>
      </thead>
      <tbody className="[&_tr:last-child]:border-0">
-      {alvarasData.map(alvara => (
+      {paginatedData.map(alvara => (
        <tr
         key={alvara.id}
         className="border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted"
@@ -61,6 +118,19 @@ export function AlvarasTable({ alvarasData }: AlvarasTableProps) {
       ))}
      </tbody>
     </table>
+   </div>
+   <div className="flex items-center justify-between mt-4">
+    <Button variant="outline" disabled={currentPage === 1} onClick={handlePrev}>
+     Anterior
+    </Button>
+
+    <Button
+     variant="outline"
+     disabled={currentPage === totalPages}
+     onClick={handleNext}
+    >
+     Próxima
+    </Button>
    </div>
    <div className="mt-4 text-sm text-muted-foreground">
     Total de alvarás exibidos: {alvarasData.length}

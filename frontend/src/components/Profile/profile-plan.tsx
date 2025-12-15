@@ -6,8 +6,13 @@ import {
  CardHeader,
  CardTitle
 } from '../ui/card'
+import type { UserRequest } from '@/http/types/user'
 
-export function ProfilePlan() {
+interface ProfilePlanProps {
+ user: UserRequest
+}
+
+export function ProfilePlan({ user }: ProfilePlanProps) {
  return (
   <Card>
    <CardHeader>
@@ -22,8 +27,14 @@ export function ProfilePlan() {
      <div className="flex items-start gap-3 p-3 rounded-lg bg-muted/50">
       <Check className="h-5 w-5 text-green-500 mt-0.5" />
       <div>
-       <p className="font-medium">200 Alvarás/mês</p>
-       <p className="text-sm text-muted-foreground">Captação mensal inclusa</p>
+       <p className="font-medium">
+        {user.plan.monthly_credits !== null
+         ? `${user.plan.monthly_credits} Alvarás/mês`
+         : 'Alvarás ilimitados'}
+       </p>
+       {user.plan.monthly_credits !== null && (
+        <p className="text-sm text-muted-foreground">Captação mensal inclusa</p>
+       )}
       </div>
      </div>
      <div className="flex items-start gap-3 p-3 rounded-lg bg-muted/50">

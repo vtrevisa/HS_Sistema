@@ -14,8 +14,9 @@ export function useUser() {
       const response = await api.get('/auth/me');
       return response.data.user;
     },
-    staleTime: 1000 * 60 * 5,
-    retry: false,
+    refetchOnWindowFocus: true,       
+    refetchOnReconnect: true,         
+    staleTime: 0,                
   });
 
   // Fn to update user data

@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 
 import { CompaniesActions } from './companies-actions'
 import { CompaniesTable } from './companies-table'
@@ -25,6 +25,7 @@ export function Companies() {
  const {
   companies,
   isLoading,
+  refetchCompanies,
   saveCompanies,
   enhanceData,
   enhanceAllData,
@@ -99,6 +100,10 @@ export function Companies() {
 
   saveCompanies.mutate(processedAlvaras)
  }
+
+ useEffect(() => {
+  refetchCompanies()
+ }, [refetchCompanies])
 
  return (
   <div className="p-4 lg:p-6 space-y-6">

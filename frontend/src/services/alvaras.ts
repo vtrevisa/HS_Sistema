@@ -14,7 +14,22 @@ interface ReleaseParams {
     Error,
     { totalToRelease: number }
   >;
-  totalFound: number;
+   totalToRelease: number
+}
+
+interface SuccessParams {
+  releaseAlvaras: UseMutationResult<
+    { creditsUsed: number; creditsAvailable: number; extraNeeded: number },
+    Error,
+    { totalToRelease: number }
+  >
+  totalToRelease: number
+}
+
+interface PaginationParams<T> {
+  data: T[]
+  currentPage: number
+  itemsPerPage: number
 }
 
 export function buildSearchPayload(
@@ -42,11 +57,21 @@ export function calculateExtraAmount(totalFound: number, available: number) {
   return Math.max(totalFound - available, 0) * 5
 }
 
-export function handleReleaseAlvaras({ releaseAlvaras, totalFound }: ReleaseParams) {
-  releaseAlvaras.mutate({ totalToRelease: totalFound });
+export function handleReleaseAlvaras({ releaseAlvaras, totalToRelease }: ReleaseParams) {
+  releaseAlvaras.mutate({ totalToRelease });
 }
 
-export async function handlePaymentSuccess({ releaseAlvaras, totalToRelease }) {
+export function handleQuantityChange(value: string, totalFound?: number){
+  const numValue = parseInt(value) || 0;
+
+  if (typeof totalFound === 'number') {
+    return Math.min(Math.max(0, numValue), totalFound)
+  }
+
+  return Math.max(0, numValue)
+};
+
+export async function handlePaymentSuccess({ releaseAlvaras, totalToRelease }: SuccessParams) {
  try {
     toast.info("Pagamento registrado", { 
       description: "Finalizando liberação dos alvarás..." 
@@ -63,6 +88,25 @@ export async function handlePaymentSuccess({ releaseAlvaras, totalToRelease }) {
 
     console.error(err)
   }
+}
+
+export function getPaginatedData<T>({ data, currentPage, itemsPerPage }: PaginationParams<T>) {
+  const start = (currentPage - 1) * itemsPerPage
+  const end = start + itemsPerPage
+  return data.slice(start, end)
+}
+
+export function getTotalPages(totalItems: number, itemsPerPage: number) {
+  return Math.ceil(totalItems / itemsPerPage)
+}
+
+export function handlePageChange(page: number, totalPages: number) {
+  return Math.min(Math.max(page, 1), totalPages)
+}
+
+export function handleItemsPerPageChange(value: string, setCurrentPage: Dispatch<SetStateAction<number>>) {
+  setCurrentPage(1)
+  return Number(value)
 }
 
 export function handleNewQuery(

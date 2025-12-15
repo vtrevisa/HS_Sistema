@@ -27,6 +27,7 @@ export function AlvarasSubscriptionBox({
  const [pendingUsed, setPendingUsed] = useState(used)
 
  const displayedAvailable = Math.max(monthlyLimit - displayedUsed, 0)
+
  const displayedPercentage = useMemo(() => {
   return monthlyLimit > 0
    ? Math.min((displayedUsed / monthlyLimit) * 100, 100)
@@ -63,6 +64,7 @@ export function AlvarasSubscriptionBox({
    setDisplayedUsed(pendingUsed)
   }
  }
+
  return (
   <Card className="p-4 mb-6 bg-gradient-to-r from-primary/5 to-primary/10 border-primary/20">
    <div className="flex items-start justify-between">

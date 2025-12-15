@@ -128,7 +128,15 @@ class AlvaraController extends Controller
 
     public function release(Request $request): JsonResponse
     {
+
+        $request->validate([
+            'totalToRelease' => 'required|integer|min:1'
+        ]);
+
         $token = $request->cookie('auth-token');
+        $accessToken = PersonalAccessToken::findToken($token);
+        $user = $accessToken->tokenable;
+
 
         if (!$token) {
             return response()->json([
@@ -137,17 +145,12 @@ class AlvaraController extends Controller
             ], 401);
         }
 
-        // Retrieves the user associated with the token
-        $accessToken = PersonalAccessToken::findToken($token);
-
         if (!$accessToken) {
             return response()->json([
                 'status' => false,
                 'message' => 'Token não encontrado.',
             ], 401);
         }
-
-        $user = $accessToken->tokenable;
 
         if (!$user) {
             return response()->json([
@@ -156,7 +159,9 @@ class AlvaraController extends Controller
             ], 401);
         }
 
-        $totalToRelease = (int) $request->input('totalToRelease', 0);
+        $totalToRelease = (int) $request->totalToRelease;
+
+        $creditsAvailable = (int) $user->credits;
 
         if ($totalToRelease <= 0) {
             return response()->json([
@@ -165,40 +170,26 @@ class AlvaraController extends Controller
             ], 400);
         }
 
-        // O saldo atual do usuário antes de qualquer operação
-        $creditsAvailable = $user->credits;
+        if ($creditsAvailable < $totalToRelease) {
+            return response()->json([
+                'creditsUsed' => 0,
+                'creditsAvailable' => $creditsAvailable,
+                'extraNeeded' => $totalToRelease - $creditsAvailable,
+                'monthly_used' => $user->monthly_used
+            ], 200);
+        }
 
-        // O valor que falta para a transação
-        $extraNeeded = max($totalToRelease - $creditsAvailable, 0);
-
-        // O quanto seria consumido se a transação fosse parcial (usado no retorno de erro)
-        $creditsConsumedIncomplete = min($creditsAvailable, $totalToRelease);
-
-        if ($extraNeeded === 0) {
-            // ✅ FLUXO DE SUCESSO: Créditos suficientes ou saldo exato.
-            return DB::transaction(function () use ($user, $totalToRelease) {
-
-                // 1. DÉBITO: O valor usado é o total solicitado ($totalToRelease)
-                $user->credits -= $totalToRelease;
-                $user->monthly_used += $totalToRelease;
-                $user->save();
-
-                return response()->json([
-                    'creditsUsed' => $totalToRelease, // Usou o total solicitado
-                    'creditsAvailable' => $user->credits, // Novo saldo
-                    'extraNeeded' => 0,
-                    'monthly_used' => $user->monthly_used
-                ]);
-            });
-        } else {
-            // 🛑 FLUXO DE PAGAMENTO REQUERIDO: Informa a necessidade, mas NÃO debita NADA no DB.
+        return DB::transaction(function () use ($user, $totalToRelease) {
+            $user->credits -= $totalToRelease;
+            $user->monthly_used += $totalToRelease;
+            $user->save();
 
             return response()->json([
-                'creditsUsed' => $creditsConsumedIncomplete, // Valor parcial que seria usado
-                'creditsAvailable' => $creditsAvailable, // Saldo no DB PERMANECE o mesmo
-                'extraNeeded' => $extraNeeded, // Valor que precisa ser comprado
-                'monthly_used' => $user->monthly_used + $creditsConsumedIncomplete
+                'creditsUsed' => $totalToRelease,
+                'creditsAvailable' => $user->credits,
+                'extraNeeded' => 0,
+                'monthly_used' => $user->monthly_used
             ]);
-        }
+        });
     }
 }

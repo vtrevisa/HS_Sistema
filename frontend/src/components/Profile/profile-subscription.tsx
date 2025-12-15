@@ -65,13 +65,23 @@ export function ProfileSubscription({
     <CardContent className="space-y-4">
      <div className="space-y-3">
       <div className="flex justify-between items-center">
-       <span className="text-sm text-muted-foreground">
-        Créditos disponíveis
-       </span>
-       <span className="font-semibold">
-        {subscriptionInfo.creditsLimit - subscriptionInfo.alvarasUsed} /{' '}
-        {subscriptionInfo.creditsLimit}
-       </span>
+       {subscriptionInfo.creditsLimit !== null ? (
+        <>
+         <span className="text-sm text-muted-foreground">
+          Créditos disponíveis
+         </span>
+         <span className="font-semibold">
+          {subscriptionInfo.creditsLimit - subscriptionInfo.alvarasUsed} /{' '}
+          {subscriptionInfo.creditsLimit}
+         </span>
+        </>
+       ) : (
+        <>
+         <span className="text-sm text-muted-foreground">
+          Créditos ilimitados
+         </span>
+        </>
+       )}
       </div>
       <div className="w-full bg-muted rounded-full h-2">
        <div
@@ -93,9 +103,13 @@ export function ProfileSubscription({
      <div className="space-y-2">
       <div className="flex justify-between items-center">
        <span className="text-sm text-muted-foreground">Valor mensal</span>
-       <span className="font-bold text-lg">
-        R$ {subscriptionInfo.price.toFixed(2).replace('.', ',')}
-       </span>
+       {subscriptionInfo.price !== 0 ? (
+        <span className="font-bold text-lg">
+         R$ {subscriptionInfo.price.toFixed(2).replace('.', ',')}
+        </span>
+       ) : (
+        <span className="font-bold text-lg">customizado</span>
+       )}
       </div>
       <div className="flex justify-between items-center">
        <span className="text-sm text-muted-foreground">Próxima cobrança</span>

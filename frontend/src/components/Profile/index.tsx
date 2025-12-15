@@ -1,9 +1,11 @@
 import { useState } from 'react'
+import { toast } from 'sonner'
 import { ProfileData } from './profile-data'
 import { ProfileSubscription } from './profile-subscription'
 import { ProfileUpdatePlan } from '../Modals/profile-updateplan'
 import { ProfileTabs } from './profile-tabs'
 import { useUser } from '@/http/use-user'
+import { usePlan } from '@/http/use-plan'
 
 // const mockSubscription = {
 //  planId: 1,
@@ -19,6 +21,7 @@ export function Profile() {
  const [showPlanSelectorModal, setShowPlanSelectorModal] = useState(false)
 
  const { user, isLoading } = useUser()
+ const { changePlanMutation } = usePlan()
 
  if (isLoading) return <p>Carregando...</p>
 
@@ -32,6 +35,27 @@ export function Profile() {
   alvarasUsed: user.plan.monthly_used,
   nextBillingDate: user.plan.plan_renews_at,
   price: Number(user.plan.price)
+ }
+
+ function handleSelectPlan(planId: number) {
+  changePlanMutation.mutate(
+   { plan_id: planId },
+   {
+    onSuccess: data => {
+     if (data.status) {
+      toast.success('Plano atualizado com sucesso!')
+     } else {
+      toast.error('Falha ao atualizar o plano.')
+     }
+     setShowPlanSelectorModal(false)
+    },
+    onError: err => {
+     console.error(err)
+     toast.error('Erro ao atualizar o plano.')
+     setShowPlanSelectorModal(false)
+    }
+   }
+  )
  }
 
  return (
@@ -56,17 +80,13 @@ export function Profile() {
     />
    </div>
 
-   <ProfileTabs />
+   <ProfileTabs user={user} />
 
    <ProfileUpdatePlan
     currentPlanId={subscription.planId}
     isOpen={showPlanSelectorModal}
     onClose={() => setShowPlanSelectorModal(false)}
-    onSelectPlan={(planId: number) => {
-     // TODO: Integrate with backend
-     console.log(planId)
-     setShowPlanSelectorModal(false)
-    }}
+    onSelectPlan={handleSelectPlan}
    />
   </div>
  )

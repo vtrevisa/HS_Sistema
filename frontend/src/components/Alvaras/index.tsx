@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { toast } from 'sonner'
 import { AlertCircle } from 'lucide-react'
 import type { DateRange } from 'react-day-picker'
@@ -8,6 +8,7 @@ import { useAlvaras } from '@/http/use-alvaras'
 
 import {
  buildSearchPayload,
+ handleQuantityChange,
  handleNewQuery,
  handlePaymentSuccess,
  handleReleaseAlvaras
@@ -33,30 +34,30 @@ export function Alvaras() {
   credits: number
   price: number
  } | null>(null)
+ const [quantity, setQuantity] = useState(0)
 
  const { user, isLoading: loadingUser } = useUser()
 
  const safePlan = user?.plan ?? {
   name: '',
-  monthly_credits: 0
+  monthly_credits: 0,
+  monthly_used: 0,
+  plan_renews_at: new Date()
  }
 
  const monthlyLimit = safePlan.monthly_credits
- const totalCredits = user?.credits ?? 0
-
- const usedMonthly =
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  typeof (user as any)?.monthly_used === 'number'
-   ? // eslint-disable-next-line @typescript-eslint/no-explicit-any
-     (user as any).monthly_used
-   : Math.max(monthlyLimit - Math.min(totalCredits, monthlyLimit), 0)
+ const usedMonthly = safePlan.monthly_used ?? 0
 
  const subscriptionData = {
   planName: safePlan.name,
   monthlyLimit,
   used: usedMonthly,
-  resetDate: user?.plan_renews_at ? new Date(user.plan_renews_at) : new Date()
+  resetDate: safePlan.plan_renews_at
+   ? new Date(safePlan.plan_renews_at)
+   : new Date()
  }
+
+ console.log(subscriptionData.resetDate)
 
  const {
   alvarasData,
@@ -70,6 +71,12 @@ export function Alvaras() {
   flowState,
   setFlowState
  } = useAlvaras(subscriptionData)
+
+ useEffect(() => {
+  if (searchResults?.totalFound) {
+   setQuantity(searchResults.totalFound)
+  }
+ }, [searchResults?.totalFound])
 
  if (loadingUser) {
   return <p>Carregando...</p>
@@ -214,13 +221,17 @@ export function Alvaras() {
      <AlvarasCounter
       totalFound={searchResults.totalFound}
       creditsAvailable={searchResults.available}
+      used={subscriptionData.used}
       extraNeeded={searchResults.extraNeeded ?? 0}
+      quantity={quantity}
       isLoading={isReleasing}
-      flowState={flowState}
+      onQuantityChange={(value: string) => {
+       setQuantity(handleQuantityChange(value, searchResults.totalFound))
+      }}
       onRelease={() =>
        handleReleaseAlvaras({
         releaseAlvaras,
-        totalFound: searchResults.totalFound
+        totalToRelease: quantity
        })
       }
       onPayment={pkg => {
@@ -239,7 +250,7 @@ export function Alvaras() {
      onSuccess={() =>
       handlePaymentSuccess({
        releaseAlvaras,
-       totalToRelease: searchResults?.totalFound
+       totalToRelease: quantity
       })
      }
     />
