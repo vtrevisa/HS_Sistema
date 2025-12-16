@@ -57,8 +57,6 @@ export function Alvaras() {
    : new Date()
  }
 
- console.log(subscriptionData.resetDate)
-
  const {
   alvarasData,
   searchAlvaras,
@@ -231,7 +229,11 @@ export function Alvaras() {
       onRelease={() =>
        handleReleaseAlvaras({
         releaseAlvaras,
-        totalToRelease: quantity
+        totalToRelease: quantity,
+        city,
+        serviceType: selectedTypeFilter,
+        periodStart: dateRange!.from!,
+        periodEnd: dateRange!.to!
        })
       }
       onPayment={pkg => {
@@ -250,7 +252,13 @@ export function Alvaras() {
      onSuccess={() =>
       handlePaymentSuccess({
        releaseAlvaras,
-       totalToRelease: quantity
+       payload: {
+        totalToRelease: quantity,
+        city,
+        service_type: selectedTypeFilter,
+        period_start: dateRange!.from!.toISOString().split('T')[0],
+        period_end: dateRange!.to!.toISOString().split('T')[0]
+       }
       })
      }
     />

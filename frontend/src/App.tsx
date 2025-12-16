@@ -13,6 +13,7 @@ import { Leads } from './pages/app/gestao-leads'
 import { Pipeline } from './pages/app/pipeline-crm'
 import { ArchivedProposals } from './pages/app/archived-proposals'
 import { Profile } from './pages/app/profile'
+import { Logs } from './pages/app/logs'
 
 const queryClient = new QueryClient()
 
@@ -36,6 +37,7 @@ export function App() {
          element={<ArchivedProposals />}
         />
         <Route path="/dashboard/minha-conta" element={<Profile />} />
+        <Route path="/dashboard/logs" element={<Logs />} />
        </Route>
       </Route>
      </Routes>

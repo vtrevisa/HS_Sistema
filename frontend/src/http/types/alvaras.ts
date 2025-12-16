@@ -38,6 +38,14 @@ export interface SearchAlvarasPayload {
   to: { year: number; month: string };
 }
 
+export interface ReleasePayload {
+  totalToRelease: number
+  city: string
+  service_type: "AVCB" | "CLCB" | "Todos"
+  period_start: string
+  period_end: string
+}
+
 export interface AlvarasFake {
   id: number;
   service: string;

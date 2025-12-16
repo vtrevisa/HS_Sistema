@@ -2,7 +2,7 @@ import { useState } from "react";
 import { api } from "@/lib/api";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import type { Alvara, AlvarasFake, SearchAlvarasPayload } from "./types/alvaras";
+import type { Alvara, AlvarasFake, ReleasePayload, SearchAlvarasPayload } from "./types/alvaras";
 
 export type FlowState =
   | "no-subscription"
@@ -87,9 +87,9 @@ export function useAlvaras({ monthlyLimit, used }: Plan) {
 
   // Mutation para liberar alvarás e consumir créditos
  
-  const releaseMutation = useMutation<{ creditsUsed: number; creditsAvailable: number; extraNeeded: number;  monthlyUsed: number; },Error,{ totalToRelease: number }>({
-    mutationFn: async ({ totalToRelease }) => {
-      const { data } = await api.post("/alvaras/release", { totalToRelease });
+  const releaseMutation = useMutation<{ creditsUsed: number; creditsAvailable: number; extraNeeded: number;  monthlyUsed: number; },Error, ReleasePayload>({
+    mutationFn: async (payload) => {
+      const { data } = await api.post("/alvaras/release", payload);
       return data;
     },
     onMutate: () => setIsReleasing(true),

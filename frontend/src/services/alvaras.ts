@@ -1,6 +1,6 @@
 import type { Dispatch, SetStateAction } from 'react'
 import type { DateRange } from 'react-day-picker'
-import type { SearchAlvarasPayload } from '@/http/types/alvaras'
+import type { ReleasePayload, SearchAlvarasPayload } from '@/http/types/alvaras'
 import type { FlowState } from '@/http/use-alvaras'
 import type { UseMutationResult } from "@tanstack/react-query";
 
@@ -8,22 +8,26 @@ import { toast } from 'sonner'
 
 type SearchResults = { totalFound: number; available: number; } | null
 
-interface ReleaseParams {
-  releaseAlvaras: UseMutationResult<
-    { creditsUsed: number; creditsAvailable: number; extraNeeded: number },
-    Error,
-    { totalToRelease: number }
-  >;
-   totalToRelease: number
-}
+// interface ReleaseParams {
+//   releaseAlvaras: UseMutationResult<{ creditsUsed: number; creditsAvailable: number; extraNeeded: number },
+//     Error,
+//     { totalToRelease: number }
+//   >;
+//    totalToRelease: number
+// }
 
 interface SuccessParams {
   releaseAlvaras: UseMutationResult<
-    { creditsUsed: number; creditsAvailable: number; extraNeeded: number },
+    {
+      creditsUsed: number
+      creditsAvailable: number
+      extraNeeded: number
+      monthlyUsed: number
+    },
     Error,
-    { totalToRelease: number }
+    ReleasePayload
   >
-  totalToRelease: number
+  payload: ReleasePayload
 }
 
 interface PaginationParams<T> {
@@ -57,8 +61,23 @@ export function calculateExtraAmount(totalFound: number, available: number) {
   return Math.max(totalFound - available, 0) * 5
 }
 
-export function handleReleaseAlvaras({ releaseAlvaras, totalToRelease }: ReleaseParams) {
-  releaseAlvaras.mutate({ totalToRelease });
+export function handleReleaseAlvaras({ releaseAlvaras, totalToRelease, city, serviceType, periodStart, periodEnd }: 
+  {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    releaseAlvaras: any
+    totalToRelease: number
+    city: string
+    serviceType: "AVCB" | "CLCB" | "Todos"
+    periodStart: Date
+    periodEnd: Date
+  }) {
+  releaseAlvaras.mutate({ 
+    totalToRelease,
+    city,
+    service_type: serviceType,
+    period_start: periodStart.toISOString().split("T")[0],
+    period_end: periodEnd.toISOString().split("T")[0]
+  });
 }
 
 export function handleQuantityChange(value: string, totalFound?: number){
@@ -71,13 +90,13 @@ export function handleQuantityChange(value: string, totalFound?: number){
   return Math.max(0, numValue)
 };
 
-export async function handlePaymentSuccess({ releaseAlvaras, totalToRelease }: SuccessParams) {
+export async function handlePaymentSuccess({releaseAlvaras, payload }: SuccessParams) {
  try {
     toast.info("Pagamento registrado", { 
       description: "Finalizando liberação dos alvarás..." 
     });
 
-    await releaseAlvaras.mutateAsync({ totalToRelease })
+    await releaseAlvaras.mutateAsync(payload)
 
   } catch (err) {
     console.error("Erro ao finalizar a liberação após pagamento.", err);

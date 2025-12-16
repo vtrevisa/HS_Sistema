@@ -100,6 +100,12 @@ export function Header() {
    label: 'Minha Conta',
    icon: UserCircle,
    href: '/dashboard/minha-conta'
+  },
+  {
+   id: 'logs',
+   label: 'Logs de Alvarás',
+   icon: FileText,
+   href: '/dashboard/logs'
   }
  ]
 

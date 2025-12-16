@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Alvara;
+use App\Models\AlvaraLog;
 use Laravel\Sanctum\PersonalAccessToken;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -130,7 +131,11 @@ class AlvaraController extends Controller
     {
 
         $request->validate([
-            'totalToRelease' => 'required|integer|min:1'
+            'totalToRelease' => 'required|integer|min:1',
+            'city'           => 'required|string',
+            'service_type'   => 'required|in:AVCB,CLCB,Todos',
+            'period_start'   => 'required|date',
+            'period_end'     => 'required|date|after_or_equal:period_start',
         ]);
 
         $token = $request->cookie('auth-token');
@@ -179,10 +184,23 @@ class AlvaraController extends Controller
             ], 200);
         }
 
-        return DB::transaction(function () use ($user, $totalToRelease) {
+        return DB::transaction(function () use ($request, $user, $totalToRelease) {
+
+            // 1️⃣ Debita créditos
             $user->credits -= $totalToRelease;
             $user->monthly_used += $totalToRelease;
             $user->save();
+
+            // 2️⃣ Registra LOG do consumo
+            AlvaraLog::create([
+                'user_id'      => $user->id,
+                'city'         => $request->city,
+                'service_type' => $request->service_type,
+                'quantity'     => $totalToRelease,
+                'period_start' => $request->period_start,
+                'period_end'   => $request->period_end,
+                'consumed_at'  => now(),
+            ]);
 
             return response()->json([
                 'creditsUsed' => $totalToRelease,
