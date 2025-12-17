@@ -40,7 +40,7 @@ Route::post('/auth/logout', [AuthController::class, 'logout']); //POST
 Route::get('/alvaras', [AlvaraController::class, 'index']); //GET
 Route::post('/alvaras/search', [AlvaraController::class, 'search']); //POST
 Route::post('/alvaras/release', [AlvaraController::class, 'release']); //POST
-Route::get('/alvara-logs', [AlvaraLogController::class, 'index']); //GET
+Route::get('/alvaras/logs', [AlvaraLogController::class, 'index']); //GET
 
 // Leads
 Route::get('/leads', [LeadController::class, 'index']); //GET
