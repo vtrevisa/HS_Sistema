@@ -51,15 +51,14 @@ class AlvaraLogController extends Controller
             $query->where('city', 'like', "%{$request->city}%");
         }
 
-        if ($request->filled('service_type') && $request->service_type !== 'todos') {
+        if ($request->filled('service_type') && $request->service_type !== 'Todos') {
             $query->where('service_type', $request->service_type);
         }
 
-        if ($request->filled('from') && $request->filled('to')) {
-            $query->whereBetween('consumed_at', [
-                $request->from,
-                $request->to
-            ]);
+        if ($request->filled('month') && $request->filled('year')) {
+            $query
+                ->whereYear('consumed_at', $request->year)
+                ->whereMonth('consumed_at', $request->month);
         }
 
         $logs = $query
@@ -73,9 +72,11 @@ class AlvaraLogController extends Controller
                 'city' => $log->city,
                 'service' => $log->service_type,
                 'quantity' => $log->quantity,
-                'consumedDate' => $log->consumed_at,
-                'initDate' => $log->period_start,
-                'endDate' => $log->period_end,
+                'consumedAt' => $log->consumed_at->format('Y-m-d'),
+                'period' => [
+                    'start' => $log->period_start->format('Y-m-d'),
+                    'end'   => $log->period_end->format('Y-m-d'),
+                ],
             ]);
 
         return response()->json([

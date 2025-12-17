@@ -6,7 +6,9 @@ export interface AlvaraLog {
   city: string;
   service: "Todos" | "AVCB" | "CLCB";
   quantity: number;
-  consumedDate: Date;
-  initDate: Date;
-  endDate: Date;
+  consumedAt: string;
+  period: {
+    start: string;
+    end: string;
+  }
 }

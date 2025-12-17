@@ -1,4 +1,5 @@
 import type { AlvaraLog } from "@/http/types/logs";
+import { formatDate } from "@/lib/date";
 import { toast } from "sonner";
 import * as XLSX from "xlsx";
 
@@ -9,9 +10,9 @@ export function handleExportLogs(filteredLogs: AlvaraLog[]){
     "Cidade": log.city,
     "Tipo de Serviço": log.service,
     "Quantidade": log.quantity,
-    "Data do Consumo": new Date (log.consumedDate).toLocaleDateString("pt-BR"),
-    "Período Início": new Date (log.initDate).toLocaleDateString("pt-BR"),
-    "Período Fim": new Date (log.endDate).toLocaleDateString("pt-BR"),
+    "Data do Consumo": formatDate(log.consumedAt),
+    "Período Início": formatDate(log.period.start),
+    "Período Fim": formatDate(log.period.end),
   }));
 
   const ws = XLSX.utils.json_to_sheet(dataToExport);

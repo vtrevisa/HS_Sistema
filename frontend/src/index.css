@@ -118,6 +118,10 @@
   @apply truncate max-w-xs;
  }
 
+ /* [data-mantine-color-scheme='dark'] #mantine-dzznkd9p9-dropdown {
+  background: black;
+ } */
+
  .scrollbar-thin {
   scrollbar-width: thin;
   scrollbar-color: hsl(var(--muted-foreground)) hsl(var(--muted));
