@@ -7,10 +7,13 @@ export interface UserPlan {
 
 export interface UserRequest {
   id: number
+  role?: string
+  status?: 'active' | 'inactive' | 'pending' | 'blocked'
   name: string
   email: string
   phone: string
   company: string
+  alvarasUsed: number
   cnpj: string
   cep?: string
   number?: string

@@ -19,6 +19,8 @@ class User extends Authenticatable
      * @var list<string>
      */
     protected $fillable = [
+        'role',
+        'status',
         'name',
         'email',
         'password',
@@ -53,7 +55,7 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
-
+            'alvarasUsed' => 'integer',
             'plan_renews_at' => 'datetime',
             'last_renewal_at' => 'datetime',
         ];
@@ -83,9 +85,6 @@ class User extends Authenticatable
         return $this->hasMany(CreditPurchase::class);
     }
 
-
-
-
     public function consumeCredits(int $amount = 1)
     {
         if ($this->credits < $amount) {
@@ -101,5 +100,30 @@ class User extends Authenticatable
     public function leads()
     {
         return $this->hasMany(Lead::class);
+    }
+
+    public function alvaraLogs()
+    {
+        return $this->hasMany(AlvaraLog::class);
+    }
+
+    public function isAdmin(): bool
+    {
+        return $this->role === 'admin';
+    }
+
+    public function isActive(): bool
+    {
+        return $this->status === 'Ativo';
+    }
+
+    public function isInactive(): bool
+    {
+        return $this->status === 'Inativo';
+    }
+
+    public function isPending(): bool
+    {
+        return $this->status === 'Pendente';
     }
 }

@@ -16,7 +16,11 @@ class UserController extends Controller
     public function index(): JsonResponse
     {
 
-        $users = User::orderBy('id', 'DESC')->get();
+
+        $users = User::with('plan')
+            ->withSum('alvaraLogs as alvarasUsed', 'quantity')
+            ->orderBy('id', 'DESC')
+            ->get();
 
         return response()->json([
             'status' => true,
@@ -38,6 +42,7 @@ class UserController extends Controller
 
     public function store(UserRequest $request): JsonResponse
     {
+
         // Init transaction on DB
         DB::beginTransaction();
 
@@ -49,6 +54,8 @@ class UserController extends Controller
                 'name' => $request->name,
                 'email' => $request->email,
                 'password' => $request->password,
+                'role'     => $request->role ?? 'user',
+                'status'   => $request->status ?? 'inactive',
             ]);
 
             // Success Operation
@@ -87,7 +94,9 @@ class UserController extends Controller
                 'cnpj' => $request->cnpj,
                 'company' => $request->company,
                 'phone'    => $request->phone,
-                'address' => $request->address
+                'address' => $request->address,
+                'role'  => $request->role ?? $user->role,
+                'status'  => $request->status ?? $user->status,
             ]);
 
             // Success Operation

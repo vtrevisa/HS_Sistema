@@ -6,22 +6,19 @@ import { ProfileUpdatePlan } from '../Modals/profile-updateplan'
 import { ProfileTabs } from './profile-tabs'
 import { useUser } from '@/http/use-user'
 import { usePlan } from '@/http/use-plan'
-
-// const mockSubscription = {
-//  planId: 1,
-//  planName: 'Básico',
-//  status: 'active',
-//  creditsLimit: 200,
-//  alvarasUsed: 45,
-//  nextBillingDate: '2025-01-04',
-//  price: 800
-// }
+import { ProfileAdmin } from './admin/'
 
 export function Profile() {
  const [showPlanSelectorModal, setShowPlanSelectorModal] = useState(false)
 
  const { user, isLoading } = useUser()
  const { changePlanMutation } = usePlan()
+
+ const isAdmin = user.role === 'admin'
+
+ if (isAdmin) {
+  return <ProfileAdmin />
+ }
 
  if (isLoading) return <p>Carregando...</p>
 

@@ -7,6 +7,18 @@ import { toast } from "sonner";
 export function useUser() {
   const queryClient = useQueryClient();
 
+
+  const userDB = useQuery<UserRequest[], AxiosError>({
+    queryKey: ["users"],
+    queryFn: async (): Promise<UserRequest[]> => {
+      const { data } = await api.get<{ status: boolean; users: UserRequest[] }>("/users");
+      return data.users;
+    },
+    staleTime: 1 * 60 * 1000, 
+    gcTime: 30 * 60 * 1000,
+    refetchOnWindowFocus: "always",
+  });
+
   // Fn to show data from auth user
   const authUser = useQuery({
     queryKey: ['authUser'],
@@ -75,6 +87,7 @@ export function useUser() {
 
   return {
     user: authUser.data || [],
+    users: userDB.data || [],
     isLoading: authUser.isLoading,
     updateUser: updateMutation,
     updateUserPassword: updatePasswordMutation

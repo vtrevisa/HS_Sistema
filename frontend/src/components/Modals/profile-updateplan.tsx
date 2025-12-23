@@ -23,10 +23,10 @@ interface ProfileUpdatePlanProps {
 }
 
 interface PlanSelectorProps {
- currentPlanId: number
+ currentPlanId?: number
  isOpen: boolean
  onClose: () => void
- onSelectPlan: (planId: number) => void
+ onSelectPlan?: (planId: number) => void
 }
 
 const plans: ProfileUpdatePlanProps[] = [
@@ -101,7 +101,7 @@ export function ProfileUpdatePlan({
 
     <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3 mt-4">
      {plans.map(plan => {
-      const isCurrent = plan.id === currentPlanId
+      const isCurrent = currentPlanId !== undefined && plan.id === currentPlanId
 
       return (
        <div
@@ -188,7 +188,7 @@ export function ProfileUpdatePlan({
          }
          className="w-full"
          disabled={isCurrent}
-         onClick={() => onSelectPlan(plan.id)}
+         onClick={() => onSelectPlan?.(plan.id)}
          aria-label={
           isCurrent
            ? `Plano atual: ${plan.name}`

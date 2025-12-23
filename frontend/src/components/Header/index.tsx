@@ -31,6 +31,7 @@ import {
  useSidebar
 } from '@/components/ui/sidebar'
 import { useLogout } from '@/http/use-logout'
+import { useUser } from '@/http/use-user'
 
 interface MenuItemProps {
  id: string
@@ -44,6 +45,8 @@ export function Header() {
  const isCollapsed = state === 'collapsed'
  const location = useLocation()
  const { mutateAsync: logout } = useLogout()
+
+ const { user } = useUser()
 
  const comercialItems: MenuItemProps[] = [
   {
@@ -165,19 +168,26 @@ export function Header() {
      <SidebarGroupLabel>Sistema</SidebarGroupLabel>
      <SidebarGroupContent>
       <SidebarMenu>
-       {systemItems.map(item => (
-        <SidebarMenuItem key={item.id}>
-         <Link to={item.href}>
-          <SidebarMenuButton
-           isActive={activeTab === item.id}
-           tooltip={isCollapsed ? item.label : undefined}
-          >
-           <item.icon className="h-4 w-4" />
-           <span>{item.label}</span>
-          </SidebarMenuButton>
-         </Link>
-        </SidebarMenuItem>
-       ))}
+       {systemItems
+        .filter(item => {
+         if (item.id === 'logs' && user.role !== 'admin') {
+          return false
+         }
+         return true
+        })
+        .map(item => (
+         <SidebarMenuItem key={item.id}>
+          <Link to={item.href}>
+           <SidebarMenuButton
+            isActive={activeTab === item.id}
+            tooltip={isCollapsed ? item.label : undefined}
+           >
+            <item.icon className="h-4 w-4" />
+            <span>{item.label}</span>
+           </SidebarMenuButton>
+          </Link>
+         </SidebarMenuItem>
+        ))}
       </SidebarMenu>
      </SidebarGroupContent>
     </SidebarGroup>

@@ -22,6 +22,7 @@ import { AlvarasCounter } from './alvaras-counter'
 import { AlvarasSubscriptionBox } from './alvaras-subscription-box'
 import { PaymentDetails } from '../Modals/payment-details'
 import { AlvarasTable } from './alvaras-table'
+import { ProfileUpdatePlan } from '../Modals/profile-updateplan'
 
 export function Alvaras() {
  const [city, setCity] = useState('')
@@ -35,6 +36,7 @@ export function Alvaras() {
   price: number
  } | null>(null)
  const [quantity, setQuantity] = useState(0)
+ const [showPlansModal, setShowPlansModal] = useState(false)
 
  const { user, isLoading: loadingUser } = useUser()
 
@@ -131,33 +133,15 @@ export function Alvaras() {
        <p className="font-semibold">
         Para requisitar alvarás, é necessário ter uma assinatura ativa.
        </p>
-       <Button
-        onClick={() =>
-         toast.info('Em breve', {
-          description: 'Página de planos em desenvolvimento.'
-         })
-        }
-       >
-        Ver Planos
-       </Button>
+       <Button onClick={() => setShowPlansModal(true)}>Ver Planos</Button>
       </div>
      </AlertDescription>
     </Alert>
 
-    {/* Temporary button to simulate activation. */}
-    <div className="mt-6">
-     <Button
-      variant="outline"
-      onClick={() => {
-       setFlowState('subscription-active')
-       toast.success('Assinatura ativada', {
-        description: 'Modo de teste ativado com sucesso.'
-       })
-      }}
-     >
-      Simular Assinatura Ativa (Teste)
-     </Button>
-    </div>
+    <ProfileUpdatePlan
+     isOpen={showPlansModal}
+     onClose={() => setShowPlansModal(false)}
+    />
    </div>
   )
  }

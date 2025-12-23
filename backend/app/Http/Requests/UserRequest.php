@@ -8,19 +8,10 @@ use Illuminate\Http\Exceptions\HttpResponseException;
 
 class UserRequest extends FormRequest
 {
-    /**
-     * Determine if the user is authorized to make this request.
-     */
     public function authorize(): bool
     {
         return true;
     }
-
-    /**
-     * Get the validation rules that apply to the request.
-     *
-     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
-     */
 
     protected function failedValidation(Validator $validator)
     {
@@ -30,21 +21,38 @@ class UserRequest extends FormRequest
         ], 422));
     }
 
-
     public function rules(): array
     {
-        $userId = $this->route('user')->id;
+        $userId = optional($this->route('user'))->id;
 
+        // CREATE (POST)
+        if ($this->isMethod('post')) {
+            return [
+                'name'     => 'required|string',
+                'email'    => 'required|email|unique:users,email',
+                'password' => 'required|min:6',
+                'role'     => 'nullable|in:admin,user',
+                'status' => 'nullable|in:active,inactive,pending,blocked',
+
+                'cnpj'     => 'nullable|string',
+                'company'  => 'nullable|string',
+                'phone'    => 'nullable|string',
+                'address'  => 'nullable|string',
+            ];
+        }
+
+        // UPDATE (PUT / PATCH)
         return [
-            'name' => 'required|string',
-            'cnpj' => 'nullable|string',
-            'company' => 'nullable|string',
-            'phone' => 'nullable|string',
-            'address' => 'nullable|string',
+            'name'     => 'sometimes|required|string',
+            'email'    => 'sometimes|required|email|unique:users,email,' . $userId,
+            'password' => 'sometimes|nullable|min:6',
+            'role'     => 'sometimes|in:admin,user',
+            'status' => 'nullable|in:active,inactive,pending,blocked',
 
-            'email' => 'sometimes|email|unique:users,email,' . $userId,
-
-            'password' => 'nullable|min:6'
+            'cnpj'     => 'nullable|string',
+            'company'  => 'nullable|string',
+            'phone'    => 'nullable|string',
+            'address'  => 'nullable|string',
         ];
     }
 

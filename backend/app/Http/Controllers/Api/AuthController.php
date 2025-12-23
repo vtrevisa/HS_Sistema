@@ -140,6 +140,7 @@ class AuthController extends Controller
                 'status' => true,
                 'user' => [
                     'id' => $user->id,
+                    'role' => $user->role,
                     'name' => $user->name,
                     'email' => $user->email,
                     'cnpj' => $user->cnpj,
