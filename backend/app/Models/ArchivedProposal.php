@@ -13,6 +13,7 @@ class ArchivedProposal extends Model
     public $timestamps = false;
 
     protected $fillable = [
+        'user_id',
         'lead_id',
         'company',
         'type',
@@ -29,5 +30,10 @@ class ArchivedProposal extends Model
     public function lead()
     {
         return $this->belongsTo(Lead::class, 'lead_id', 'id');
+    }
+
+    public function user()
+    {
+        return $this->belongsTo(User::class);
     }
 }

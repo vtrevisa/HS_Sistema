@@ -11,10 +11,28 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\DB;
 use Laravel\Sanctum\PersonalAccessToken;
-
+use Symfony\Component\HttpKernel\Exception\UnauthorizedHttpException;
 
 class CompanyController extends Controller
 {
+
+    private function getAuthenticatedUser(Request $request)
+    {
+        $token = $request->bearerToken() ?? $request->cookie('auth-token');
+
+
+        if (!$token) {
+            throw new UnauthorizedHttpException('', 'Token de autenticação é inválido ou não fornecido.');
+        }
+
+        $accessToken = PersonalAccessToken::findToken($token);
+
+        if (!$accessToken) {
+            throw new UnauthorizedHttpException('', 'Token de autenticação é inválido ou expirado.');
+        }
+
+        return $accessToken->tokenable;
+    }
 
     public function searchCompanyByAddress(Request $request)
     {
@@ -210,10 +228,14 @@ class CompanyController extends Controller
 
     // Show all companies from db
 
-    public function index(): JsonResponse
+    public function index(Request $request): JsonResponse
     {
 
-        $companies = Company::orderBy('id', 'DESC')->get();
+        $user = $this->getAuthenticatedUser($request);
+
+        $companies = Company::where('user_id', $user->id)
+            ->orderBy('id', 'DESC')
+            ->get();
 
         return response()->json([
             'status' => true,
@@ -223,8 +245,19 @@ class CompanyController extends Controller
 
     // Show company from db
 
-    public function show(Company $company): JsonResponse
+    public function show(Request $request, Company $company): JsonResponse
     {
+
+        $user = $this->getAuthenticatedUser($request);
+
+
+        if (!$user || $company->user_id !== $user->id) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Acesso não autorizado.',
+            ], 403);
+        }
+
         return response()->json([
             'status' => true,
             'company' => $company,
@@ -235,26 +268,7 @@ class CompanyController extends Controller
 
     public function store(CompanyRequest $request): JsonResponse
     {
-        $token = $request->bearerToken() ?? $request->cookie('auth-token');
-
-        if (!$token) {
-            return response()->json([
-                'status' => false,
-                'message' => 'Token de autenticação é inválido ou não fornecido.',
-            ], 401);
-        }
-
-        // Retrieves the user associated with the token
-        $accessToken = PersonalAccessToken::findToken($token);
-
-        if (!$accessToken) {
-            return response()->json([
-                'status' => false,
-                'message' => 'Token de autenticação é inválido ou expirado.',
-            ], 401);
-        }
-
-        $user = $accessToken->tokenable;
+        $user = $this->getAuthenticatedUser($request);
 
         // Init transaction on DB
         DB::beginTransaction();
@@ -263,6 +277,7 @@ class CompanyController extends Controller
             // Add company on DB
 
             $company = Company::create([
+                'user_id' => $user->id,
                 'status' => $request->input('status', ''),
                 'company' => ucwords(strtolower($request->input('company', ''))),
                 'cep' => $request->input('cep', ''),
@@ -309,6 +324,16 @@ class CompanyController extends Controller
 
     public function update(CompanyRequest $request, Company $company): JsonResponse
     {
+
+        $user = $this->getAuthenticatedUser($request);
+
+        if (!$user || $company->user_id !== $user->id) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Acesso não autorizado.',
+            ], 403);
+        }
+
         // Init transaction on DB
         DB::beginTransaction();
 
@@ -359,8 +384,18 @@ class CompanyController extends Controller
 
     // Delete company from db
 
-    public function destroy(Company $company): JsonResponse
+    public function destroy(Request $request, Company $company): JsonResponse
     {
+
+        $user = $this->getAuthenticatedUser($request);
+
+        if (!$user || $company->user_id !== $user->id) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Acesso não autorizado.',
+            ], 403);
+        }
+
         try {
 
             // Delete company on DB

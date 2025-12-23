@@ -7,13 +7,37 @@ use App\Http\Requests\ArchivedProposalRequest;
 use App\Models\ArchivedProposal;
 use App\Models\Lead;
 use Illuminate\Http\Request;
+use Laravel\Sanctum\PersonalAccessToken;
+use Symfony\Component\HttpKernel\Exception\UnauthorizedHttpException;
 
 class ArchivedProposalController extends Controller
 {
+
+    private function getAuthenticatedUser(Request $request)
+    {
+        $token = $request->bearerToken() ?? $request->cookie('auth-token');
+
+
+        if (!$token) {
+            throw new UnauthorizedHttpException('', 'Token de autenticação é inválido ou não fornecido.');
+        }
+
+        $accessToken = PersonalAccessToken::findToken($token);
+
+        if (!$accessToken) {
+            throw new UnauthorizedHttpException('', 'Token de autenticação é inválido ou expirado.');
+        }
+
+        return $accessToken->tokenable;
+    }
+
     // List all archived proposals with filters
     public function index(Request $request)
     {
-        $query = ArchivedProposal::query();
+
+        $user = $this->getAuthenticatedUser($request);
+
+        $query = ArchivedProposal::where('user_id', $user->id);
 
         // Filtrer by status
         if ($request->filled('status')) {
@@ -22,8 +46,9 @@ class ArchivedProposalController extends Controller
 
         // Filtrer by city
         if ($request->filled('cidade')) {
-            $query->whereHas('lead', function ($q) use ($request) {
-                $q->whereRaw('LOWER(city) LIKE ?', ['%' . strtolower($request->cidade) . '%']);
+            $query->whereHas('lead', function ($q) use ($request, $user) {
+                $q->where('user_id', $user->id)
+                    ->whereRaw('LOWER(city) LIKE ?', ['%' . strtolower($request->cidade) . '%']);
             });
         }
 
@@ -34,14 +59,20 @@ class ArchivedProposalController extends Controller
 
         // Filtrar by date
         if ($request->filled('dataInicio')) {
-            $query->where('archived_at', '>=', $request->dataInicio);
+            $query->whereDate('archived_at', '>=', $request->dataInicio);
         }
+
         if ($request->filled('dataTermino')) {
-            $query->where('archived_at', '<=', $request->dataTermino);
+            $query->whereDate('archived_at', '<=', $request->dataTermino);
         }
 
         // Return lead 
-        $proposals = $query->with('lead')->orderBy('archived_at', 'desc')->get();
+        $proposals = $query
+            ->with(['lead' => function ($q) use ($user) {
+                $q->where('user_id', $user->id);
+            }])
+            ->orderBy('archived_at', 'desc')
+            ->get();
 
         return response()->json([
             'status' => true,
@@ -53,6 +84,8 @@ class ArchivedProposalController extends Controller
 
     public function store(ArchivedProposalRequest $request)
     {
+        $user = $this->getAuthenticatedUser($request);
+
         $data = $request->validated();
 
         if ($data['status'] === 'Perdido' && empty($data['reason'])) {
@@ -62,13 +95,18 @@ class ArchivedProposalController extends Controller
             ], 422);
         }
 
+        $lead = Lead::where('id', $data['lead_id'])
+            ->where('user_id', $user->id)
+            ->firstOrFail();
 
         $proposal = ArchivedProposal::create([
-            ...$data,
-            'archived_at' => now()
+            'user_id'     => $user->id,
+            'lead_id'     => $lead->id,
+            'status'      => $data['status'],
+            'type'        => $data['type'] ?? null,
+            'reason'      => $data['reason'] ?? null,
+            'archived_at' => now(),
         ]);
-
-        $lead = Lead::find($data['lead_id']);
 
         if ($data['status'] === 'Ganho') {
             $lead->status = 'Cliente Fechado';
@@ -82,6 +120,6 @@ class ArchivedProposalController extends Controller
             'status' => true,
             'message' => 'Proposta arquivada com sucesso!',
             'proposal' => $proposal
-        ]);
+        ], 201);
     }
 }

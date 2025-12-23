@@ -18,10 +18,9 @@ export function useCompany() {
       const { data } = await api.get<{ status: boolean; companies: CompanyRequest[] }>("/companies");
       return data.companies;
     },
-    enabled: false,
-    staleTime: 1 * 60 * 1000, 
-    gcTime: 30 * 60 * 1000,
-    refetchOnWindowFocus: "always",
+    refetchOnWindowFocus: true,       
+    refetchOnReconnect: true,         
+    staleTime: 0,                
   });
 
   // Mutation to save companies
