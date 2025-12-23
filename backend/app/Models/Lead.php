@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 class Lead extends Model
 {
 	protected $fillable = [
+		'user_id',
 		'company',
 		'service',
 		'license',
@@ -34,4 +35,9 @@ class Lead extends Model
 	protected $casts = [
 		'attachments' => 'array',
 	];
+
+	public function user()
+	{
+		return $this->belongsTo(User::class);
+	}
 }

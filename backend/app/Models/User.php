@@ -97,4 +97,9 @@ class User extends Authenticatable
 
         return true;
     }
+
+    public function leads()
+    {
+        return $this->hasMany(Lead::class);
+    }
 }

@@ -11,15 +11,40 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Laravel\Sanctum\PersonalAccessToken;
+use Symfony\Component\HttpKernel\Exception\UnauthorizedHttpException;
 
 class LeadController extends Controller
 {
+
+
+    private function getAuthenticatedUser(Request $request)
+    {
+        $token = $request->bearerToken() ?? $request->cookie('auth-token');
+
+
+        if (!$token) {
+            throw new UnauthorizedHttpException('', 'Token de autenticação é inválido ou não fornecido.');
+        }
+
+        $accessToken = PersonalAccessToken::findToken($token);
+
+        if (!$accessToken) {
+            throw new UnauthorizedHttpException('', 'Token de autenticação é inválido ou expirado.');
+        }
+
+        return $accessToken->tokenable;
+    }
+
+
     // Show all leads from db
 
-    public function index(): JsonResponse
+    public function index(Request $request): JsonResponse
     {
+        $user = $this->getAuthenticatedUser($request);
 
-        $leads = Lead::orderBy('id', 'DESC')->get();
+        $leads = Lead::where('user_id', $user->id)
+            ->orderBy('id', 'DESC')
+            ->get();
 
         return response()->json([
             'status' => true,
@@ -30,8 +55,19 @@ class LeadController extends Controller
 
     // Show lead from db
 
-    public function show(Lead $lead): JsonResponse
+    public function show(Request $request, Lead $lead): JsonResponse
     {
+
+        $user = $this->getAuthenticatedUser($request);
+
+
+        if (!$user || $lead->user_id !== $user->id) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Acesso não autorizado.',
+            ], 403);
+        }
+
         return response()->json([
             'status' => true,
             'lead' => $lead,
@@ -42,6 +78,18 @@ class LeadController extends Controller
 
     public function uploadAttachments(Request $request, Lead $lead): JsonResponse
     {
+
+
+        $user = $this->getAuthenticatedUser($request);
+
+        if ($lead->user_id !== $user->id) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Acesso não autorizado.',
+            ], 403);
+        }
+
+
         try {
             $attachments = $lead->attachments ?? [];
 
@@ -88,26 +136,7 @@ class LeadController extends Controller
     public function store(LeadRequest $request): JsonResponse
     {
 
-        $token = $request->bearerToken() ?? $request->cookie('auth-token');
-
-        if (!$token) {
-            return response()->json([
-                'status' => false,
-                'message' => 'Token de autenticação é inválido ou não fornecido.',
-            ], 401);
-        }
-
-        // Retrieves the user associated with the token
-        $accessToken = PersonalAccessToken::findToken($token);
-
-        if (!$accessToken) {
-            return response()->json([
-                'status' => false,
-                'message' => 'Token de autenticação é inválido ou expirado.',
-            ], 401);
-        }
-
-        $user = $accessToken->tokenable;
+        $user = $this->getAuthenticatedUser($request);
 
         // Init transaction on DB
         DB::beginTransaction();
@@ -117,6 +146,7 @@ class LeadController extends Controller
             // Add lead on DB
 
             $lead = Lead::create([
+                'user_id' => $user->id,
                 'company' => strtoupper($request->input('company', '')),
                 'service' => strtoupper($request->input('service', '')),
                 'license' => $request->input('license', ''),
@@ -166,6 +196,16 @@ class LeadController extends Controller
 
     public function update(LeadRequest $request, Lead $lead): JsonResponse
     {
+
+        $user = $this->getAuthenticatedUser($request);
+
+        if (!$user || $lead->user_id !== $user->id) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Acesso não autorizado.',
+            ], 403);
+        }
+
         // Init transaction on DB
         DB::beginTransaction();
 
@@ -256,8 +296,20 @@ class LeadController extends Controller
 
     // Delete attachments to db
 
-    public function deleteAttachment(Lead $lead, int $index)
+    public function deleteAttachment(Request $request, Lead $lead, int $index)
     {
+
+
+        $user = $this->getAuthenticatedUser($request);
+
+        if ($lead->user_id !== $user->id) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Acesso não autorizado.',
+            ], 403);
+        }
+
+
         try {
             $attachments = $lead->attachments ?? [];
 
@@ -301,8 +353,18 @@ class LeadController extends Controller
 
     // Delete lead from db
 
-    public function destroy(Lead $lead): JsonResponse
+    public function destroy(Request $request, Lead $lead): JsonResponse
     {
+
+        $user = $this->getAuthenticatedUser($request);
+
+        if (!$user || $lead->user_id !== $user->id) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Acesso não autorizado.',
+            ], 403);
+        }
+
         try {
 
             // Delete lead on DB
