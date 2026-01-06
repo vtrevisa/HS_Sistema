@@ -9,9 +9,9 @@ export function ProfileAdmin() {
 
  const [searchTerm, setSearchTerm] = useState('')
 
- const nonAdminUsers = users.filter(user => user.role !== 'admin')
+ //const nonAdminUsers = users.filter(user => user.role !== 'admin')
 
- const filteredUsers = nonAdminUsers.filter(
+ const filteredUsers = users.filter(
   user =>
    user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
    user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||

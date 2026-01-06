@@ -46,6 +46,7 @@ export function useUser() {
     },
     onSuccess: (updatedUser) => {
       queryClient.invalidateQueries({ queryKey: ["authUser"] });
+      queryClient.invalidateQueries({ queryKey: ["users"] });
       queryClient.invalidateQueries({ queryKey: ["authUser", updatedUser.id] });
 
       setTimeout(() => {
@@ -85,11 +86,38 @@ export function useUser() {
     }
   });
 
+   // Mutation to delete users
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const deleteMutation = useMutation<void, AxiosError<any>, number>({
+    mutationFn: async (userId: number) => {
+      await api.delete(`/users/${userId}`)
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['users'] })
+
+      setTimeout(() => {
+        toast.success('Usuário deletado com sucesso!')
+      }, 1200)
+    },
+    onError: (error) => {
+      const messages = error.response?.data?.erros
+        ? Object.values(error.response.data.erros).flat().join('\n')
+        : 'Erro desconhecido.'
+
+      setTimeout(() => {
+        toast.error('Erro ao deletar o usuário!', {
+          description: messages
+        })
+      }, 1200)
+    }
+  })
+
   return {
     user: authUser.data || [],
     users: userDB.data || [],
     isLoading: authUser.isLoading,
     updateUser: updateMutation,
+    deleteUser: deleteMutation,
     updateUserPassword: updatePasswordMutation
   }
 }

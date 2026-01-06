@@ -4,7 +4,7 @@ import {
  CardHeader,
  CardTitle
 } from '@/components/ui/card'
-import { Building, User, Users } from 'lucide-react'
+import { Target, User, Users } from 'lucide-react'
 
 interface ProfileAdminCardsProps {
  totalUsers: number
@@ -41,7 +41,7 @@ export function ProfileAdminCards({
     <CardHeader className="pb-2">
      <CardDescription>Alvarás Consumidos (Total)</CardDescription>
      <CardTitle className="text-3xl flex items-center gap-2">
-      <Building className="h-6 w-6 text-orange-500" />
+      <Target className="h-6 w-6 text-orange-500" />
       {totalAlvarasUsed}
      </CardTitle>
     </CardHeader>

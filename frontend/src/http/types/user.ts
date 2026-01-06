@@ -19,7 +19,7 @@ export interface UserRequest {
   number?: string
   address: string
   created_at: string
-  plan: UserPlan
+  plan: UserPlan | null
 }
 
 export interface UpdateUserPasswordRequest {
@@ -27,3 +27,5 @@ export interface UpdateUserPasswordRequest {
   password: string;
   password_confirmation: string;
 }
+
+export type UserRole = 'admin' | 'user'
