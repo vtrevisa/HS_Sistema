@@ -96,6 +96,10 @@
  }
 }
 
+.m_6fa5e2aa {
+ height: 2rem !important;
+}
+
 /* Melhorias para visualização de dados */
 @layer components {
  .data-table {
