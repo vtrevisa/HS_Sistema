@@ -14,6 +14,7 @@ import { Pipeline } from './pages/app/pipeline-crm'
 import { ArchivedProposals } from './pages/app/archived-proposals'
 import { Profile } from './pages/app/profile'
 import { Logs } from './pages/app/logs'
+import { Plans } from './pages/app/plans'
 
 const queryClient = new QueryClient()
 
@@ -37,6 +38,7 @@ export function App() {
          element={<ArchivedProposals />}
         />
         <Route path="/dashboard/minha-conta" element={<Profile />} />
+        <Route path="/dashboard/solicitacoes" element={<Plans />} />
         <Route path="/dashboard/logs" element={<Logs />} />
        </Route>
       </Route>

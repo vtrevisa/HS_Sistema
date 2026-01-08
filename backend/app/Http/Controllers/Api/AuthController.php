@@ -45,8 +45,13 @@ class AuthController extends Controller
             // Get user from DB
             $user = $request->user();
 
+            $user->update([
+                'last_login_at' => now(),
+            ]);
+
             // Generate token
             $token = $user->createToken('auth-token')->plainTextToken;
+
 
             // Cookie HttpOnly secure
 
@@ -147,6 +152,7 @@ class AuthController extends Controller
                     'company' => $user->company,
                     'phone' => $user->phone,
                     'address' => $user->address,
+                    'last_login_at' => $user->last_login_at,
                     'created_at' => $user->created_at,
                     'plan_active' => $user->isPlanActive(),
                     'plan' => $user->plan ? [

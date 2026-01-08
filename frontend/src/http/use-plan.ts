@@ -1,35 +1,67 @@
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import type { AxiosError } from "axios";
-
-// interface Plan {
-//   id: number;
-//   name: string;
-//   creditsLimit: number;
-//   price: string;
-//   description: string;
-//   features: string[];
-// }
+import type { PlanRequest } from "./types/plan";
 
 export function usePlan() {
   const queryClient = useQueryClient();
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const changePlanMutation = useMutation<{ status: boolean; message: string; user: any }, AxiosError, { plan_id: number }>({
-    mutationFn:  async ({ plan_id }) => {
-      if (!plan_id) throw new Error("Plano não encontrado!");
-
-      const { data } = await api.post("/plans/update", { plan_id });
-      return data;
+  const plansDB = useQuery<PlanRequest[], AxiosError>({
+    queryKey: ["plans", filters.status],
+    queryFn: async (): Promise<PlanRequest[]> => {
+      const { data } = await api.get<{status: boolean, requests: PlanRequest[]}>('/plans', {
+         params: filters.status !== 'all' ? { status: filters.status } : undefined
+      })
+      return data.requests
     },
-    onSuccess: (data) => {
-      if (data.status) {
-        queryClient.invalidateQueries({ queryKey: ["authUser"] });
-      }
-    },
+    staleTime: 1 * 60 * 1000,
+    gcTime: 30 * 60 * 1000,
+    refetchOnWindowFocus: 'always'
   });
 
+  const requestPlanChangeMutation = useMutation<{ status: boolean; message: string}, AxiosError, { plan_id: number }>({
+    mutationFn: async ({ plan_id }) => {
+      if (!plan_id) throw new Error("Plano não encontrado!")
+
+      const { data } = await api.post("/plans/request-change", {
+        plan_id,
+      })
+
+      return data
+    },
+  })
+
+   const approvePlanChangeMutation = useMutation<{ status: boolean; message: string}, AxiosError,{ requestId: number }>({
+    mutationFn: async ({ requestId }) => {
+      const { data } = await api.post(
+        `/admin/plan-requests/${requestId}/approve`
+      )
+
+      return data
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["authUser"] })
+      queryClient.invalidateQueries({ queryKey: ["planRequests"] })
+    },
+  })
+
+  const rejectPlanChangeMutation = useMutation<{ status: boolean; message: string}, AxiosError,{ requestId: number }>({
+    mutationFn: async ({ requestId }) => {
+      const { data } = await api.post(
+        `/admin/plan-requests/${requestId}/reject`
+      )
+
+      return data
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["planRequests"] })
+    },
+  })
+
   return {
-    changePlanMutation
+    plans: plansDB.data || [],
+    requestPlanChangeMutation,
+    approvePlanChangeMutation,
+    rejectPlanChangeMutation
   };
 }

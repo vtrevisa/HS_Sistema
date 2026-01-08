@@ -7,7 +7,8 @@ import {
  Search,
  Trello,
  FileText,
- UserCircle
+ UserCircle,
+ ArrowRightLeft
  //  Shield,
  //  Calculator,
  //  Zap,
@@ -104,6 +105,13 @@ export function Header() {
    icon: UserCircle,
    href: '/dashboard/minha-conta'
   },
+  {
+   id: 'plans',
+   label: 'Solicitações',
+   icon: ArrowRightLeft,
+   href: '/dashboard/solicitacoes'
+  },
+
   {
    id: 'logs',
    label: 'Logs de Alvarás',

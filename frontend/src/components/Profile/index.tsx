@@ -12,7 +12,7 @@ export function Profile() {
  const [showPlanSelectorModal, setShowPlanSelectorModal] = useState(false)
 
  const { user, isLoading } = useUser()
- const { changePlanMutation } = usePlan()
+ const { requestPlanChangeMutation } = usePlan()
 
  const isAdmin = user.role === 'admin'
 
@@ -35,21 +35,19 @@ export function Profile() {
  }
 
  function handleSelectPlan(planId: number) {
-  changePlanMutation.mutate(
+  requestPlanChangeMutation.mutate(
    { plan_id: planId },
    {
     onSuccess: data => {
      if (data.status) {
-      toast.success('Plano atualizado com sucesso!')
+      toast.success(data.message || 'Solicitação enviada! Aguarde aprovação.')
+      setShowPlanSelectorModal(false)
      } else {
-      toast.error('Falha ao atualizar o plano.')
+      toast.error(data.message || 'Não foi possível solicitar a troca.')
      }
-     setShowPlanSelectorModal(false)
     },
-    onError: err => {
-     console.error(err)
-     toast.error('Erro ao atualizar o plano.')
-     setShowPlanSelectorModal(false)
+    onError: () => {
+     toast.error('Erro ao solicitar troca de plano.')
     }
    }
   )

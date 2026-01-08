@@ -7,17 +7,20 @@ import {
 import { Search } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { ProfileAdminTable } from './profile-admin-table'
+import { ProfileUserTable } from './profile-users-table'
 import type { UserRequest } from '@/http/types/user'
 
 interface ProfileAdminDataProps {
  searchTerm: string
  setSearchTerm: (term: string) => void
+ admin: UserRequest[]
  users: UserRequest[]
 }
 
 export function ProfileAdminData({
  searchTerm,
  setSearchTerm,
+ admin,
  users
 }: ProfileAdminDataProps) {
  return (
@@ -41,7 +44,10 @@ export function ProfileAdminData({
     </div>
    </CardHeader>
 
-   <ProfileAdminTable users={users} />
+   <Card className="p-2 md:p-6">
+    <ProfileAdminTable users={admin} />
+    <ProfileUserTable users={users} />
+   </Card>
   </Card>
  )
 }

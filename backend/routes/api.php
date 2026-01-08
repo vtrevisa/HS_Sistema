@@ -13,7 +13,6 @@ use App\Http\Controllers\Api\PlanController;
 use App\Http\Controllers\Api\SubscriptionController;
 use App\Http\Controllers\Api\CreditPurchaseController;
 use App\Http\Controllers\Api\InvoiceController;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Route;
 
 // Auth
@@ -25,7 +24,11 @@ Route::put('/auth/me/password/update', [AuthController::class, 'changePassword']
 
 // Plans
 Route::get('/plans', [PlanController::class, 'index']); //GET 
-Route::post('/plans/update', [PlanController::class, 'update']); //POST 
+Route::post('/plans/request-change', [PlanController::class, 'requestChange']); //POST 
+
+Route::get('/admin/plan-requests', [PlanController::class, 'pendingRequests']); //GET 
+Route::post('/admin/plan-requests/{id}/approve', [PlanController::class, 'approve']); //POST
+Route::post('/admin/plan-requests/{id}/reject', [PlanController::class, 'reject']); //POST
 
 // Subscriptions
 Route::post('/subscription/start', [SubscriptionController::class, 'start']); //POST

@@ -9,9 +9,19 @@ export function ProfileAdmin() {
 
  const [searchTerm, setSearchTerm] = useState('')
 
- //const nonAdminUsers = users.filter(user => user.role !== 'admin')
+ const adminUsers = users.filter(user => user.role === 'admin')
+ const systemUsers = users.filter(user => user.role !== 'admin')
 
- const filteredUsers = users.filter(
+ //const orderedUsers = [...adminUsers, ...systemUsers]
+
+ const filteredAdminUsers = adminUsers.filter(
+  user =>
+   user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+   user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+   user.company?.toLowerCase().includes(searchTerm.toLowerCase())
+ )
+
+ const filteredUsers = systemUsers.filter(
   user =>
    user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
    user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -50,6 +60,7 @@ export function ProfileAdmin() {
    <ProfileAdminData
     searchTerm={searchTerm}
     setSearchTerm={setSearchTerm}
+    admin={filteredAdminUsers}
     users={filteredUsers}
    />
   </div>

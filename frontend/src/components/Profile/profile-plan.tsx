@@ -28,11 +28,11 @@ export function ProfilePlan({ user }: ProfilePlanProps) {
       <Check className="h-5 w-5 text-green-500 mt-0.5" />
       <div>
        <p className="font-medium">
-        {user.plan.monthly_credits !== null
-         ? `${user.plan.monthly_credits} Alvarás/mês`
+        {user.plan?.monthly_credits !== null
+         ? `${user.plan?.monthly_credits} Alvarás/mês`
          : 'Alvarás ilimitados'}
        </p>
-       {user.plan.monthly_credits !== null && (
+       {user.plan?.monthly_credits !== null && (
         <p className="text-sm text-muted-foreground">Captação mensal inclusa</p>
        )}
       </div>

@@ -33,6 +33,7 @@ class User extends Authenticatable
         'credits',
         'plan_renews_at',
         'last_renewal_at',
+        'last_login_at',
     ];
 
     /**
@@ -58,6 +59,7 @@ class User extends Authenticatable
             'alvarasUsed' => 'integer',
             'plan_renews_at' => 'datetime',
             'last_renewal_at' => 'datetime',
+            'last_login_at' => 'datetime',
         ];
     }
 
@@ -125,5 +127,10 @@ class User extends Authenticatable
     public function isPending(): bool
     {
         return $this->status === 'Pendente';
+    }
+
+    public function planChangeRequests()
+    {
+        return $this->hasMany(PlanChangeRequest::class);
     }
 }

@@ -10,6 +10,7 @@ import {
 
 import { Separator } from '../ui/separator'
 import { Button } from '../ui/button'
+import { cn } from '@/lib/utils'
 
 interface ProfileSubscriptionProps {
  subscriptionInfo: {
@@ -28,6 +29,19 @@ export function ProfileSubscription({
  subscriptionInfo,
  onOpenPlanSelector
 }: ProfileSubscriptionProps) {
+ const hasLimit = subscriptionInfo.creditsLimit > 0
+
+ const progressPercentage = hasLimit
+  ? Math.min(
+     (subscriptionInfo.alvarasUsed / subscriptionInfo.creditsLimit) * 100,
+     100
+    )
+  : 100
+
+ const remainingCredits = hasLimit
+  ? Math.max(subscriptionInfo.creditsLimit - subscriptionInfo.alvarasUsed, 0)
+  : Infinity
+
  const getStatusBadge = (status: string) => {
   switch (status) {
    case 'active':
@@ -65,14 +79,13 @@ export function ProfileSubscription({
     <CardContent className="space-y-4">
      <div className="space-y-3">
       <div className="flex justify-between items-center">
-       {subscriptionInfo.creditsLimit !== null ? (
+       {hasLimit ? (
         <>
          <span className="text-sm text-muted-foreground">
           Créditos disponíveis
          </span>
          <span className="font-semibold">
-          {subscriptionInfo.creditsLimit - subscriptionInfo.alvarasUsed} /{' '}
-          {subscriptionInfo.creditsLimit}
+          {remainingCredits} / {subscriptionInfo.creditsLimit}
          </span>
         </>
        ) : (
@@ -85,17 +98,24 @@ export function ProfileSubscription({
       </div>
       <div className="w-full bg-muted rounded-full h-2">
        <div
-        className="bg-primary h-2 rounded-full transition-all"
+        className={cn(
+         'h-2 rounded-full transition-all',
+         hasLimit ? 'bg-primary' : 'bg-green-500'
+        )}
         style={{
-         width: `${
-          (subscriptionInfo.alvarasUsed / subscriptionInfo.creditsLimit) * 100
-         }%`
+         width: `${progressPercentage}%`
         }}
        />
       </div>
-      <p className="text-xs text-muted-foreground">
-       {subscriptionInfo.alvarasUsed} alvarás utilizados este mês
-      </p>
+      {hasLimit ? (
+       <p className="text-xs text-muted-foreground">
+        {subscriptionInfo.alvarasUsed} alvarás utilizados este mês
+       </p>
+      ) : (
+       <p className="text-xs text-muted-foreground">
+        Uso ilimitado neste plano
+       </p>
+      )}
      </div>
 
      <Separator />

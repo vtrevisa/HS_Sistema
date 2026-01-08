@@ -18,6 +18,7 @@ export interface UserRequest {
   cep?: string
   number?: string
   address: string
+  last_login_at: string
   created_at: string
   plan: UserPlan | null
 }
