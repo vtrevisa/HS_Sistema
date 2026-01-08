@@ -178,7 +178,10 @@ export function Header() {
       <SidebarMenu>
        {systemItems
         .filter(item => {
-         if (item.id === 'logs' && user.role !== 'admin') {
+         if (
+          (item.id === 'logs' && user.role !== 'admin') ||
+          (item.id === 'plans' && user.role !== 'admin')
+         ) {
           return false
          }
          return true

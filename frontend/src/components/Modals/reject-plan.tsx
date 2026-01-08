@@ -14,9 +14,17 @@ interface RejectPlanProps {
  request: PlanRequest
  isOpen: boolean
  onClose: () => void
+ onConfirm: (plan: PlanRequest) => void
+ onRejecting: boolean
 }
 
-export function RejectPlan({ request, isOpen, onClose }: RejectPlanProps) {
+export function RejectPlan({
+ request,
+ isOpen,
+ onClose,
+ onConfirm,
+ onRejecting
+}: RejectPlanProps) {
  return (
   <Dialog open={isOpen} onOpenChange={onClose}>
    <DialogContent>
@@ -37,8 +45,8 @@ export function RejectPlan({ request, isOpen, onClose }: RejectPlanProps) {
      <Button variant="outline" onClick={onClose}>
       Cancelar
      </Button>
-     <Button variant="destructive" onClick={() => {}}>
-      Rejeitar
+     <Button variant="destructive" onClick={() => onConfirm(request)}>
+      {onRejecting ? 'Rejeitando...' : 'Rejeitar'}
      </Button>
     </DialogFooter>
    </DialogContent>

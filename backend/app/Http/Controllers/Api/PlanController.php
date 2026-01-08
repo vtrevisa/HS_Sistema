@@ -21,7 +21,7 @@ class PlanController extends Controller
             'requestedPlan:id,name',
         ]);
 
-        if ($status) {
+        if ($status && $status !== 'all') {
             $query->where('status', $status);
         }
 
@@ -62,59 +62,23 @@ class PlanController extends Controller
             'status' => true,
             'message' => 'Solicitação enviada com sucesso. Aguarde aprovação.'
         ]);
-
-        //$planId = (int) $request->input('plan_id');
-
-        // return DB::transaction(function () use ($user, $planId) {
-        //     $plan = Plan::find($planId);
-
-        //     if (!$plan) {
-        //         return response()->json([
-        //             'status' => false,
-        //             'message' => 'Plano não encontrado.'
-        //         ], 404);
-        //     }
-
-
-        //     $user->plan_id = $plan->id;
-        //     $user->plan_renews_at = now()->addMonth();
-        //     $user->save();
-
-        //     return response()->json([
-        //         'status' => true,
-        //         'message' => 'Plano atualizado com sucesso!',
-        //         'user' => [
-        //             'id' => $user->id,
-        //             'plan_id' => $user->plan_id,
-        //             'plan' => [
-        //                 'id' => $plan->id,
-        //                 'name' => $plan->name,
-        //                 'monthly_credits' => $plan->creditsLimit,
-        //                 'price' => $plan->price,
-        //                 'plan_renews_at' => $user->plan_renews_at,
-        //             ]
-        //         ]
-        //     ]);
-        // });
-    }
-
-    public function pendingRequests(): JsonResponse
-    {
-        return response()->json([
-            'status' => true,
-            'requests' => PlanChangeRequest::with(['user', 'requestedPlan'])
-                ->where('status', 'pending')
-                ->latest()
-                ->get()
-        ]);
     }
 
     public function approve(Request $request, int $id): JsonResponse
     {
         $admin = $this->getUserFromToken($request);
-        if (!$admin || !$admin->is_admin) return $this->unauthorized();
+        if (!$admin || !$admin->isAdmin()) {
+            return $this->unauthorized();
+        }
 
-        $planRequest = PlanChangeRequest::findOrFail($id);
+        $planRequest = PlanChangeRequest::with(['user', 'requestedPlan'])->findOrFail($id);
+
+        if ($planRequest->status !== 'pending') {
+            return response()->json([
+                'status' => false,
+                'message' => 'Esta solicitação já foi processada.'
+            ], 422);
+        }
 
         DB::transaction(function () use ($planRequest, $admin) {
             $user = $planRequest->user;
@@ -122,7 +86,7 @@ class PlanController extends Controller
 
             $user->update([
                 'plan_id' => $plan->id,
-                'credits' => $plan->creditsLimit,
+                'credits' => $plan->monthly_credits,
                 'plan_renews_at' => now()->addMonth(),
             ]);
 
@@ -142,9 +106,19 @@ class PlanController extends Controller
     public function reject(Request $request, int $id): JsonResponse
     {
         $admin = $this->getUserFromToken($request);
-        if (!$admin || !$admin->is_admin) return $this->unauthorized();
+        if (!$admin || !$admin->isAdmin()) {
+            return $this->unauthorized();
+        }
 
         $planRequest = PlanChangeRequest::findOrFail($id);
+
+
+        if ($planRequest->status !== 'pending') {
+            return response()->json([
+                'status' => false,
+                'message' => 'Esta solicitação já foi processada.'
+            ], 422);
+        }
 
         $planRequest->update([
             'status' => 'rejected',

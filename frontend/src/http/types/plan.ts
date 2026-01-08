@@ -1,4 +1,4 @@
-export type PlanRequestStatus = 'pending' | 'approved' | 'rejected';
+export type PlanRequestStatus = 'all' | 'pending' | 'approved' | 'rejected';
 
 export interface PlanRequest {
   id: number;

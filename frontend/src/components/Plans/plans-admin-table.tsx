@@ -13,9 +13,11 @@ import {
 import { Button } from '../ui/button'
 import { AprovePlan } from '../Modals/aprove-plan'
 import { RejectPlan } from '../Modals/reject-plan'
+import { usePlan } from '@/http/use-plan'
 
 interface PlansAdminTableProps {
  plans: PlanRequest[]
+ isLoading: boolean
 }
 
 export function PlansAdminTable({ plans }: PlansAdminTableProps) {
@@ -26,6 +28,8 @@ export function PlansAdminTable({ plans }: PlansAdminTableProps) {
  const [approveModalOpen, setApproveModalOpen] = useState(false)
  const [rejectModalOpen, setRejectModalOpen] = useState(false)
 
+ const { approvePlanChangeMutation, rejectPlanChangeMutation } = usePlan()
+
  function handleOpenApproveModal(request: PlanRequest) {
   setSelectedRequest(request)
   setApproveModalOpen(true)
@@ -34,6 +38,32 @@ export function PlansAdminTable({ plans }: PlansAdminTableProps) {
  function handleOpenRejectModal(request: PlanRequest) {
   setSelectedRequest(request)
   setRejectModalOpen(true)
+ }
+
+ function handleApprove() {
+  if (!selectedRequest) return
+  approvePlanChangeMutation.mutate(
+   { requestId: selectedRequest.id },
+   {
+    onSuccess: () => {
+     setApproveModalOpen(false)
+     setSelectedRequest(null)
+    }
+   }
+  )
+ }
+
+ function handleReject() {
+  if (!selectedRequest) return
+  rejectPlanChangeMutation.mutate(
+   { requestId: selectedRequest.id },
+   {
+    onSuccess: () => {
+     setRejectModalOpen(false)
+     setSelectedRequest(null)
+    }
+   }
+  )
  }
 
  return (
@@ -144,6 +174,7 @@ export function PlansAdminTable({ plans }: PlansAdminTableProps) {
        setApproveModalOpen(false)
        setSelectedRequest(null)
       }}
+      onConfirm={handleApprove}
      />
 
      <RejectPlan
@@ -153,6 +184,8 @@ export function PlansAdminTable({ plans }: PlansAdminTableProps) {
        setRejectModalOpen(false)
        setSelectedRequest(null)
       }}
+      onConfirm={handleReject}
+      onRejecting={rejectPlanChangeMutation.isPending}
      />
     </>
    )}

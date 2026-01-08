@@ -14,9 +14,15 @@ interface AprovePlanProps {
  request: PlanRequest
  isOpen: boolean
  onClose: () => void
+ onConfirm: (plan: PlanRequest) => void
 }
 
-export function AprovePlan({ request, isOpen, onClose }: AprovePlanProps) {
+export function AprovePlan({
+ request,
+ isOpen,
+ onClose,
+ onConfirm
+}: AprovePlanProps) {
  return (
   <Dialog open={isOpen} onOpenChange={onClose}>
    <DialogContent>
@@ -37,7 +43,10 @@ export function AprovePlan({ request, isOpen, onClose }: AprovePlanProps) {
      <Button variant="outline" onClick={onClose}>
       Cancelar
      </Button>
-     <Button onClick={() => {}} className="bg-green-600 hover:bg-green-700">
+     <Button
+      onClick={() => onConfirm(request)}
+      className="bg-green-600 hover:bg-green-700"
+     >
       Aprovar
      </Button>
     </DialogFooter>

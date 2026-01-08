@@ -10,7 +10,7 @@ interface PlansDataProps {
 }
 
 export function PlansData({ filters, setFilters }: PlansDataProps) {
- const { plans } = usePlan()
+ const { plans, isLoading } = usePlan(filters.status)
 
  return (
   <Card>
@@ -46,7 +46,7 @@ export function PlansData({ filters, setFilters }: PlansDataProps) {
     </div>
    </CardHeader>
 
-   <PlansAdminTable plans={plans} />
+   <PlansAdminTable plans={plans} isLoading={isLoading} />
   </Card>
  )
 }

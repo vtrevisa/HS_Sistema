@@ -1,23 +1,24 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import type { AxiosError } from "axios";
-import type { PlanRequest } from "./types/plan";
+import type { PlanRequest, PlanRequestStatus } from "./types/plan";
+import { toast } from "sonner";
 
-export function usePlan() {
+export function usePlan(status?: PlanRequestStatus) {
   const queryClient = useQueryClient();
 
   const plansDB = useQuery<PlanRequest[], AxiosError>({
-    queryKey: ["plans", filters.status],
-    queryFn: async (): Promise<PlanRequest[]> => {
-      const { data } = await api.get<{status: boolean, requests: PlanRequest[]}>('/plans', {
-         params: filters.status !== 'all' ? { status: filters.status } : undefined
-      })
-      return data.requests
-    },
-    staleTime: 1 * 60 * 1000,
-    gcTime: 30 * 60 * 1000,
-    refetchOnWindowFocus: 'always'
-  });
+  queryKey: ['plans', status],
+  queryFn: async (): Promise<PlanRequest[]> => {
+    const { data } = await api.get<{status: boolean, requests: PlanRequest[]}>('/plans', {
+      params: status !== 'all' ? { status } : undefined
+    })
+    return data.requests
+  },
+  staleTime: 1 * 60 * 1000,
+  gcTime: 30 * 60 * 1000,
+  refetchOnWindowFocus: 'always'
+})
 
   const requestPlanChangeMutation = useMutation<{ status: boolean; message: string}, AxiosError, { plan_id: number }>({
     mutationFn: async ({ plan_id }) => {
@@ -33,6 +34,9 @@ export function usePlan() {
 
    const approvePlanChangeMutation = useMutation<{ status: boolean; message: string}, AxiosError,{ requestId: number }>({
     mutationFn: async ({ requestId }) => {
+
+      if (!requestId) throw new Error("Solicitação não encontrada!");
+
       const { data } = await api.post(
         `/admin/plan-requests/${requestId}/approve`
       )
@@ -41,12 +45,27 @@ export function usePlan() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["authUser"] })
-      queryClient.invalidateQueries({ queryKey: ["planRequests"] })
+      queryClient.invalidateQueries({ queryKey: ["plans"] })
+
+       setTimeout(() => {
+        toast.success('Solicitação aprovada com sucesso!')
+      }, 1200)
+    },
+    onError: (error) => {
+      const messages = error.response?.data ? Object.values(error.response.data).flat().join("\n") : "Erro desconhecido.";
+
+      setTimeout(() => {
+        toast.error("Falha ao aprovar solicitação.", {
+          description: messages,
+        });
+      }, 1200);
     },
   })
 
   const rejectPlanChangeMutation = useMutation<{ status: boolean; message: string}, AxiosError,{ requestId: number }>({
     mutationFn: async ({ requestId }) => {
+      if (!requestId) throw new Error("Solicitação não encontrada!");
+
       const { data } = await api.post(
         `/admin/plan-requests/${requestId}/reject`
       )
@@ -54,12 +73,30 @@ export function usePlan() {
       return data
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["planRequests"] })
+      queryClient.invalidateQueries({ queryKey: ["plans"] })
+
+      setTimeout(() => {
+        toast.success('Solicitação rejeitada com sucesso!')
+      }, 1200)
+    },
+    onError: (error) => {
+      const messages = error.response?.data ? Object.values(error.response.data).flat().join("\n") : "Erro desconhecido.";
+
+      setTimeout(() => {
+        toast.success('A atualização do plano foi rejeitada com sucesso!')
+      }, 1200)
+
+      setTimeout(() => {
+        toast.error("Falha ao rejeitar a solicitação.", {
+          description: messages,
+        });
+      }, 1200);
     },
   })
 
   return {
     plans: plansDB.data || [],
+    isLoading: plansDB.isLoading,
     requestPlanChangeMutation,
     approvePlanChangeMutation,
     rejectPlanChangeMutation
