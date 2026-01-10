@@ -12,11 +12,16 @@ use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\Api\PlanController;
 use App\Http\Controllers\Api\SubscriptionController;
 use App\Http\Controllers\Api\CreditPurchaseController;
+use App\Http\Controllers\Api\DashboardController;
 use App\Http\Controllers\Api\InvoiceController;
 use Illuminate\Support\Facades\Route;
 
 // Auth
 Route::post('/auth', [AuthController::class, 'login']); //POST
+
+//Dashboard
+Route::get('/dashboard', [DashboardController::class, 'index']); //GET 
+
 
 // Profile 
 Route::get('/auth/me', [AuthController::class, 'me']); //GET 

@@ -3,12 +3,17 @@ import { StatsCards } from './stats-cards'
 import { ChecklistNotifications } from './checklist-notifications'
 import { RecentLeads } from './recent-leads'
 import { UpcomingTasks } from './upcoming-tasks'
+import { useDashboard } from '@/http/use-dashboard'
 
 interface DashboardProps {
  sectionType?: 'comercial' | 'processos'
 }
 
 export function Dashboard({ sectionType = 'comercial' }: DashboardProps) {
+ const { dashboard, isLoading } = useDashboard()
+
+ if (isLoading) return null
+
  return (
   <div className="p-4 lg:p-6 space-y-6">
    <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
@@ -32,7 +37,14 @@ export function Dashboard({ sectionType = 'comercial' }: DashboardProps) {
    </div>
 
    {/* Stats Cards */}
-   <StatsCards />
+   <StatsCards
+    totalLeads={dashboard?.leads.totalLeads ?? 0}
+    leadsQuantity={dashboard?.leads.growthPercentage ?? 0}
+    totalPipeline={dashboard?.pipeline.totalPipeline ?? 0}
+    pipelineQuantity={dashboard?.pipeline.growthPercentage ?? 0}
+    totalPropostas={dashboard?.propostas_enviadas.totalPropostas ?? 0}
+    propostasQuantity={dashboard?.propostas_enviadas.growthPercentage ?? 0}
+   />
 
    <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
     {/* Checklist Notifications */}

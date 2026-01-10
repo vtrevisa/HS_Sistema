@@ -89,7 +89,7 @@ export function LeadDetailsModal({
    {
     onSuccess: () => {
      setEditedLead(prev =>
-      prev ? { ...prev, status: 'Cliente Fechado' } : prev
+      prev ? { ...prev, status: 'Cliente fechado' } : prev
      )
     }
    }

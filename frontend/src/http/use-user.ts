@@ -4,8 +4,22 @@ import type { AxiosError } from "axios";
 import type { UpdateUserPasswordRequest, UserRequest } from "./types/user";
 import { toast } from "sonner";
 
-export function useUser() {
+export function useUser(loadUsers = false) {
   const queryClient = useQueryClient();
+
+  // Fn to show data from auth user
+  const authUser = useQuery({
+    queryKey: ['authUser'],
+    queryFn: async () => {
+      const response = await api.get('/auth/me');
+      return response.data.user;
+    },      
+    staleTime: Infinity,      
+    gcTime: Infinity,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+    retry: false,          
+  });
 
 
   const userDB = useQuery<UserRequest[], AxiosError>({
@@ -14,22 +28,10 @@ export function useUser() {
       const { data } = await api.get<{ status: boolean; users: UserRequest[] }>("/users");
       return data.users;
     },
-    staleTime: 1 * 60 * 1000, 
-    gcTime: 30 * 60 * 1000,
-    refetchOnWindowFocus: "always",
+    enabled: loadUsers && authUser.data?.role === 'admin',
   });
 
-  // Fn to show data from auth user
-  const authUser = useQuery({
-    queryKey: ['authUser'],
-    queryFn: async () => {
-      const response = await api.get('/auth/me');
-      return response.data.user;
-    },
-    refetchOnWindowFocus: true,       
-    refetchOnReconnect: true,         
-    staleTime: 0,                
-  });
+
 
   // Fn to update user data
   // eslint-disable-next-line @typescript-eslint/no-explicit-any

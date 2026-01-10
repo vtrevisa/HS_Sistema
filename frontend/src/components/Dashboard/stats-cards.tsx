@@ -1,25 +1,50 @@
 import { TrendingUp, Users, DollarSign, Target } from 'lucide-react'
 
-export function StatsCards() {
+interface StatsCardsProps {
+ totalLeads: number
+ leadsQuantity: number
+ totalPipeline: number
+ pipelineQuantity: number
+ totalPropostas: number
+ propostasQuantity: number
+}
+
+export function StatsCards({
+ totalLeads,
+ leadsQuantity,
+ totalPipeline,
+ pipelineQuantity,
+ totalPropostas,
+ propostasQuantity
+}: StatsCardsProps) {
+ const changeLeadValue = leadsQuantity ?? 0
+ const isPositiveLead = changeLeadValue >= 0
+
+ const changePipelineValue = pipelineQuantity ?? 0
+ const isPositivePipeline = changePipelineValue >= 0
+
+ const changePropostasValue = propostasQuantity ?? 0
+ const isPositivePropostas = changePropostasValue >= 0
+
  const stats = [
   {
    title: 'Total de Leads',
-   value: '127',
-   change: '+12%',
+   value: totalLeads.toString(),
+   change: `${isPositiveLead ? '+' : ''}${changeLeadValue}%`,
    icon: Users,
    color: 'bg-blue-500'
   },
   {
    title: 'Pipeline Ativo',
-   value: '89',
-   change: '+8%',
+   value: `R$ ${totalPipeline.toString()}`,
+   change: `${isPositivePipeline ? '+' : ''}${changePipelineValue}%`,
    icon: TrendingUp,
    color: 'bg-blue-600'
   },
   {
    title: 'Propostas Enviadas',
-   value: '23',
-   change: '+15%',
+   value: totalPropostas.toString(),
+   change: `${isPositivePropostas ? '+' : ''}${changePropostasValue}%`,
    icon: DollarSign,
    color: 'bg-blue-700'
   },

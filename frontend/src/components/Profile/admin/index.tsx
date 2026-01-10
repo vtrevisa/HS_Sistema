@@ -12,8 +12,6 @@ export function ProfileAdmin() {
  const adminUsers = users.filter(user => user.role === 'admin')
  const systemUsers = users.filter(user => user.role !== 'admin')
 
- //const orderedUsers = [...adminUsers, ...systemUsers]
-
  const filteredAdminUsers = adminUsers.filter(
   user =>
    user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
