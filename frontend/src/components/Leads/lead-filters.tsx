@@ -44,7 +44,6 @@ export function LeadsFilters({
      <option value="Follow-up">Follow-up</option>
      <option value="Proposta enviada">Proposta Enviada</option>
      <option value="Cliente fechado">Cliente Fechado</option>
-     <option value="Arquivado">Arquivado</option>
     </select>
 
     <select

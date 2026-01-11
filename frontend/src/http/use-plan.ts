@@ -4,7 +4,7 @@ import type { AxiosError } from "axios";
 import type { PlanRequest, PlanRequestStatus } from "./types/plan";
 import { toast } from "sonner";
 
-export function usePlan(status?: PlanRequestStatus) {
+export function usePlan(status?: PlanRequestStatus, enabled: boolean = true) {
   const queryClient = useQueryClient();
 
   const plansDB = useQuery<PlanRequest[], AxiosError>({
@@ -17,7 +17,8 @@ export function usePlan(status?: PlanRequestStatus) {
   },
   staleTime: 1 * 60 * 1000,
   gcTime: 30 * 60 * 1000,
-  refetchOnWindowFocus: 'always'
+  refetchOnWindowFocus: 'always',
+  enabled
 })
 
   const requestPlanChangeMutation = useMutation<{ status: boolean; message: string}, AxiosError, { plan_id: number }>({

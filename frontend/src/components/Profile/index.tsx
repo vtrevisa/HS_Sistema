@@ -12,9 +12,10 @@ export function Profile() {
  const [showPlanSelectorModal, setShowPlanSelectorModal] = useState(false)
 
  const { user, isLoading } = useUser()
- const { requestPlanChangeMutation } = usePlan()
 
  const isAdmin = user.role === 'admin'
+
+ const { requestPlanChangeMutation } = usePlan(undefined, isAdmin)
 
  if (isAdmin) {
   return <ProfileAdmin />

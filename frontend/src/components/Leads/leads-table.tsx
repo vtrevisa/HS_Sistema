@@ -31,19 +31,19 @@ export function LeadsTable({
  function getStatusColor(status: string) {
   switch (status) {
    case 'Lead':
-    return 'bg-gray-200 text-gray-700 dark:bg-gray-600 dark:text-gray-300'
+    return 'bg-gray-200 text-gray-800 dark:bg-gray-600 dark:text-white'
    case 'Primeiro contato':
-    return 'bg-blue-200 text-blue-700 dark:bg-blue-800 dark:text-blue-300'
+    return 'bg-blue-100 text-blue-800 dark:bg-blue-600/30 dark:text-white'
    case 'Follow-up':
-    return 'bg-yellow-200 text-yellow-700 dark:bg-yellow-800 dark:text-yellow-300'
+    return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-600/30 dark:text-white'
    case 'Proposta enviada':
-    return 'bg-green-200 text-green-700 dark:bg-green-800 dark:text-green-300'
+    return 'bg-orange-100 text-orange-800 dark:bg-orange-600/30 dark:text-white'
    case 'Cliente fechado':
-    return 'bg-green-100 text-green-800'
+    return 'bg-green-100 text-green-800 dark:bg-green-600/30 dark:text-white'
    case 'Arquivado':
-    return 'bg-red-100 text-red-800'
+    return 'bg-red-100 text-red-800 dark:bg-red-600/30 dark:text-white'
    default:
-    return 'bg-gray-100 text-gray-800'
+    return 'bg-gray-200 text-gray-800 dark:bg-gray-600 dark:text-white'
   }
  }
 

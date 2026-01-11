@@ -10,7 +10,7 @@ interface DashboardProps {
 }
 
 export function Dashboard({ sectionType = 'comercial' }: DashboardProps) {
- const { dashboard, isLoading } = useDashboard()
+ const { cards, recentLeads, isLoading } = useDashboard()
 
  if (isLoading) return null
 
@@ -38,12 +38,14 @@ export function Dashboard({ sectionType = 'comercial' }: DashboardProps) {
 
    {/* Stats Cards */}
    <StatsCards
-    totalLeads={dashboard?.leads.totalLeads ?? 0}
-    leadsQuantity={dashboard?.leads.growthPercentage ?? 0}
-    totalPipeline={dashboard?.pipeline.totalPipeline ?? 0}
-    pipelineQuantity={dashboard?.pipeline.growthPercentage ?? 0}
-    totalPropostas={dashboard?.propostas_enviadas.totalPropostas ?? 0}
-    propostasQuantity={dashboard?.propostas_enviadas.growthPercentage ?? 0}
+    totalLeads={cards?.leads.totalLeads ?? 0}
+    leadsQuantity={cards?.leads.growthPercentage ?? 0}
+    totalPipeline={cards?.pipeline.totalPipeline ?? 0}
+    pipelineQuantity={cards?.pipeline.growthPercentage ?? 0}
+    totalPropostas={cards?.propostas_enviadas.totalPropostas ?? 0}
+    propostasQuantity={cards?.propostas_enviadas.growthPercentage ?? 0}
+    totalTaxaConversao={cards?.taxa_conversao.totalTaxaConversao ?? 0}
+    taxaConversaoQuantity={cards?.taxa_conversao.growthPercentage ?? 0}
    />
 
    <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
@@ -53,7 +55,7 @@ export function Dashboard({ sectionType = 'comercial' }: DashboardProps) {
     </div>
 
     {/* Recent Leads */}
-    <RecentLeads />
+    <RecentLeads leads={recentLeads ?? []} />
 
     {/* Upcoming Tasks */}
     <UpcomingTasks />

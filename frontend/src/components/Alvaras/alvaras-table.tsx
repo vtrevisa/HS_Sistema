@@ -8,6 +8,8 @@ import {
  handleItemsPerPageChange,
  handlePageChange
 } from '@/services/alvaras'
+// import type { CompanyRequest } from '@/http/types/companies'
+// import { useCompany } from '@/http/use-company'
 
 interface AlvarasTableProps {
  alvarasData: {
@@ -24,6 +26,8 @@ const PAGE_SIZE_OPTIONS = [25, 50, 100, 250, 500]
 export function AlvarasTable({ alvarasData }: AlvarasTableProps) {
  const [currentPage, setCurrentPage] = useState(1)
  const [itemsPerPage, setItemsPerPage] = useState(25)
+
+ //const { exportCompanies } = useCompany()
 
  const totalItems = alvarasData.length
  const totalPages = getTotalPages(totalItems, itemsPerPage)
@@ -45,11 +49,29 @@ export function AlvarasTable({ alvarasData }: AlvarasTableProps) {
   setItemsPerPage(value)
  }
 
+ function handleExportAlvaras() {
+  //if (alvarasData.length === 0) return
+
+  //   const companiesToSave: Omit<CompanyRequest, 'id'>[] = alvarasData.map(
+  //    alvara => ({
+  //     name: alvara.address,
+  //     service: alvara.service,
+  //     expiration_date: alvara.endDate.toISOString(),
+  //     address: alvara.address,
+  //     occupation: alvara.occupation
+  //    })
+  //   )
+
+  //   exportCompanies.mutate(companiesToSave)
+
+  console.log('Exportar alvarás:', alvarasData)
+ }
+
  return (
   <Card className="p-6">
    <div className="flex flex-row items-center justify-between mb-4">
     <h2 className="text-xl font-semibold">Alvarás Liberados</h2>
-    <Button onClick={() => {}}>Exportar Alvarás</Button>
+    <Button onClick={handleExportAlvaras}>Exportar Alvarás</Button>
    </div>
 
    <div className="flex flex-row items-center justify-between gap-4 mb-4">

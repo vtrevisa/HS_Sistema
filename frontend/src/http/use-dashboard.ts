@@ -1,20 +1,23 @@
 import { api } from "@/lib/api"
-import type { DashboardCards, DashboardResponse } from "./types/dashboard"
+import type { DashboardResponse } from "./types/dashboard"
 import { useQuery } from "@tanstack/react-query"
 import type { AxiosError } from "axios"
 
+
 export function useDashboard() {
-  const dashboardQuery = useQuery<DashboardCards, AxiosError>({
+
+  const dashboardQuery = useQuery<DashboardResponse['data'], AxiosError>({
     queryKey: ["dashboard"],
     queryFn: async () => {
-      const { data } = await api.get<DashboardResponse>('/dashboard')
-      return data.data.cards
+      const { data } = await api.get<DashboardResponse>('/dashboard');
+      return data.data
     },
     staleTime: 1000 * 60 * 5
   })
 
   return { 
-    dashboard: dashboardQuery.data,
+    cards: dashboardQuery.data?.cards,
+    recentLeads: dashboardQuery.data?.recentLeads,
     isLoading: dashboardQuery.isLoading,
   }
 }

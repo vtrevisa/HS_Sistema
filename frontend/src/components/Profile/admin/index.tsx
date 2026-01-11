@@ -5,7 +5,7 @@ import { ProfileAdminData } from './profile-admin'
 import { useUser } from '@/http/use-user'
 
 export function ProfileAdmin() {
- const { users, isLoading } = useUser()
+ const { users, isLoading } = useUser(true)
 
  const [searchTerm, setSearchTerm] = useState('')
 

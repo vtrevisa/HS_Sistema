@@ -25,24 +25,22 @@ export function useCompany() {
 
   // Mutation to save companies
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const saveMutation = useMutation<CompanyRequest[], AxiosError<any>, Omit<CompanyRequest, 'id'>[]>({
-    mutationFn: async (companies: Omit<CompanyRequest, 'id'>[]) => {
+  const exportMutation = useMutation<CompanyRequest[], AxiosError<any>, Omit<CompanyRequest, 'id'>[]>({
+     mutationFn: async (companies) => {
       const responses = await Promise.all(
-      companies.map(company =>
-        api.post<CompanyRequest>("/companies", company).then(res => res.data)
+        companies.map(company =>
+          api.post<CompanyRequest>("/companies", company).then(res => res.data)
+        )
       )
-    )
-    return responses
+      return responses
     },
     onSuccess: (savedCompanies) => {
-      queryClient.invalidateQueries({ queryKey: ["companies"] })
-      toast.success("A empresa foi salva com sucesso!")
 
       setTimeout(() => {
         toast.success(
           savedCompanies.length === 1
-          ? '1 empresa foi salva com sucesso!'
-          : `${savedCompanies.length} empresas foram salvas com sucesso!`
+          ? '1 alvará foi exportado com sucesso!'
+          : `${savedCompanies.length} alvarás foram exportados com sucesso!`
         )
       }, 3200)
 
@@ -54,10 +52,28 @@ export function useCompany() {
         : "Erro desconhecido."
 
       setTimeout(() => {
-        toast.error('Erro ao salvar a empresa no sistema!', {
+        toast.error('Erro ao exportar alvarás no sistema!', {
           description: messages
         })
       }, 3200)
+    }
+  })
+
+
+    const saveMutation = useMutation<CompanyRequest[], AxiosError, Omit<CompanyRequest, 'id'>[]>({
+    mutationFn: async (companies) => {
+      const responses = await Promise.all(
+        companies.map(company =>
+          api.post<CompanyRequest>("/companies", company).then(res => res.data)
+        )
+      )
+      return responses
+    },
+    onSuccess: () => {
+      alert('Alvarás exportados com sucesso!')
+    },
+    onError: (error) => {
+      alert('Erro ao exportar alvarás: ' + error.message)
     }
   })
 
@@ -203,6 +219,7 @@ export function useCompany() {
     refetchCompanies: companiesDB.refetch,
     isLoading: companiesDB.isLoading,
     saveCompanies: saveMutation,
+    exportCompanies: exportMutation,
     updateCompany: updateMutation,
     searchByCnpj: searchCnpjMutation,
     searchByAddress: searchByAddressMutation,

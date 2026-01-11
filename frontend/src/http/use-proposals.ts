@@ -69,6 +69,7 @@ export function useProposals(filters: ProposalFilters) {
     onSuccess: (data) => {
       toast.success(data.message)
       queryClient.invalidateQueries({ queryKey: ["archived-proposals"] })
+      queryClient.invalidateQueries({ queryKey: ["leads"] })
     }
   })
 

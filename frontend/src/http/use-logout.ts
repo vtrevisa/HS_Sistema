@@ -22,6 +22,7 @@ export function useLogout() {
       toast.success(data.message)
 
       navigate('/')
+
     },
 
     onError: (error: AxiosError<{ message: string }>) => {

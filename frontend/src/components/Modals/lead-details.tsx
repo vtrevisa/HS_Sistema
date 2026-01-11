@@ -91,6 +91,7 @@ export function LeadDetailsModal({
      setEditedLead(prev =>
       prev ? { ...prev, status: 'Cliente fechado' } : prev
      )
+     onClose()
     }
    }
   )
@@ -108,7 +109,10 @@ export function LeadDetailsModal({
    },
    {
     onSuccess: () => {
-     setEditedLead(prev => (prev ? { ...prev, status: 'Arquivado' } : prev))
+     setEditedLead(prev =>
+      prev ? { ...prev, status: 'Cliente fechado' } : prev
+     )
+     onClose()
     }
    }
   )
@@ -246,7 +250,7 @@ export function LeadDetailsModal({
         Prazo vencido
        </Badge>
       )}
-      {currentLead.daysInStage && (
+      {(currentLead.daysInStage ?? 0) > 0 && (
        <Badge variant="outline" className="flex items-center gap-1">
         <Clock size={12} />
         {currentLead.daysInStage} dias no estágio

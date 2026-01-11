@@ -28,7 +28,7 @@ export function ProposalsActions({
 
  if (
   isEditing ||
-  currentLead.status === 'Cliente Fechado' ||
+  currentLead.status === 'Cliente fechado' ||
   currentLead.status === 'Arquivado'
  )
   return null

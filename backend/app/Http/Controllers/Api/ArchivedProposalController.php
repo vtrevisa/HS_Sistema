@@ -108,10 +108,8 @@ class ArchivedProposalController extends Controller
             'archived_at' => now(),
         ]);
 
-        if ($data['status'] === 'Ganho') {
-            $lead->status = 'Cliente Fechado';
-        } else {
-            $lead->status = 'Arquivado';
+        if ($data['status'] === 'Ganho' || $data['status'] === 'Perdido') {
+            $lead->status = 'Cliente fechado';
         }
 
         $lead->save();
