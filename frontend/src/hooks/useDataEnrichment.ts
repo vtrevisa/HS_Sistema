@@ -3,6 +3,12 @@ import { DataEnrichmentService, type EnrichmentConfig, type EnrichmentData } fro
 import { toast } from 'sonner';
 
 
+interface EnrichedCompany {
+  name: string;
+  cnpj?: string;
+  enrichedData: EnrichmentData | null;
+};
+
 export const useDataEnrichment = () => {
   const [config, setConfig] = useState<EnrichmentConfig | null>(null);
   const [isEnriching, setIsEnriching] = useState(false);
@@ -44,11 +50,11 @@ export const useDataEnrichment = () => {
       const data = await service.enrichCompanyData(companyName, cnpj);
       setEnrichedData(data);
       
-      const dataTypes = [];
-      if (data.phone) dataTypes.push('telefone');
+      const dataTypes: string[] = [];
+      if (data.phone) dataTypes.push('phone');
       if (data.email) dataTypes.push('email');
       if (data.website) dataTypes.push('website');
-      if (data.address) dataTypes.push('endereço');
+      if (data.address) dataTypes.push('address');
       
        toast.info('Dados Enriquecidos', {
         description: `Encontrados: ${dataTypes.join(', ')} para ${companyName}`,
@@ -76,7 +82,7 @@ export const useDataEnrichment = () => {
       return [];
     }
 
-    const enrichedResults = [];
+    const enrichedResults: EnrichedCompany[] = [];
     const service = new DataEnrichmentService(config);
 
     for (const company of companies) {

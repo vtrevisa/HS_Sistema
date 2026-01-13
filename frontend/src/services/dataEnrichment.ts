@@ -28,6 +28,7 @@ export interface EnrichmentConfig {
 }
 
 export class DataEnrichmentService {
+    
   private config: EnrichmentConfig;
 
   constructor(config: EnrichmentConfig) {
@@ -37,10 +38,16 @@ export class DataEnrichmentService {
   async enrichCompanyData(companyName: string, cnpj?: string): Promise<EnrichmentData> {
     console.log(`Enriquecendo dados para: ${companyName}`, { cnpj });
 
-    if (!cnpj) {
-      throw new Error('CNPJ é obrigatório para ReceitaWS');
+    switch (this.config.apiProvider) {
+      case 'receitaws':
+        if (!cnpj) {
+          throw new Error('CNPJ é obrigatório para ReceitaWS');
+        }
+        return this.enrichWithReceitaWS(cnpj);
+
+      default:
+        throw new Error(`Provedor ${this.config.apiProvider} ainda não implementado`);
     }
-    return this.enrichWithReceitaWS(cnpj);
    
   }
 
