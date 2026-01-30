@@ -1,8 +1,9 @@
 import { ClipboardList, Target } from 'lucide-react'
 import { StatsCards } from './stats-cards'
-import { ChecklistNotifications } from './checklist-notifications'
+//import { ChecklistNotifications } from './checklist-notifications'
 import { RecentLeads } from './recent-leads'
 import { UpcomingTasks } from './upcoming-tasks'
+import { AlvarasAlert } from './alvaras-alert'
 import { useDashboard } from '@/http/use-dashboard'
 
 interface DashboardProps {
@@ -10,7 +11,7 @@ interface DashboardProps {
 }
 
 export function Dashboard({ sectionType = 'comercial' }: DashboardProps) {
- const { cards, recentLeads, isLoading } = useDashboard()
+ const { cards, recentLeads, alvaras, isLoading } = useDashboard()
 
  if (isLoading) return null
 
@@ -40,8 +41,16 @@ export function Dashboard({ sectionType = 'comercial' }: DashboardProps) {
    <StatsCards
     totalLeads={cards?.leads.totalLeads ?? 0}
     leadsQuantity={cards?.leads.growthPercentage ?? 0}
+    totalAlvaras={cards?.alvaras_a_vencer.totalAlvaras ?? 0}
+    alvarasQuantity={cards?.alvaras_a_vencer.growthPercentage ?? 0}
     totalPipeline={cards?.pipeline.totalPipeline ?? 0}
     pipelineQuantity={cards?.pipeline.growthPercentage ?? 0}
+    totalAprimoramentos={
+     cards?.aprimoramentos_pendentes.totalAprimoramentos ?? 0
+    }
+    aprimoramentosQuantity={
+     cards?.aprimoramentos_pendentes.growthPercentage ?? 0
+    }
     totalPropostas={cards?.propostas_enviadas.totalPropostas ?? 0}
     propostasQuantity={cards?.propostas_enviadas.growthPercentage ?? 0}
     totalTaxaConversao={cards?.taxa_conversao.totalTaxaConversao ?? 0}
@@ -50,9 +59,12 @@ export function Dashboard({ sectionType = 'comercial' }: DashboardProps) {
 
    <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
     {/* Checklist Notifications */}
-    <div className="xl:col-span-1">
+    {/* <div className="xl:col-span-1">
      <ChecklistNotifications />
-    </div>
+    </div> */}
+
+    {/* Alvaras */}
+    <AlvarasAlert alvaras={alvaras ?? []} />
 
     {/* Recent Leads */}
     <RecentLeads leads={recentLeads ?? []} />

@@ -23,7 +23,7 @@ export function App() {
  return (
   <QueryClientProvider client={queryClient}>
    <ThemeProvider>
-    <Toaster position="top-right" richColors />
+    <Toaster position="bottom-right" expand={true} richColors closeButton />
     <BrowserRouter>
      <Routes>
       <Route path="/" element={<Login />} />

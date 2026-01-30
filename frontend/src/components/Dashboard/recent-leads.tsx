@@ -7,33 +7,6 @@ interface RecentLeadsProps {
 }
 
 export function RecentLeads({ leads }: RecentLeadsProps) {
- //  const recentLeads = [
- //   {
- //    company: 'Edifício Residencial Solar',
- //    type: 'AVCB',
- //    status: 'Primeiro contato',
- //    vencimento: '2024-08-15'
- //   },
- //   {
- //    company: 'Shopping Center Plaza',
- //    type: 'CLCB',
- //    status: 'Proposta enviada',
- //    vencimento: '2024-07-20'
- //   },
- //   {
- //    company: 'Hotel Business Inn',
- //    type: 'AVCB',
- //    status: 'Follow-up',
- //    vencimento: '2024-09-10'
- //   },
- //   {
- //    company: 'Condomínio Jardim Sul',
- //    type: 'Laudo Técnico',
- //    status: 'Lead',
- //    vencimento: '2024-06-30'
- //   }
- //  ]
-
  if (leads.length === 0) {
   return (
    <Card className="h-[110px]">
@@ -73,14 +46,14 @@ export function RecentLeads({ leads }: RecentLeadsProps) {
          lead.status === 'Lead'
           ? 'bg-gray-200 text-gray-800 dark:bg-gray-600 dark:text-white'
           : lead.status === 'Primeiro contato'
-          ? 'bg-blue-100 text-blue-800 dark:bg-blue-600/30 dark:text-white'
-          : lead.status === 'Follow-up'
-          ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-600/30 dark:text-white'
-          : lead.status === 'Proposta enviada'
-          ? 'bg-orange-100 text-orange-800 dark:bg-orange-600/30 dark:text-white'
-          : lead.status === 'Cliente fechado'
-          ? 'bg-green-100 text-green-800 dark:bg-green-600/30 dark:text-white'
-          : 'bg-red-100 text-red-800 dark:bg-red-600/30 dark:text-white'
+            ? 'bg-blue-100 text-blue-800 dark:bg-blue-600/30 dark:text-white'
+            : lead.status === 'Follow-up'
+              ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-600/30 dark:text-white'
+              : lead.status === 'Proposta enviada'
+                ? 'bg-orange-100 text-orange-800 dark:bg-orange-600/30 dark:text-white'
+                : lead.status === 'Cliente fechado'
+                  ? 'bg-green-100 text-green-800 dark:bg-green-600/30 dark:text-white'
+                  : 'bg-red-100 text-red-800 dark:bg-red-600/30 dark:text-white'
         }`}
        >
         {lead.status}

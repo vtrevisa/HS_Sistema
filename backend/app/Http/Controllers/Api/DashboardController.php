@@ -6,9 +6,10 @@ use App\Http\Controllers\Controller;
 use App\Models\ArchivedProposal;
 use App\Traits\AuthenticatesWithToken;
 use App\Models\Lead;
+use App\Models\Company;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
+
 
 class DashboardController extends Controller
 {
@@ -54,6 +55,54 @@ class DashboardController extends Controller
             ? round((($leadsThisMonth - $leadsLastMonth) / $leadsLastMonth) * 100, 1)
             : 0;
 
+
+        // Alvarás a vencer (próximos 30 dias)
+
+        $today = Carbon::today();
+        $next60Days = Carbon::today()->addDays(60);
+
+        // Mês atual
+        $startCurrentMonth = Carbon::now()->startOfMonth();
+        $endCurrentMonth = Carbon::now()->endOfMonth();
+
+        // Mês passado
+        $startLastMonth = Carbon::now()->subMonth()->startOfMonth();
+        $endLastMonth = Carbon::now()->subMonth()->endOfMonth();
+
+        // 🔴 Vencidos (até hoje)
+        $alvarasVencidosCurrent = Company::where('user_id', $user->id)
+            ->whereDate('validity', '<', $today)
+            ->count();
+
+        // 🟡 A vencer em até 60 dias
+        $alvarasAVencerCurrent = Company::where('user_id', $user->id)
+            ->whereDate('validity', '>=', $today)
+            ->whereDate('validity', '<=', $next60Days)
+            ->count();
+
+        $totalAlvarasCurrent = $alvarasVencidosCurrent + $alvarasAVencerCurrent;
+
+        $todayLastMonth = $startLastMonth->copy();
+        $next60DaysLastMonth = $todayLastMonth->copy()->addDays(60);
+
+        // 🔴 Vencidos no mês passado
+        $alvarasVencidosLast = Company::where('user_id', $user->id)
+            ->whereDate('validity', '<', $todayLastMonth)
+            ->count();
+
+        // 🟡 A vencer (janela de 60 dias do mês passado)
+        $alvarasAVencerLast = Company::where('user_id', $user->id)
+            ->whereDate('validity', '>=', $todayLastMonth)
+            ->whereDate('validity', '<=', $next60DaysLastMonth)
+            ->count();
+
+        $totalAlvarasLast = $alvarasVencidosLast + $alvarasAVencerLast;
+
+        // 📈 Growth
+        $alvarasGrowthPercentage = $totalAlvarasLast > 0
+            ? round((($totalAlvarasCurrent - $totalAlvarasLast) / $totalAlvarasLast) * 100, 1)
+            : 0;
+
         // Pipeline Ativo
 
         $pipelineBaseQuery = Lead::where('user_id', $user->id)
@@ -75,6 +124,32 @@ class DashboardController extends Controller
         $pipelineGrowthPercentage = $pipelineLastMonth > 0
             ? round((($pipelineThisMonth - $pipelineLastMonth) / $pipelineLastMonth) * 100, 1)
             : 0;
+
+
+        // Aprimoramentos Pendentes
+
+        $aprimoramentoStatus = 'pendente';
+
+        $aprimoramentoBaseQuery = Company::where('user_id', $user->id)
+            ->where('status', $aprimoramentoStatus);
+
+        // Total
+        $totalAprimoramentos = (clone $aprimoramentoBaseQuery)->count();
+
+        // Mês atual
+        $aprimoramentosThisMonth = (clone $aprimoramentoBaseQuery)
+            ->whereBetween('created_at', [$startCurrentMonth, $endCurrentMonth])
+            ->count();
+
+        // Mês passado
+        $aprimoramentosLastMonth = (clone $aprimoramentoBaseQuery)
+            ->whereBetween('created_at', [$startLastMonth, $endLastMonth])
+            ->count();
+
+        $aprimoramentosGrowthPercentage = $aprimoramentosLastMonth > 0
+            ? round((($aprimoramentosThisMonth - $aprimoramentosLastMonth) / $aprimoramentosLastMonth) * 100, 1)
+            : 0;
+
 
         // Propostas Enviadas
 
@@ -159,6 +234,25 @@ class DashboardController extends Controller
 
         $recentLeads = Lead::where('user_id', $user->id)->latest()->take(5)->select('id', 'company', 'service', 'expiration_date', 'status')->get();
 
+        // Alvarás
+
+        $alvarasList = Company::where('user_id', $user->id)
+            ->where(function ($query) use ($today, $next60Days) {
+                $query->whereDate('validity', '<', $today)
+                    ->orWhereBetween('validity', [$today, $next60Days]);
+            })
+            ->orderByRaw("validity < '{$today}' DESC")
+            ->orderBy('validity')
+            ->limit(5)
+            ->get()
+            ->map(fn($company) => [
+                'id' => $company->id,
+                'company' => $company->company,
+                'validity' => $company->validity,
+                'status' => $company->validity < $today ? 'Vencido' : 'A vencer',
+            ]);
+
+
         return response()->json([
             'status' => true,
             'data' => [
@@ -168,10 +262,19 @@ class DashboardController extends Controller
                         'leadsThisMonth' => $leadsThisMonth,
                         'growthPercentage' => $leadsGrowthPercentage,
                     ],
+                    'alvaras_a_vencer' => [
+                        'totalAlvaras' => $totalAlvarasCurrent,
+                        'growthPercentage' => $alvarasGrowthPercentage,
+                    ],
                     'pipeline' => [
                         'totalPipeline' => $totalPipeline,
                         'pipelineThisMonth' => $pipelineThisMonth,
                         'growthPercentage' => $pipelineGrowthPercentage
+                    ],
+                    'aprimoramentos_pendentes' => [
+                        'totalAprimoramentos' => $totalAprimoramentos,
+                        'aprimoramentosThisMonth' => $aprimoramentosThisMonth,
+                        'growthPercentage' => $aprimoramentosGrowthPercentage,
                     ],
                     'propostas_enviadas' => [
                         'totalPropostas' => $totalPropostas,
@@ -185,7 +288,9 @@ class DashboardController extends Controller
                         'perdidos' => $propostasPerdidas,
                     ],
                 ],
-                'recentLeads' => $recentLeads
+                'recentLeads' => $recentLeads,
+                'alvaras' => $alvarasList,
+
             ]
         ]);
     }
