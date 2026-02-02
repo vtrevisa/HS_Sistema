@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Api\AlvaraController;
 use App\Http\Controllers\Api\AlvaraLogController;
+use App\Http\Controllers\Api\AlvaraPurchaseController;
 use App\Http\Controllers\Api\ArchivedProposalController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\AutomationController;
@@ -48,7 +49,12 @@ Route::post('/auth/logout', [AuthController::class, 'logout']); //POST
 Route::get('/alvaras', [AlvaraController::class, 'index']); //GET
 Route::post('/alvaras/search', [AlvaraController::class, 'search']); //POST
 Route::post('/alvaras/release', [AlvaraController::class, 'release']); //POST
+Route::get('/alvaras/consumed', [AlvaraPurchaseController::class, 'index']); //GET
+Route::post('/alvaras/consumed', [AlvaraPurchaseController::class, 'store']); //POST
+
 Route::get('/alvaras/logs', [AlvaraLogController::class, 'index']); //GET
+
+
 
 // Leads
 Route::get('/leads', [LeadController::class, 'index']); //GET

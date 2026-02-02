@@ -1,6 +1,7 @@
 import { ClipboardList, Target } from 'lucide-react'
 import { StatsCards } from './stats-cards'
 //import { ChecklistNotifications } from './checklist-notifications'
+import { CalendarDashboard } from './calendar-dashboard'
 import { RecentLeads } from './recent-leads'
 import { UpcomingTasks } from './upcoming-tasks'
 import { AlvarasAlert } from './alvaras-alert'
@@ -57,11 +58,14 @@ export function Dashboard({ sectionType = 'comercial' }: DashboardProps) {
     taxaConversaoQuantity={cards?.taxa_conversao.growthPercentage ?? 0}
    />
 
-   <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+   <div className="grid grid-cols-1 xl:grid-cols-4 gap-6">
     {/* Checklist Notifications */}
     {/* <div className="xl:col-span-1">
      <ChecklistNotifications />
     </div> */}
+
+    {/* Calendário */}
+    <CalendarDashboard sectionType={sectionType} />
 
     {/* Alvaras */}
     <AlvarasAlert alvaras={alvaras ?? []} />

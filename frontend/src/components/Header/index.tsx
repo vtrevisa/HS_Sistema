@@ -8,7 +8,9 @@ import {
  Trello,
  FileText,
  UserCircle,
- ArrowRightLeft
+ ArrowRightLeft,
+ Sun,
+ Moon
  //  Shield,
  //  Calculator,
  //  Zap,
@@ -33,6 +35,7 @@ import {
 } from '@/components/ui/sidebar'
 import { useLogout } from '@/http/use-logout'
 import { useUser } from '@/http/use-user'
+import { useTheme } from '@/hooks/useTheme'
 
 interface MenuItemProps {
  id: string
@@ -120,9 +123,15 @@ export function Header() {
   }
  ]
 
+ const { actualTheme, setTheme } = useTheme()
+
  const activeTab = comercialItems.find(
   item => item.href === location.pathname
  )?.id
+
+ const toggleTheme = () => {
+  setTheme(actualTheme === 'dark' ? 'light' : 'dark')
+ }
 
  async function handleLogout() {
   await logout()
@@ -206,6 +215,26 @@ export function Header() {
 
    <SidebarFooter>
     <SidebarMenu>
+     <SidebarMenuItem>
+      <SidebarMenuButton
+       onClick={toggleTheme}
+       tooltip={
+        isCollapsed
+         ? actualTheme === 'dark'
+           ? 'Modo Claro'
+           : 'Modo Escuro'
+         : undefined
+       }
+       className="hover:bg-accent hover:text-accent-foreground"
+      >
+       {actualTheme === 'dark' ? (
+        <Sun className="h-4 w-4" />
+       ) : (
+        <Moon className="h-4 w-4" />
+       )}
+       <span>{actualTheme === 'dark' ? 'Modo Claro' : 'Modo Escuro'}</span>
+      </SidebarMenuButton>
+     </SidebarMenuItem>
      <SidebarMenuItem>
       <SidebarMenuButton
        onClick={handleLogout}

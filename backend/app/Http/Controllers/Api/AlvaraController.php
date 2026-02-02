@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Alvara;
 use App\Models\AlvaraLog;
+use App\Models\AlvaraPurchase;
 use Laravel\Sanctum\PersonalAccessToken;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -136,6 +137,12 @@ class AlvaraController extends Controller
             'service_type'   => 'required|in:AVCB,CLCB,Todos',
             'period_start'   => 'required|date',
             'period_end'     => 'required|date|after_or_equal:period_start',
+            'alvaras'        => 'required|array',
+            'alvaras.*.service' => 'required|string|in:AVCB,CLCB',
+            'alvaras.*.address' => 'required|string',
+            'alvaras.*.occupation' => 'required|string',
+            'alvaras.*.validity' => 'required|date',
+
         ]);
 
         $token = $request->cookie('auth-token');
@@ -186,6 +193,7 @@ class AlvaraController extends Controller
 
         return DB::transaction(function () use ($request, $user, $totalToRelease) {
 
+
             // 1️⃣ Debita créditos
             $user->credits -= $totalToRelease;
             $user->monthly_used += $totalToRelease;
@@ -202,6 +210,17 @@ class AlvaraController extends Controller
                 'consumed_at'  => now(),
             ]);
 
+            // 3️⃣ Salva alvarás recebidos do frontend
+            foreach ($request->alvaras as $alvara) {
+                AlvaraPurchase::create([
+                    'user_id' => $user->id,
+                    'service' => $alvara['service'],
+                    'city' => $request->city,
+                    'address' => $alvara['address'],
+                    'occupation' => $alvara['occupation'],
+                    'validity' => $alvara['validity'],
+                ]);
+            }
             return response()->json([
                 'creditsUsed' => $totalToRelease,
                 'creditsAvailable' => $user->credits,

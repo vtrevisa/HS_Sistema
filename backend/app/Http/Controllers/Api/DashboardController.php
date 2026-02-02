@@ -248,7 +248,7 @@ class DashboardController extends Controller
             ->map(fn($company) => [
                 'id' => $company->id,
                 'company' => $company->company,
-                'validity' => $company->validity,
+                'validity' => Carbon::parse($company->validity)->toDateString(),
                 'status' => $company->validity < $today ? 'Vencido' : 'A vencer',
             ]);
 
