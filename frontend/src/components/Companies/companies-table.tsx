@@ -9,8 +9,9 @@ import {
  Pencil,
  Phone,
  RefreshCw,
+ Trash2,
  User,
- UserPlus
+ UserPlus,
 } from 'lucide-react'
 import { Badge } from '../ui/badge'
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card'
@@ -144,6 +145,8 @@ export function CompaniesTable({
              <Button
               size="sm"
               variant="outline"
+              title="Enriquecer"
+              aria-label={`Enriquecer ${company.company}`}
               onClick={() => enhanceData(company)}
               disabled={processingEnrichment.includes(company.id)}
               className="dark:hover:bg-red-600 dark:hover:border-red-600"
@@ -158,11 +161,25 @@ export function CompaniesTable({
             <Button
              size="sm"
              variant="outline"
+             title="Editar"
+              aria-label={`Editar ${company.company}`}
              onClick={() => onCompanyClick?.(company)}
              className="dark:hover:bg-red-600 dark:hover:border-red-600"
             >
              <Pencil size={14} />
             </Button>
+
+            <Button
+             size="sm"
+             variant="outline"
+             title="Deletar"
+             aria-label={`Deletar ${company.company}`}
+             //onClick={() => deleteCompany(company)}
+             className="bg-red-500 hover:bg-red-600 dark:hover:bg-red-700 dark:hover:border-red-700"
+            >
+             <Trash2  size={14} />
+            </Button>
+
            </div>
           </td>
           <td className="p-4 align-middle [&:has([role=checkbox])]:pr-0">
@@ -189,6 +206,7 @@ export function CompaniesTable({
        </tbody>
       </table>
      </div>
+     
      {/* Versão Mobile */}
      <div className="block 1150:hidden divide-y divide-border">
       {companies.map(company => (

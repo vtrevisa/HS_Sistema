@@ -185,7 +185,7 @@ export function NewCompanyModal({
        )}
       </div>
 
-      <div className="md:col-span-2">
+      <div className="md:col-span-1">
        <label className="block text-sm font-medium text-foreground mb-1">
         CEP
        </label>
@@ -223,6 +223,17 @@ export function NewCompanyModal({
        <input
         type="tel"
         {...register('number')}
+        className="w-full border bg-background text-foreground placeholder:text-foreground rounded-lg px-3 py-2 focus:ring-blue-500 focus:outline-none focus:ring-2 outline-none border-gray-300"
+       />
+      </div>
+
+      <div>
+       <label className="block text-sm font-medium text-foreground mb-1">
+        Complemento
+       </label>
+       <input
+        type="text"
+        {...register('complement')}
         className="w-full border bg-background text-foreground placeholder:text-foreground rounded-lg px-3 py-2 focus:ring-blue-500 focus:outline-none focus:ring-2 outline-none border-gray-300"
        />
       </div>
