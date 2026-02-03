@@ -25,7 +25,7 @@ class AlvaraPurchaseController extends Controller
         }
 
         $consumed = AlvaraPurchase::where('user_id', $user->id)
-            ->orderByDesc('created_at')
+            ->orderBy('id', 'asc')
             ->get();
 
         return response()->json($consumed);

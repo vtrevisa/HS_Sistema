@@ -24,8 +24,8 @@ export function ArchivedProposalsCard({
          variant={proposal.status === 'Ganho' ? 'default' : 'destructive'}
          className={
           proposal.status === 'Ganho'
-           ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100'
-           : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-100'
+           ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100 hover:bg-green-100'
+           : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-100 hover:bg-red-100'
          }
         >
          {proposal.status}

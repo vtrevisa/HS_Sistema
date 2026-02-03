@@ -42,7 +42,20 @@ class LeadController extends Controller
     {
         $user = $this->getAuthenticatedUser($request);
 
+        $result = $request->query('result');
+
         $leads = Lead::where('user_id', $user->id)
+            ->with('archivedProposal')
+            ->when($result === 'Ganho', function ($query) {
+                $query->whereHas('archivedProposal', function ($q) {
+                    $q->where('result', 'Ganho');
+                });
+            })
+            ->when($result === 'Perdido', function ($query) {
+                $query->whereHas('archivedProposal', function ($q) {
+                    $q->where('result', 'Perdido');
+                });
+            })
             ->orderBy('id', 'DESC')
             ->get();
 

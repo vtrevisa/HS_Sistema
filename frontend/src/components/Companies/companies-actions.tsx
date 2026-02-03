@@ -1,4 +1,4 @@
-import { Plus, RefreshCw, Upload } from 'lucide-react'
+import { Plus, Upload } from 'lucide-react'
 import { Button } from '../ui/button'
 
 interface CompaniesActionsProps {
@@ -9,7 +9,6 @@ interface CompaniesActionsProps {
 
 export function CompaniesActions({
  onImportClick,
- enhanceAllData,
  onNewCompanyClick
 }: CompaniesActionsProps) {
  return (
@@ -22,13 +21,13 @@ export function CompaniesActions({
     Importar Planilha
    </Button>
 
-   <Button
+   {/* <Button
     onClick={enhanceAllData}
     className="bg-blue-600 hover:bg-blue-700 dark:text-white"
    >
     <RefreshCw className="h-4 w-4 mr-2" />
     Aprimorar Todos
-   </Button>
+   </Button> */}
 
    <Button
     onClick={onNewCompanyClick}

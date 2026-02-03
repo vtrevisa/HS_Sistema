@@ -26,50 +26,6 @@ interface SearchResults {
   extraNeeded?: number;
 }
 
-
-// const mockConsumedAlvaras: Alvaras[] = [
-//  {
-//   id: 1,
-//   service: 'AVCB',
-//   endDate: new Date('2025-03-15'),
-//   address: 'Av. Paulista, 1578 - Bela Vista',
-//   occupation: 'Comercial - Shopping',
-//   city: 'São Paulo'
-//  },
-//  {
-//   id: 2,
-//   service: 'CLCB',
-//   endDate: new Date('2025-04-20'),
-//   address: 'Rua Augusta, 2350 - Consolação',
-//   occupation: 'Comercial - Edifício Corporativo',
-//   city: 'São Paulo'
-//  },
-//  {
-//   id: 3,
-//   service: 'AVCB',
-//   endDate: new Date('2025-05-10'),
-//   address: 'Av. Brigadeiro Faria Lima, 3477 - Itaim Bibi',
-//   occupation: 'Comercial - Shopping',
-//   city: 'São Paulo'
-//  },
-//  {
-//   id: 4,
-//   service: 'CLCB',
-//   endDate: new Date('2025-06-25'),
-//   address: 'Rua Oscar Freire, 908 - Jardins',
-//   occupation: 'Comercial - Loja de Varejo',
-//   city: 'São Paulo'
-//  },
-//  {
-//   id: 5,
-//   service: 'AVCB',
-//   endDate: new Date('2025-02-28'),
-//   address: 'Av. Rebouças, 3970 - Pinheiros',
-//   occupation: 'Comercial - Shopping',
-//   city: 'São Paulo'
-//  }
-// ]
-
 export function useAlvaras({ monthlyLimit, used }: Plan) {
   const queryClient = useQueryClient();
 
@@ -78,7 +34,6 @@ export function useAlvaras({ monthlyLimit, used }: Plan) {
   const [allAlvaras, setAllAlvaras] = useState<Alvaras[]>([])
   const [releasedAlvaras, setReleasedAlvaras] = useState<Alvaras[]>([])
 
-  //const [consumedAlvaras] = useState<Alvaras[]>(mockConsumedAlvaras)
 
   const { data: consumedAlvaras = [], refetch: refetchConsumedAlvaras } = useQuery<Alvaras[]>({
     queryKey: ["alvaras", "consumed"],
@@ -103,8 +58,6 @@ export function useAlvaras({ monthlyLimit, used }: Plan) {
     setReleasedAlvaras([]);
   }
 
-
-
   // Mutation para buscar alvarás filtrados
   const searchMutation = useMutation<Alvara[], Error, SearchAlvarasPayload>({
     mutationFn: async (payload) => {
@@ -121,6 +74,7 @@ export function useAlvaras({ monthlyLimit, used }: Plan) {
       const available = monthlyLimit - used; 
       setSearchResults({ totalFound, available });
 
+      // Gera array fake de alvarás filtrando duplicados do banco
       const fakeArray = Array.from({ length: totalFound }, (_, i) => {
         const randomDate = new Date();
         randomDate.setDate(randomDate.getDate() + Math.floor(Math.random() * 90));
@@ -137,14 +91,26 @@ export function useAlvaras({ monthlyLimit, used }: Plan) {
         }
       })
 
-      setAllAlvaras(fakeArray);
+
+
+      // Filtra alvarás que já existem no banco
+      const filteredFakeArray = fakeArray.filter(fake =>
+        !consumedAlvaras.some(consumed =>
+          consumed.service === fake.service &&
+          consumed.city === fake.city &&
+          consumed.address === fake.address &&
+          new Date(consumed.validity).toDateString() === fake.validity.toDateString()
+        )
+      );
+
+      setAllAlvaras(filteredFakeArray);
       setReleasedAlvaras([]);
 
       // Update flowState based on search results
-      setFlowState(totalFound <= available ? 'search-result' : 'payment-required');
+      setFlowState(filteredFakeArray.length <= available ? 'search-result' : 'payment-required');
 
       toast.success("Busca concluída", {
-        description: `Encontramos ${totalFound} alvarás com os filtros aplicados.`,
+        description: `Encontramos ${filteredFakeArray.length} alvarás com os filtros aplicados.`,
       });
     },
     onError: () => {
@@ -154,10 +120,13 @@ export function useAlvaras({ monthlyLimit, used }: Plan) {
 
   // Mutation para liberar alvarás e consumir créditos
  
-  const releaseMutation = useMutation<{ creditsUsed: number; creditsAvailable: number; extraNeeded: number;  monthlyUsed: number; toRelease: Alvaras[] }, Error, ReleasePayload>({
+  const releaseMutation = useMutation<{ creditsUsed: number; creditsAvailable: number; extraNeeded: number;  monthlyUsed: number; savedAlvaras: number; }, Error, ReleasePayload>({
     mutationFn: async (payload) => {
 
-      const toRelease = allAlvaras.slice(0, payload.totalToRelease).filter((alvara) => !releasedAlvaras.some((release) => release.id === alvara.id));
+      const toRelease = allAlvaras.slice(0, payload.totalToRelease).filter(alvara => !releasedAlvaras.some(release => release.id === alvara.id) && !consumedAlvaras.some(consumed => consumed.service === alvara.service &&
+        consumed.city === alvara.city && consumed.address === alvara.address && new Date(consumed.validity).toDateString() === alvara.validity.toDateString())
+      );
+
 
       const { data } = await api.post("/alvaras/release", {
         ...payload,
@@ -170,13 +139,15 @@ export function useAlvaras({ monthlyLimit, used }: Plan) {
         })),
       });
 
-     return { ...data, toRelease };
+     return data;
     },
-    onSuccess: async ({ toRelease, ...data }) => {
+    onSuccess: async (data) => {
 
-      setReleasedAlvaras(prev => [...prev, ...toRelease]);
+      await refetchConsumedAlvaras();
 
-      queryClient.invalidateQueries({ queryKey: ["authUser"] });
+      const newReleased = allAlvaras.slice(0, data.savedAlvaras).filter(alvara => !releasedAlvaras.some(r => r.id === alvara.id));
+
+      setReleasedAlvaras(prev => [...prev, ...newReleased]);
 
       setSearchResults(prev => prev
         ? {
@@ -187,6 +158,8 @@ export function useAlvaras({ monthlyLimit, used }: Plan) {
         : null
       )
 
+      queryClient.invalidateQueries({ queryKey: ["authUser"] });
+
       if (data.extraNeeded > 0) {
         setFlowState('payment-required')
         toast.info('Créditos insuficientes', {
@@ -195,8 +168,7 @@ export function useAlvaras({ monthlyLimit, used }: Plan) {
         return
       }
 
-      await refetchConsumedAlvaras();
-
+      
       setFlowState('my-alvaras')
       toast.success('Alvarás liberados com sucesso!')
     },

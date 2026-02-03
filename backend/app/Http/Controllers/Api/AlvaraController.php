@@ -172,7 +172,6 @@ class AlvaraController extends Controller
         }
 
         $totalToRelease = (int) $request->totalToRelease;
-
         $creditsAvailable = (int) $user->credits;
 
         if ($totalToRelease <= 0) {
@@ -210,22 +209,37 @@ class AlvaraController extends Controller
                 'consumed_at'  => now(),
             ]);
 
+            $savedCount = 0;
+
             // 3️⃣ Salva alvarás recebidos do frontend
             foreach ($request->alvaras as $alvara) {
-                AlvaraPurchase::create([
-                    'user_id' => $user->id,
-                    'service' => $alvara['service'],
-                    'city' => $request->city,
-                    'address' => $alvara['address'],
-                    'occupation' => $alvara['occupation'],
-                    'validity' => $alvara['validity'],
-                ]);
+
+                $exists = AlvaraPurchase::where('user_id', $user->id)
+                    ->where('service', $alvara['service'])
+                    ->where('city', $alvara['city'])
+                    ->where('address', $alvara['address'])
+                    ->whereDate('validity', $alvara['validity'])
+                    ->exists();
+
+
+                if (!$exists) {
+                    AlvaraPurchase::create([
+                        'user_id' => $user->id,
+                        'service' => $alvara['service'],
+                        'city' => $alvara['city'],
+                        'address' => $alvara['address'],
+                        'occupation' => $alvara['occupation'],
+                        'validity' => $alvara['validity'],
+                    ]);
+                    $savedCount++;
+                }
             }
             return response()->json([
                 'creditsUsed' => $totalToRelease,
                 'creditsAvailable' => $user->credits,
                 'extraNeeded' => 0,
-                'monthly_used' => $user->monthly_used
+                'monthly_used' => $user->monthly_used,
+                'savedAlvaras' => $savedCount,
             ]);
         });
     }

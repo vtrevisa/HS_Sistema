@@ -1,5 +1,7 @@
 import type { LeadRequest } from '@/http/types/leads'
 import { Calendar, Mail, MapPin, Pencil, Phone, Trash } from 'lucide-react'
+import { WhatsappLogoIcon } from '@phosphor-icons/react'
+import { Badge } from '../ui/badge'
 
 interface LeadsTableProps {
  leads: LeadRequest[]
@@ -71,14 +73,22 @@ export function LeadsTable({
          Tipo
         </th>
         <th className="data-cell text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
-         Contato
-        </th>
-        <th className="data-cell text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
          Status
         </th>
         <th className="data-cell text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
          Vencimento
         </th>
+        <th className="data-cell text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
+         Data de cadastro
+        </th>
+        <th className="data-cell text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
+         Status da proposta
+        </th>
+
+        <th className="data-cell text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
+         Contato
+        </th>
+
         <th className="data-cell text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
          Ações
         </th>
@@ -118,34 +128,6 @@ export function LeadsTable({
           </div>
          </td>
          <td className="data-cell">
-          <div className="space-y-1">
-           <div className="text-sm font-medium text-foreground">
-            {lead.contact}
-           </div>
-           <div className="text-sm text-muted-foreground flex items-center gap-1">
-            <Phone size={12} />
-            <span>{lead.phone}</span>
-           </div>
-           <div className="text-xs text-muted-foreground flex items-center gap-1">
-            <Mail size={12} />
-            <span className="text-truncate">{lead.email}</span>
-           </div>
-           {lead.website && (
-            <div className="text-xs text-muted-foreground flex items-center gap-1">
-             <span>🌐</span>
-             <a
-              href={lead.website}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-truncate hover:underline"
-             >
-              {lead.website}
-             </a>
-            </div>
-           )}
-          </div>
-         </td>
-         <td className="data-cell">
           <span
            className={`status-badge ${getStatusColor(lead.status)} capitalize`}
           >
@@ -176,6 +158,58 @@ export function LeadsTable({
           )}
          </td>
          <td className="data-cell">
+          <div className="text-sm font-medium text-foreground mt-1">
+           {new Date(lead.created_at ?? '').toLocaleDateString('pt-BR')}
+          </div>
+         </td>
+         <td className="data-cell">
+          <div className="text-sm font-medium text-foreground mt-1">
+           <Badge
+            variant={
+             lead.archived_proposal?.status === 'Ganho'
+              ? 'default'
+              : 'destructive'
+            }
+            className={
+             lead.archived_proposal?.status === 'Ganho'
+              ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100 hover:bg-green-100'
+              : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-100 hover:bg-red-100'
+            }
+           >
+            {lead.archived_proposal?.status || 'Não arquivada'}
+           </Badge>
+          </div>
+         </td>
+         <td className="data-cell">
+          <div className="space-y-1">
+           <div className="text-sm font-medium text-foreground">
+            {lead.contact}
+           </div>
+           <div className="text-sm text-muted-foreground flex items-center gap-1">
+            <Phone size={12} />
+            <span>{lead.phone}</span>
+           </div>
+           <div className="text-xs text-muted-foreground flex items-center gap-1">
+            <Mail size={12} />
+            <span className="text-truncate">{lead.email}</span>
+           </div>
+           {lead.website && (
+            <div className="text-xs text-muted-foreground flex items-center gap-1">
+             <span>🌐</span>
+             <a
+              href={lead.website}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-truncate hover:underline"
+             >
+              {lead.website}
+             </a>
+            </div>
+           )}
+          </div>
+         </td>
+
+         <td className="data-cell">
           <div className="flex gap-1 flex-wrap">
            <button
             onClick={e => {
@@ -189,7 +223,7 @@ export function LeadsTable({
             type="button"
             className="bg-green-100 dark:bg-green-900/30 hover:bg-green-200 dark:hover:bg-green-900/50 text-green-700 dark:text-green-300 p-2 rounded-lg transition-colors"
            >
-            <Phone size={14} />
+            <WhatsappLogoIcon size={18} />
            </button>
            <button
             onClick={e => {
@@ -209,13 +243,6 @@ export function LeadsTable({
            >
             <Pencil size={14} />
            </button>
-           {/* <button
-           onClick={e => e.stopPropagation()}
-           className="bg-purple-100 dark:bg-purple-900/30 hover:bg-purple-200 dark:hover:bg-purple-900/50 text-purple-700 dark:text-purple-300 p-2 rounded-lg transition-colors"
-           title="Enriquecimento Avançado"
-          >
-           <Sparkles size={14} />
-          </button> */}
            <button
             onClick={e => {
              e.stopPropagation()

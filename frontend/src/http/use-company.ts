@@ -143,6 +143,7 @@ export function useCompany() {
     try {
       const data = await searchByAddressMutation.mutateAsync({
         address: `${company.address} ${company.number} ${company.district} ${company.city} ${company.state}`,
+        //address: `${company.address}, ${company.number}, ${company.district}, ${company.city}, SP, Brasil`,
       });
 
       if (!data.places || data.places.length === 0) {
