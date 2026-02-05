@@ -3,13 +3,15 @@ import type { AxiosError } from "axios"
 import type { ArchivedProposal } from "./types/crm"
 import { api } from "@/lib/api"
 import { toast } from "sonner"
+import type { DateRange } from "react-day-picker"
 
 export interface ProposalFilters {
-  status?: 'Ganho' | 'Perdido' | 'todas'
   city?: string
-  service?: string
-  initDate?: string
-  endDate?: string
+  type?: string
+  status?: 'Ganho' | 'Perdido' | 'todas'
+  expiration?: string
+  leadCreatedAt?: string
+  dateRange?: DateRange
 }
 
 export interface CreateArchivedProposal {
@@ -31,23 +33,41 @@ export function useProposals(filters: ProposalFilters) {
 
   const queryClient = useQueryClient();
 
-  const shouldFetch = 
-    !!filters.status && filters.status !== 'todas' ||
-    !!filters.city ||
-    !!filters.service ||
-    !!filters.initDate ||
-    !!filters.endDate
-
   const proposalsDB = useQuery<ArchivedProposal[], AxiosError>({
     queryKey: ["archived-proposals", filters],
     queryFn: async (): Promise<ArchivedProposal[]> => {
       const params = new URLSearchParams()
 
+      // Status
       if (filters.status && filters.status !== 'todas') params.append('status', filters.status)
+
+      // Cidade  
       if (filters.city) params.append('city', filters.city)
-      if (filters.service) params.append('service', filters.service)
-      if (filters.initDate) params.append('initDate', filters.initDate)
-      if (filters.endDate) params.append('endDate', filters.endDate)
+      
+      // Tipo de serviço
+      if (filters.type) params.append('type', filters.type)
+
+      // Data de vencimento alvará
+      if (filters.expiration) params.append('expiration', filters.expiration)
+
+      // Data de cadastro lead
+      if (filters.leadCreatedAt) params.append('leadCreatedAt', filters.leadCreatedAt)
+    
+
+      // Período de arquivamento (dateRange)
+      if (filters.dateRange?.from) {
+        params.append(
+          'dataInicio',
+          filters.dateRange.from.toISOString().split('T')[0]
+        )
+      }
+
+      if (filters.dateRange?.to) {
+        params.append(
+          'dataTermino',
+          filters.dateRange.to.toISOString().split('T')[0]
+        )
+      }
 
       const { data } = await api.get<{ status: boolean; proposals: ArchivedProposal[] }>(
         `/archived-proposals?${params.toString()}`
@@ -56,8 +76,7 @@ export function useProposals(filters: ProposalFilters) {
       return data.proposals
     },
     staleTime: 1 * 60 * 1000, 
-    gcTime: 30 * 60 * 1000,
-    enabled: shouldFetch,
+    gcTime: 30 * 60 * 1000
   })
 
   const createProposal = useMutation<CreateProposalResponse, AxiosError, CreateArchivedProposal>({

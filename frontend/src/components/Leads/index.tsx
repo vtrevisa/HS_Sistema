@@ -12,6 +12,7 @@ import { useLead } from '@/http/use-lead'
 
 import { useQueryClient } from '@tanstack/react-query'
 import { daysUntil } from '@/lib/days'
+import { useCompany } from '@/http/use-company'
 
 export function Leads() {
  const [searchTerm, setSearchTerm] = useState('')
@@ -33,6 +34,8 @@ export function Leads() {
  const queryClient = useQueryClient()
 
  const { leadsDB, saveLeads } = useLead()
+
+ const { searchByCnpj } = useCompany()
 
  const leads = useMemo(() => leadsDB.data ?? [], [leadsDB.data])
 
@@ -204,6 +207,7 @@ export function Leads() {
     isOpen={isNewLeadModalOpen}
     onClose={() => setIsNewLeadModalOpen(false)}
     onLeadCreate={handleNewLead}
+    onSearchCnpj={searchByCnpj}
    />
 
    <LeadDetailsModal

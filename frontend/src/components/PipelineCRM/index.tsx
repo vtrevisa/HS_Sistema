@@ -10,6 +10,7 @@ import { LeadDetailsModal } from '../Modals/lead-details'
 import { PipelineLeadCard } from './pipeline-lead-card'
 
 import type { LeadRequest } from '@/http/types/leads'
+import { useCompany } from '@/http/use-company'
 
 export function Pipeline() {
  const {
@@ -22,6 +23,8 @@ export function Pipeline() {
  } = useCRM()
 
  const { saveLeads } = useLead()
+
+ const { searchByCnpj } = useCompany()
 
  const [isNewLeadModalOpen, setIsNewLeadModalOpen] = useState(false)
  const [selectedLead, setSelectedLead] = useState<LeadRequest | null>(null)
@@ -177,6 +180,7 @@ export function Pipeline() {
     isOpen={isNewLeadModalOpen}
     onClose={() => setIsNewLeadModalOpen(false)}
     onLeadCreate={handleNewLead}
+    onSearchCnpj={searchByCnpj}
    />
 
    <LeadDetailsModal

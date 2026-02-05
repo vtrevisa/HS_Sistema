@@ -37,24 +37,67 @@ class ArchivedProposalController extends Controller
 
         $user = $this->getAuthenticatedUser($request);
 
-        $query = ArchivedProposal::where('user_id', $user->id);
+        $query = ArchivedProposal::query()
+            ->where('user_id', $user->id)
+            ->with([
+                'lead' => function ($q) use ($user) {
+                    $q->select(
+                        'id',
+                        'user_id',
+                        'company',
+                        'city',
+                        'service_value',
+                        'created_at',
+                        'validity'
+                    )->where('user_id', $user->id);
+                }
+            ]);
+
 
         // Filtrer by status
-        if ($request->filled('status')) {
+        if ($request->filled('status') && $request->status !== 'todas') {
             $query->where('status', $request->status);
         }
 
         // Filtrer by city
-        if ($request->filled('cidade')) {
+        if ($request->filled('city')) {
             $query->whereHas('lead', function ($q) use ($request, $user) {
                 $q->where('user_id', $user->id)
-                    ->whereRaw('LOWER(city) LIKE ?', ['%' . strtolower($request->cidade) . '%']);
+                    ->where('city', $request->city);
             });
         }
 
         // Filtrar by service
-        if ($request->filled('tipoServico')) {
-            $query->where('type', $request->tipoServico);
+        if ($request->filled('type')) {
+            $query->where('type', $request->type);
+        }
+
+        // Filtrar por data de vencimento do alvará
+        if ($request->filled('expiration')) {
+            if ($request->expiration === 'vencido') {
+                $query->whereHas('lead', function ($q) {
+                    $q->whereDate('validity', '<', now());
+                });
+            } else {
+                $days = (int) $request->expiration;
+
+                $query->whereHas('lead', function ($q) use ($days) {
+                    $q->whereBetween('validity', [
+                        now(),
+                        now()->addDays($days)
+                    ]);
+                });
+            }
+        }
+
+        // Filtrar por data de cadastro do lead
+
+        if ($request->filled('leadCreatedAt')) {
+            $days = (int) $request->leadCreatedAt;
+
+            $query->whereHas('lead', function ($q) use ($days) {
+                $q->whereDate('created_at', '>=', now()->subDays($days));
+            });
         }
 
         // Filtrar by date
@@ -66,16 +109,18 @@ class ArchivedProposalController extends Controller
             $query->whereDate('archived_at', '<=', $request->dataTermino);
         }
 
-        // Return lead 
+
+
+
+
         $proposals = $query
-            ->with(['lead' => function ($q) use ($user) {
-                $q->where('user_id', $user->id);
-            }])
             ->orderBy('archived_at', 'desc')
             ->get();
 
+
         return response()->json([
             'status' => true,
+            'total' => $proposals->count(),
             'proposals' => $proposals
         ]);
     }
@@ -102,8 +147,10 @@ class ArchivedProposalController extends Controller
         $proposal = ArchivedProposal::create([
             'user_id'     => $user->id,
             'lead_id'     => $lead->id,
-            'status'      => $data['status'],
+            'company'     => $lead->company,
             'type'        => $data['type'] ?? null,
+            'value'       => $lead->service_value,
+            'status'      => $data['status'],
             'reason'      => $data['reason'] ?? null,
             'archived_at' => now(),
         ]);

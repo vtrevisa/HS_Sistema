@@ -67,6 +67,14 @@ export interface ArchivedProposal {
   value: number;
   status: 'Ganho' | 'Perdido';
   archived_at: string;
+  lead?: {
+    id: number;
+    company: string;
+    city: string;
+    service_value: number;
+    created_at: string;
+    validity: string;
+  }
   reason?: string; // For lost proposals
   processId?: number; // For won proposals
   message?: string

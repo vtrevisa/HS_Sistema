@@ -34,8 +34,6 @@ export function LeadsFilters({
  selectedResult,
  setSelectedResult
 }: LeadsFiltersProps) {
- console.log('Expiration Filter:', expirationFilter)
-
  return (
   <div className="bg-background dark:data-table rounded-lg shadow-md p-6 mb-6">
    <div className="grid grid-cols-1 md:grid-cols-6 gap-4">

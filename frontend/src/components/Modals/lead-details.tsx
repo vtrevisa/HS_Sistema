@@ -325,6 +325,14 @@ export function LeadDetailsModal({
         onChange={updateField}
        />
        <EditableField
+        label="Empresa"
+        field="company"
+        value={currentLead.company}
+        isEditing={isEditing}
+        onChange={updateField}
+       />
+
+       <EditableField
         label="Website"
         field="website"
         value={currentLead.website}
