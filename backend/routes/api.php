@@ -15,6 +15,7 @@ use App\Http\Controllers\Api\SubscriptionController;
 use App\Http\Controllers\Api\CreditPurchaseController;
 use App\Http\Controllers\Api\DashboardController;
 use App\Http\Controllers\Api\InvoiceController;
+use App\Http\Controllers\Api\TaskController;
 use Illuminate\Support\Facades\Route;
 
 // Auth
@@ -54,7 +55,9 @@ Route::post('/alvaras/consumed', [AlvaraPurchaseController::class, 'store']); //
 
 Route::get('/alvaras/logs', [AlvaraLogController::class, 'index']); //GET
 
-
+// Tasks
+Route::get('/tasks', [TaskController::class, 'index']); //GET
+Route::post('/tasks', [TaskController::class, 'store']); //POST
 
 // Leads
 Route::get('/leads', [LeadController::class, 'index']); //GET

@@ -10,7 +10,8 @@ import {
  UserCircle,
  ArrowRightLeft,
  Sun,
- Moon
+ Moon,
+ Calendar
  //  Shield,
  //  Calculator,
  //  Zap,
@@ -58,6 +59,12 @@ export function Header() {
    label: 'Dashboard CRM',
    icon: LayoutDashboard,
    href: '/dashboard'
+  },
+  {
+   id: 'calendario-comercial',
+   label: 'Calendário',
+   icon: Calendar,
+   href: '/dashboard/calendario'
   },
   {
    id: 'captacao-alvaras',
