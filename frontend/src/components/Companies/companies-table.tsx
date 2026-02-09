@@ -12,19 +12,29 @@ import {
  Trash2,
  User,
  UserPlus,
+ CalendarRange,
+ Goal,
 } from 'lucide-react'
 import { Badge } from '../ui/badge'
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card'
 import { Button } from '../ui/button'
 import type { CompanyRequest } from '@/http/types/companies'
+import { DatePickerWithRange } from '../ui/date-picker'
+import { Label } from '@/components/ui/label'
+import type { DateRange } from 'react-day-picker'
 
 interface CompaniesTableProps {
  companies: CompanyRequest[]
  processingEnrichment: number[]
  enhanceData: (company: CompanyRequest) => void
  onCompanyClick?: (company: CompanyRequest) => void
- gererateNewLead: (company: CompanyRequest) => void
+ onDeleteCompany: (company: CompanyRequest) => void
+ generateNewLead: (company: CompanyRequest) => void
  loadingCompanyId: string | number | null
+ selectedStatus: string
+ setSelectedStatus: (status: string) => void
+ dateRange: DateRange | undefined
+ setDateRange: (range: DateRange | undefined) => void
 }
 
 export function CompaniesTable({
@@ -32,14 +42,41 @@ export function CompaniesTable({
  processingEnrichment,
  enhanceData,
  onCompanyClick,
- gererateNewLead,
- loadingCompanyId
+ onDeleteCompany,
+ generateNewLead,
+ loadingCompanyId,
+ selectedStatus,
+ setSelectedStatus,
+ dateRange,
+ setDateRange,
 }: CompaniesTableProps) {
+
  return (
   <Card>
-   <CardHeader>
+  <CardHeader>
+   <div className="flex items-center justify-between w-full">
     <CardTitle>Empresas para Enriquecimento</CardTitle>
-   </CardHeader>
+
+    <Label htmlFor="expirationPeriod" className="flex items-center gap-1">
+       <CalendarRange size={14} />
+      Vencimento:
+    </Label>
+    <DatePickerWithRange date={dateRange} onDateChange={setDateRange} />
+    <Label htmlFor="statusFilter" className="flex items-center gap-1">
+     <Goal size={15}/>Status:
+    </Label>
+    <select
+     value={selectedStatus}
+     onChange={e => setSelectedStatus(e.target.value)}
+     className="border border-gray-300 bg-background rounded-lg px-4 py-2 focus:ring-2 focus:ring-red-500 focus:border-transparent outline-none"
+    >
+     <option value="todos">Todos</option>
+     <option value="pendente">Pendentes</option>
+     <option value="enriquecido">Enriquecidos</option>
+     <option value="lead">Leads</option>
+    </select>
+   </div>
+  </CardHeader>
    <CardContent>
     <div className="data-table overflow-hidden">
      {/* Versão Desktop */}
@@ -93,6 +130,14 @@ export function CompaniesTable({
             >
              <CheckCircle className="h-3 w-3 mr-1" />
              Enriquecido
+            </Badge>
+           ) : company.status === 'lead' ? (
+            <Badge
+             variant="default"
+             className="bg-blue-100 text-blue-800 hover:bg-blue-100"
+            >
+             <User className="h-3 w-3 mr-1" />
+             Lead
             </Badge>
            ) : (
             <Badge variant="secondary">
@@ -162,7 +207,7 @@ export function CompaniesTable({
              size="sm"
              variant="outline"
              title="Editar"
-              aria-label={`Editar ${company.company}`}
+             aria-label={`Editar ${company.company}`}
              onClick={() => onCompanyClick?.(company)}
              className="dark:hover:bg-red-600 dark:hover:border-red-600"
             >
@@ -174,7 +219,10 @@ export function CompaniesTable({
              variant="outline"
              title="Deletar"
              aria-label={`Deletar ${company.company}`}
-             //onClick={() => deleteCompany(company)}
+             onClick={e => {
+             e.stopPropagation()
+             onDeleteCompany(company)
+            }}
              className="bg-red-500 hover:bg-red-600 dark:hover:bg-red-700 dark:hover:border-red-700"
             >
              <Trash2  size={14} />
@@ -185,13 +233,18 @@ export function CompaniesTable({
           <td className="p-4 align-middle [&:has([role=checkbox])]:pr-0">
            <Button
             size="sm"
-            onClick={() => gererateNewLead(company)}
-            disabled={loadingCompanyId === company.id}
-            className="bg-blue-600 hover:bg-blue-700 dark:text-white"
+            onClick={() => generateNewLead(company)}
+            disabled={loadingCompanyId === company.id || company.status === 'lead'}
+            className={company.status.toLowerCase() === 'lead' ? `bg-green-600 hover:bg-green-300 dark:text-white` : `bg-blue-600 hover:bg-blue-700 dark:text-white`}
            >
             {loadingCompanyId === company.id ? (
              <>
               <Loader2 className="h-3 w-3 mr-1 animate-spin" />
+             </>
+            ) : company.status.toLowerCase() === 'lead' ? (
+             <>
+              <CheckCircle className="h-3 w-3 mr-1" />
+              Lead Gerado
              </>
             ) : (
              <>
@@ -279,7 +332,7 @@ export function CompaniesTable({
 
           <Button
            size="sm"
-           onClick={() => gererateNewLead(company)}
+           onClick={() => generateNewLead(company)}
            className="bg-blue-600 hover:bg-blue-700 dark:text-white"
           >
            <UserPlus className="h-3 w-3 mr-1" />

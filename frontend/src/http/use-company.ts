@@ -135,6 +135,26 @@ export function useCompany() {
     },
   });
 
+  //Mutation to delete company
+  const deleteMutation = useMutation<void, AxiosError<any>, number>({
+    mutationFn: async (id: number) => {
+      await api.delete(`/companies/${id}`)
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["companies"] })
+
+      setTimeout(() => {
+        toast.success("Empresa deletada com sucesso!")
+      }, 1200)
+    },
+    onError: (error) => {
+      const messages = Object.values(error.response?.data.erros).flat().join("\n")
+      setTimeout(() => {
+        toast.error("Erro ao deletar empresa no sistema!", { description: messages })
+      }, 1200)
+    }
+  })
+
 
   // Function to enhance company data
   const enhanceData = async (company: CompanyRequest) => {
@@ -192,28 +212,6 @@ export function useCompany() {
     }
   };
 
-  // Function to enhance all pending companies
-  const enhanceAllData = async () => {
-    const pendingCompanies = companiesDB.data?.filter(company => company.status === "pendente") ?? [];
-
-    if (pendingCompanies.length === 0) {
-      toast.warning("Nenhuma empresa Pendente", {
-        description: "Todos as empresas já foram enriquecidas.",
-      });
-      return;
-    }
-
-    for (const company of pendingCompanies) {
-      await enhanceData(company);
-    }
-
-     setTimeout(() => {
-      toast.success("Enriquecimento concluído.");
-    }, pendingCompanies.length * 2000);
-
-  };
-  
-
   return {
     companies: companiesDB.data || [],
     refetchCompanies: companiesDB.refetch,
@@ -223,8 +221,9 @@ export function useCompany() {
     updateCompany: updateMutation,
     searchByCnpj: searchCnpjMutation,
     searchByAddress: searchByAddressMutation,
+    deleteCompany: deleteMutation,
     enhanceData,
-    enhanceAllData,
     processingEnrichment,
+    companiesDB,
   }
 }

@@ -5,7 +5,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../ui/dialog'
 import { Button } from '../ui/button'
 import { Calendar } from 'lucide-react'
 import { IMaskInput } from 'react-imask'
-import { useEffect } from 'react'
+import { useEffect, useRef } from 'react'
+import { useCompany } from '@/http/use-company'
 
 interface NewLeadModalProps {
  isOpen: boolean
@@ -49,6 +50,56 @@ export function NewLeadModal({
   }
  })
 
+/* const { searchByCnpj } = useCompany()
+const cnpj = watch('cnpj')
+const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+const lastSearchedCnpj = useRef<string | null>(null)
+
+useEffect(() => {
+  const inputCnpj = String(cnpj || '').replace(/\D/g, '')
+  if (timeoutRef.current) {
+    clearTimeout(timeoutRef.current)
+    timeoutRef.current = null
+  }
+
+  if (inputCnpj.length !== 14) return
+  if (lastSearchedCnpj.current === inputCnpj) return
+
+  let cancelled = false
+
+  timeoutRef.current = setTimeout(async () => {
+    if (cancelled) return
+    try {
+      const data = await searchByCnpj.mutateAsync(inputCnpj)
+      if (cancelled || !data) return
+
+      const company = (data as any).company || (data as any).place || data
+      if (!company) return
+
+      setValue('company', company.company || company.fantasia || company.razao_social || '')
+      setValue('address', company.address || company.logradouro || '')
+      setValue('number', company.number || company.numero || '')
+      setValue('district', company.district || company.bairro || '')
+      setValue('city', company.city || company.municipio || company.localidade || '')
+      setValue('phone', company.phone || company.telefone || '')
+      setValue('email', company.email || company.email_contato || '')
+      setValue('cnpj', company.cnpj || inputCnpj)
+
+      lastSearchedCnpj.current = inputCnpj
+    } catch (err) {
+      if (!cancelled) console.error('Erro ao buscar CNPJ', err)
+    }
+  }, 500)
+
+  return () => {
+    cancelled = true
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current)
+      timeoutRef.current = null
+    }
+  }
+}, [cnpj, searchByCnpj, setValue]) */
+ 
  async function searchCEP(cep: string) {
   const inputCEP = cep.replace(/\D/g, '')
   if (inputCEP.length !== 8) return

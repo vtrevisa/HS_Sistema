@@ -44,7 +44,7 @@ export function Leads() {
     selectedFilter === 'todos' ? true : lead.status === selectedFilter
    const matchesType =
     selectedType === 'todos' ? true : lead.service === selectedType
-
+    console.log('Status:', matchesType, lead)
    return matchesSearch && matchesStatus && matchesType
   })
  }, [leads, searchTerm, selectedFilter, selectedType])

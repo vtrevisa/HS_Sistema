@@ -223,6 +223,7 @@ export function LeadsTable({
             }}
             className="bg-red-100 dark:bg-red-900/30 hover:bg-red-200 dark:hover:bg-red-900/50 text-red-700 dark:text-red-300 p-2 rounded-lg transition-colors"
             title="Apagar"
+            aria-label="Apagar"
            >
             <Trash size={14} />
            </button>
