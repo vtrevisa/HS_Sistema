@@ -18,7 +18,9 @@ export function useDashboard() {
   return { 
     cards: dashboardQuery.data?.cards,
     recentLeads: dashboardQuery.data?.recentLeads,
+    recentTasks: dashboardQuery.data?.recentTasks,
     alvaras: dashboardQuery.data?.alvaras,
+    tasks: dashboardQuery.data?.tasks,
     isLoading: dashboardQuery.isLoading,
   }
 }

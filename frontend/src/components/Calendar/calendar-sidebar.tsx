@@ -74,7 +74,7 @@ export function CalendarSidebar({
          >
           <div className="flex items-center gap-2">
            <ClipboardList className="h-3.5 w-3.5 text-blue-600" />
-           <span className="text-xs font-medium text-foreground">
+           <span className="text-xs font-medium text-foreground capitalize">
             {event.title}
            </span>
           </div>
@@ -151,7 +151,7 @@ export function CalendarSidebar({
         )}
        />
 
-       <span className="truncate text-foreground">
+       <span className="truncate text-foreground capitalize">
         {event.eventType === 'tarefa' ? event.title : `⚠ ${event.company}`}
        </span>
 

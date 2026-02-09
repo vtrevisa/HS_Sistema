@@ -81,7 +81,7 @@ export function CalendarDaysGrid({
          <div
           key={event.id}
           className={cn(
-           'text-[10px] truncate px-1 py-0.5 rounded',
+           'text-[10px] truncate px-1 py-0.5 rounded capitalize',
            event.eventType === 'tarefa'
             ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300'
             : 'bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300'

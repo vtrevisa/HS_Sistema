@@ -19,12 +19,12 @@ import { cn } from '@/lib/utils'
 import { format } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 import { toast } from 'sonner'
-import type { TarefaAgendada } from '@/http/types/calendar'
+import type { Task } from '@/http/types/calendar'
 
 interface NewTaskModalProps {
  open: boolean
  onOpenChange: (open: boolean) => void
- onSave: (tarefa: TarefaAgendada) => void
+ onSave: (task: Task) => void
  defaultDate?: Date
 }
 
@@ -40,7 +40,7 @@ export function NewTaskModal({
  const [hour, setHour] = useState('09:00')
  const [priority, setPriority] = useState<'baixa' | 'media' | 'alta'>('media')
 
- function handleSave() {
+ function handleSaveTask() {
   if (!title.trim()) {
    toast.error('Informe o título da tarefa')
    return
@@ -57,13 +57,11 @@ export function NewTaskModal({
   }
 
   onSave({
-   id: crypto.randomUUID(),
    title,
    description,
    date,
    hour,
-   priority,
-   eventType: 'tarefa'
+   priority
   })
 
   // reset
@@ -71,8 +69,6 @@ export function NewTaskModal({
   setDescription('')
   setHour('09:00')
   setPriority('media')
-
-  toast.success('Tarefa agendada com sucesso!')
 
   onOpenChange(false)
  }
@@ -173,7 +169,7 @@ export function NewTaskModal({
       Cancelar
      </Button>
      <Button
-      onClick={handleSave}
+      onClick={handleSaveTask}
       className="bg-blue-600 hover:bg-blue-700 text-white"
      >
       Agendar Tarefa

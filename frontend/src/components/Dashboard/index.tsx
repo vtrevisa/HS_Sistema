@@ -12,7 +12,7 @@ interface DashboardProps {
 }
 
 export function Dashboard({ sectionType = 'comercial' }: DashboardProps) {
- const { cards, recentLeads, alvaras, isLoading } = useDashboard()
+ const { cards, recentLeads, recentTasks, alvaras, isLoading } = useDashboard()
 
  if (isLoading) return null
 
@@ -74,7 +74,7 @@ export function Dashboard({ sectionType = 'comercial' }: DashboardProps) {
     <RecentLeads leads={recentLeads ?? []} />
 
     {/* Upcoming Tasks */}
-    <UpcomingTasks />
+    <UpcomingTasks tasks={recentTasks ?? []} />
    </div>
   </div>
  )

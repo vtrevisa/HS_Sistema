@@ -12,28 +12,27 @@ interface CalendarDashboardProps {
  sectionType: 'comercial' | 'processos'
 }
 
-// Dados mock de eventos
-const mockTarefas = [
- new Date().toDateString(),
- new Date(Date.now() + 2 * 86400000).toDateString()
-]
-
-// const mockAlvaras = [new Date(Date.now() + 5 * 86400000).toDateString()]
-
 export function CalendarDashboard({ sectionType }: CalendarDashboardProps) {
  const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date())
 
- const { alvaras, isLoading } = useDashboard()
+ const { alvaras, tasks, isLoading } = useDashboard()
+
+ const tasksDates = useMemo(() => {
+  if (!tasks) return []
+  return tasks.map(task => task.date)
+ }, [tasks])
 
  const alvarasDates = useMemo(() => {
   if (!alvaras) return []
-
-  return alvaras.map(a => format(new Date(a.validity), 'yyyy-MM-dd'))
+  return alvaras.map(alvara => alvara.validity)
  }, [alvaras])
 
  if (isLoading) return null
 
- const hasTarefas = (day: Date) => mockTarefas.includes(day.toDateString())
+ const hasTarefas = (day: Date) => {
+  const formattedDay = format(day, 'yyyy-MM-dd')
+  return tasksDates.includes(formattedDay)
+ }
 
  const hasAlvaras = (day: Date) => {
   const formattedDay = format(day, 'yyyy-MM-dd')
@@ -82,10 +81,6 @@ export function CalendarDashboard({ sectionType }: CalendarDashboardProps) {
      <CalendarIcon className="h-5 w-5" />
      Calendário
     </CardTitle>
-
-    {/* <p className="text-xs text-muted-foreground">
-     Selecione um dia para visualizar eventos
-    </p> */}
    </CardHeader>
    <CardContent className="pt-0">
     <Calendar

@@ -8,9 +8,7 @@ import { useTasks } from '@/http/use-tasks'
 export function Calendario() {
  const calendar = useCalendar()
 
- const { tasks } = useTasks()
-
- console.log('Tarefas agendadas:', tasks) // Verifique o conteúdo de tasks.tasks
+ const { saveTasks } = useTasks()
 
  return (
   <div className="p-4 lg:p-6 space-y-4">
@@ -53,7 +51,7 @@ export function Calendario() {
     open={calendar.modalOpen}
     onOpenChange={calendar.setModalOpen}
     defaultDate={calendar.modalDefaultDate}
-    onSave={calendar.handleAddTask}
+    onSave={task => saveTasks.mutate(task)}
    />
   </div>
  )

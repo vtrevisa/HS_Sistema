@@ -6,6 +6,7 @@ use App\Http\Controllers\Api\AlvaraPurchaseController;
 use App\Http\Controllers\Api\ArchivedProposalController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\AutomationController;
+use App\Http\Controllers\Api\CalendarController;
 use App\Http\Controllers\Api\LeadController;
 use App\Http\Controllers\Api\CompanyController;
 use App\Http\Controllers\Api\GoogleSheetsController;
@@ -54,6 +55,7 @@ Route::get('/alvaras/consumed', [AlvaraPurchaseController::class, 'index']); //G
 Route::post('/alvaras/consumed', [AlvaraPurchaseController::class, 'store']); //POST
 
 Route::get('/alvaras/logs', [AlvaraLogController::class, 'index']); //GET
+Route::get('/calendar/alvaras', [CalendarController::class, 'alvaras']); //GET
 
 // Tasks
 Route::get('/tasks', [TaskController::class, 'index']); //GET

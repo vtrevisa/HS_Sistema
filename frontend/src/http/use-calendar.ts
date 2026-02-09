@@ -15,7 +15,9 @@ import {
   format
 } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
-import type { TarefaAgendada } from './types/calendar'
+import type { Alvara, Task } from './types/calendar'
+import { useTasks } from './use-tasks'
+
 
 export type ViewMode = 'mensal' | 'semanal'
 
@@ -28,33 +30,29 @@ export interface CalendarDay {
 }
 
 
-export type CalendarEvent = | (TarefaAgendada & { eventType: 'tarefa' }) | 
-{
-  id: string
-  company: string
-  type: string
-  validity: Date
-  address: string
-  eventType: 'alvara'
+export type CalendarEvent =
+  | (Task & { eventType: 'tarefa' })
+  | (Alvara & { eventType: 'alvara' })
+
+function isTask(event: CalendarEvent): event is Task & { eventType: 'tarefa' } {
+  return event.eventType === 'tarefa'
+}
+
+function isAlvara(event: CalendarEvent): event is Alvara & { eventType: 'alvara' } {
+  return event.eventType === 'alvara'
 }
 
 export function useCalendar() {
 
-  // Mock data - alvarás a vencer
-  const mockAlvarasVencer: CalendarEvent[] = [
-    { id: 'alv-1', company: 'Loja Centro SP', type: 'AVCB', validity: new Date(Date.now() + 2 * 86400000), address: 'Rua Augusta, 100',  eventType: 'alvara' },
-    { id: 'alv-2', company: 'Restaurante Bela Vista', type: 'CLCB', validity: new Date(Date.now() + 5 * 86400000), address: 'Av. Paulista, 500',  eventType: 'alvara'  },
-    { id: 'alv-3', company: 'Escritório Pinheiros', type: 'AVCB', validity: new Date(Date.now() + 10 * 86400000), address: 'Rua dos Pinheiros, 300',  eventType: 'alvara'  },
-    { id: 'alv-4', company: 'Galpão Industrial', type: 'CLCB', validity: new Date(Date.now() + 15 * 86400000), address: 'Av. Industrial, 1500',  eventType: 'alvara'  },
-    { id: 'alv-5', company: 'Escola Moema', type: 'AVCB', validity: new Date(Date.now() + 22 * 86400000), address: 'Rua Canário, 200',  eventType: 'alvara' },
-  ];
+  const { tasks, alvaras } = useTasks()
 
-  const mockTarefasIniciais: CalendarEvent[] = [
-    { id: 'tar-1', title: 'Follow-up cliente Loja Centro', description: '', date: new Date(Date.now() + 1 * 86400000), hour: '10:00', priority: 'alta', eventType: 'tarefa' },
-    { id: 'tar-2', title: 'Enviar proposta Restaurante', description: '', date: new Date(Date.now() + 3 * 86400000), hour: '14:00', priority: 'media', eventType: 'tarefa' },
-    { id: 'tar-3', title: 'Reunião equipe comercial', description: '', date: new Date(Date.now() + 7 * 86400000), hour: '09:00', priority: 'baixa', eventType: 'tarefa' },
-    { id: 'tar-4', title: 'Ligar para lead Moema', description: '', date: new Date(), hour: '11:00', priority: 'alta', eventType: 'tarefa' },
-  ];
+  
+  const [viewMode, setViewMode] = useState<ViewMode>('mensal')
+  const [currentDate, setCurrentDate] = useState(new Date())
+  const [selectedDate, setSelectedDate] = useState<Date | null>(new Date())
+
+  const [modalOpen, setModalOpen] = useState(false)
+  const [modalDefaultDate, setModalDefaultDate] = useState<Date | undefined>()
 
   const prioridadeCores = {
     baixa: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400',
@@ -63,15 +61,23 @@ export function useCalendar() {
   };
 
 
-  const [viewMode, setViewMode] = useState<ViewMode>('mensal')
-  const [currentDate, setCurrentDate] = useState(new Date())
-  const [selectedDate, setSelectedDate] = useState<Date | null>(new Date())
+  const taskEvents: CalendarEvent[] = useMemo(() => {
+    return tasks.map(task => ({
+      ...task,
+      eventType: 'tarefa' as const,
+    }))
+  }, [tasks])
 
-  
-  const [events, setEvents] = useState<CalendarEvent[]>([...mockTarefasIniciais, ...mockAlvarasVencer])
+  const alvaraEvents: CalendarEvent[] = useMemo(() => {
+    return alvaras.map(alvara => ({
+      ...alvara,
+      eventType: 'alvara' as const,
+    }))
+  }, [alvaras])
 
-  const [modalOpen, setModalOpen] = useState(false)
-  const [modalDefaultDate, setModalDefaultDate] = useState<Date | undefined>()
+  const allEvents: CalendarEvent[] = useMemo(() => {
+    return [...taskEvents, ...alvaraEvents]
+  }, [taskEvents, alvaraEvents])
 
 
   // Navigation
@@ -103,20 +109,31 @@ export function useCalendar() {
     })
   }, [currentDate, viewMode])
 
+
   // Calendar Days (View Model)
-  const calendarDays = useMemo<CalendarDay[]>(() => {
+   const calendarDays = useMemo<CalendarDay[]>(() => {
     return rawDays.map(day => {
-      const dailyEvents = events.filter(event => event.eventType === 'tarefa' ? isSameDay(event.date, day): isSameDay(event.validity, day))
+      const dailyEvents = allEvents.filter(event => {
+        if (isTask(event)) {
+          return isSameDay(event.date, day)
+        }
+
+        if (isAlvara(event)) {
+          return isSameDay(event.validity, day)
+        }
+
+        return false
+      })
 
       return {
         date: day,
         events: dailyEvents,
         isToday: isToday(day),
         isCurrentMonth: isSameMonth(day, currentDate),
-        isSelected: selectedDate ? isSameDay(day, selectedDate) : false
+        isSelected: selectedDate ? isSameDay(day, selectedDate) : false,
       }
     })
-  }, [rawDays, events, selectedDate, currentDate])
+  }, [rawDays, allEvents, selectedDate, currentDate])
 
 
   // Helpers
@@ -148,12 +165,6 @@ export function useCalendar() {
     setModalOpen(true)
   }
 
-  function handleAddTask(tarefa: TarefaAgendada) {
-    setEvents(prev => [
-      ...prev,
-      { ...tarefa, eventType: 'tarefa' }
-    ])
-  }
 
   return {
     // view
@@ -166,7 +177,7 @@ export function useCalendar() {
     calendarDays,
     selectedDate,
     selectedDayEvents,
-    events,
+    events: allEvents,
 
     // navigation
     goNext,
@@ -182,7 +193,6 @@ export function useCalendar() {
     // actions
     handleDayClick,
     handleScheduleFromDay,
-    handleAddTask,
     prioridadeCores
   }
 
