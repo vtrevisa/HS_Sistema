@@ -1,4 +1,4 @@
-import { Plus, Upload } from 'lucide-react'
+import { Plus, RefreshCw, Upload } from 'lucide-react'
 import { Button } from '../ui/button'
 
 interface CompaniesActionsProps {
@@ -25,9 +25,9 @@ export function CompaniesActions({
    <Button
     onClick={generateAllLeads}
     className="bg-blue-600 hover:bg-blue-700 dark:text-white"
-    >
-    <RefreshCw className="h-4 w-4 mr-2" /> 
-    Gerar Todos Leads 
+   >
+    <RefreshCw className="h-4 w-4 mr-2" />
+    Gerar Todos Leads
    </Button>
 
    <Button
