@@ -12,6 +12,7 @@ import {
  Search
 } from 'lucide-react'
 import { AlvarasActions } from './alvaras-actions'
+import { useCities } from '@/http/use-cities'
 
 interface AlvarasFiltersProps {
  city: string
@@ -22,6 +23,7 @@ interface AlvarasFiltersProps {
  setSelectedType: (type: 'Todos' | 'AVCB' | 'CLCB') => void
  applyFilter: () => void
  isLoading: boolean
+ cancelSearch: () => void
 }
 
 export function AlvarasFilters({
@@ -32,8 +34,11 @@ export function AlvarasFilters({
  selectedType,
  setSelectedType,
  applyFilter,
- isLoading
+ isLoading,
+ cancelSearch
 }: AlvarasFiltersProps) {
+ const { data: cities, isLoading: isCitiesLoading } = useCities()
+
  return (
   <Card>
    <CardHeader>
@@ -57,13 +62,22 @@ export function AlvarasFilters({
        <MapPin size={14} />
        Cidade *
       </Label>
-      <Input
+      <select
        id="cidade"
-       placeholder="Digite a cidade"
        value={city}
        onChange={e => setCity(e.target.value)}
-       className="text-foreground placeholder:text-foreground border-gray-300"
-      />
+       disabled={isCitiesLoading}
+       className="w-full h-[40px] border border-gray-300 bg-background rounded-lg px-4 py-2 focus:ring-2 focus:ring-ring focus:border-transparent outline-none text-sm"
+      >
+       <option value="">
+        {isCitiesLoading ? 'Carregando cidades...' : 'Selecione a cidade'}
+       </option>
+       {cities?.map(city => (
+        <option key={city.id} value={city.nome}>
+         {city.nome}
+        </option>
+       ))}
+      </select>
      </div>
 
      <div className="space-y-2">
@@ -93,7 +107,11 @@ export function AlvarasFilters({
      </div>
     </div>
 
-    <AlvarasActions applyFilter={applyFilter} isLoading={isLoading} />
+    <AlvarasActions
+     applyFilter={applyFilter}
+     isLoading={isLoading}
+     onCancel={cancelSearch}
+    />
    </CardContent>
   </Card>
  )

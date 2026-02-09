@@ -1,24 +1,36 @@
+import type { RecentTask } from '@/http/types/dashboard'
+import { formatUpcomingTasksDate } from '@/lib/date'
 import { Calendar, Clock } from 'lucide-react'
 
-export function UpcomingTasks() {
- const upcomingTasks = [
-  {
-   task: 'Ligar para Shopping Center Plaza',
-   date: 'Hoje, 14:00',
-   priority: 'alta'
-  },
-  {
-   task: 'Enviar proposta - Hotel Business Inn',
-   date: 'Amanhã, 09:00',
-   priority: 'média'
-  },
-  { task: 'Follow-up Edifício Solar', date: '28/05, 10:00', priority: 'baixa' },
-  {
-   task: 'Renovação AVCB - Condomínio Norte',
-   date: '30/05, 15:00',
-   priority: 'alta'
-  }
- ]
+interface UpcomingTasksProps {
+ tasks: RecentTask[]
+}
+
+export function UpcomingTasks({ tasks }: UpcomingTasksProps) {
+ //  const upcomingTasks = [
+ //   {
+ //    task: 'Ligar para Shopping Center Plaza',
+ //    date: 'Hoje, 14:00',
+ //    priority: 'alta'
+ //   },
+ //   {
+ //    task: 'Enviar proposta - Hotel Business Inn',
+ //    date: 'Amanhã, 09:00',
+ //    priority: 'média'
+ //   },
+ //   { task: 'Follow-up Edifício Solar', date: '28/05, 10:00', priority: 'baixa' },
+ //   {
+ //    task: 'Renovação AVCB - Condomínio Norte',
+ //    date: '30/05, 15:00',
+ //    priority: 'alta'
+ //   }
+ //  ]
+
+ const upcomingTasks = tasks.map(task => ({
+  title: task.title,
+  date: formatUpcomingTasksDate(task.date, task.hour),
+  priority: task.priority
+ }))
 
  return (
   <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-4 lg:p-6 border-l-4 border-blue-500">
@@ -37,13 +49,13 @@ export function UpcomingTasks() {
         task.priority === 'alta'
          ? 'bg-red-500'
          : task.priority === 'média'
-         ? 'bg-yellow-500'
-         : 'bg-green-500'
+           ? 'bg-yellow-500'
+           : 'bg-green-500'
        }`}
       ></div>
       <div className="flex-1 min-w-0">
-       <p className="font-medium text-gray-800 dark:text-white text-sm lg:text-base truncate">
-        {task.task}
+       <p className="font-medium text-gray-800 dark:text-white text-sm lg:text-base truncate capitalize">
+        {task.title}
        </p>
        <p className="text-xs lg:text-sm text-gray-600 dark:text-gray-400 flex items-center gap-1">
         <Clock size={12} />

@@ -1,34 +1,8 @@
-import type { Dispatch, SetStateAction } from 'react'
 import type { DateRange } from 'react-day-picker'
-import type { ReleasePayload, SearchAlvarasPayload } from '@/http/types/alvaras'
-import type { FlowState } from '@/http/use-alvaras'
-import type { UseMutationResult } from "@tanstack/react-query";
-
+import type { Alvaras, SearchAlvarasPayload } from '@/http/types/alvaras'
+import { saveAs } from "file-saver";
 import { toast } from 'sonner'
 
-type SearchResults = { totalFound: number; available: number; } | null
-
-// interface ReleaseParams {
-//   releaseAlvaras: UseMutationResult<{ creditsUsed: number; creditsAvailable: number; extraNeeded: number },
-//     Error,
-//     { totalToRelease: number }
-//   >;
-//    totalToRelease: number
-// }
-
-interface SuccessParams {
-  releaseAlvaras: UseMutationResult<
-    {
-      creditsUsed: number
-      creditsAvailable: number
-      extraNeeded: number
-      monthlyUsed: number
-    },
-    Error,
-    ReleasePayload
-  >
-  payload: ReleasePayload
-}
 
 interface PaginationParams<T> {
   data: T[]
@@ -61,24 +35,24 @@ export function calculateExtraAmount(totalFound: number, available: number) {
   return Math.max(totalFound - available, 0) * 5
 }
 
-export function handleReleaseAlvaras({ releaseAlvaras, totalToRelease, city, serviceType, periodStart, periodEnd }: 
-  {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    releaseAlvaras: any
-    totalToRelease: number
-    city: string
-    serviceType: "AVCB" | "CLCB" | "Todos"
-    periodStart: Date
-    periodEnd: Date
-  }) {
-  releaseAlvaras.mutate({ 
-    totalToRelease,
-    city,
-    service_type: serviceType,
-    period_start: periodStart.toISOString().split("T")[0],
-    period_end: periodEnd.toISOString().split("T")[0]
-  });
+export function getPaginatedData<T>({ data, currentPage, itemsPerPage }: PaginationParams<T>) {
+  const start = (currentPage - 1) * itemsPerPage
+  const end = start + itemsPerPage
+  return data.slice(start, end)
 }
+
+export function getTotalPages(totalItems: number, itemsPerPage: number) {
+  return Math.ceil(totalItems / itemsPerPage)
+}
+
+// export function handlePageChange(page: number, totalPages: number) {
+//   return Math.min(Math.max(page, 1), totalPages)
+// }
+
+// export function handleItemsPerPageChange(value: string, setCurrentPage: Dispatch<SetStateAction<number>>) {
+//   setCurrentPage(1)
+//   return Number(value)
+// }
 
 export function handleQuantityChange(value: string, totalFound?: number){
   const numValue = parseInt(value) || 0;
@@ -90,56 +64,69 @@ export function handleQuantityChange(value: string, totalFound?: number){
   return Math.max(0, numValue)
 };
 
-export async function handlePaymentSuccess({releaseAlvaras, payload }: SuccessParams) {
- try {
-    toast.info("Pagamento registrado", { 
-      description: "Finalizando liberação dos alvarás..." 
+export async function exportConsumedAlvaras(consumedAlvaras: Alvaras[]) {
+   if (!consumedAlvaras || consumedAlvaras.length === 0) {
+    toast.warning("Nenhum dado para exportar", {
+      description: "Você ainda não possui alvarás consumidos.",
     });
-
-    await releaseAlvaras.mutateAsync(payload)
-
-  } catch (err) {
-    console.error("Erro ao finalizar a liberação após pagamento.", err);
-
-    toast.error('Falha na liberação', {
-      description: 'Ocorreu um erro ao processar a liberação final. Se o pagamento foi efetuado, contate o suporte.'
-    });
-
-    console.error(err)
+    return;
   }
-}
 
-export function getPaginatedData<T>({ data, currentPage, itemsPerPage }: PaginationParams<T>) {
-  const start = (currentPage - 1) * itemsPerPage
-  const end = start + itemsPerPage
-  return data.slice(start, end)
-}
+  const ExcelJS = await import("exceljs")
+  const workbook = new ExcelJS.Workbook();
+  const sheet = workbook.addWorksheet("Meus Alvarás");
 
-export function getTotalPages(totalItems: number, itemsPerPage: number) {
-  return Math.ceil(totalItems / itemsPerPage)
-}
+  const headers = ["Tipo de Serviço", "Data de Vencimento", "Endereço Completo", "Ocupação", "Cidade"];
+  sheet.addRow(headers);
 
-export function handlePageChange(page: number, totalPages: number) {
-  return Math.min(Math.max(page, 1), totalPages)
-}
+  // Estilo do header
+  sheet.getRow(1).eachCell(cell => {
+    cell.fill = {
+      type: "pattern",
+      pattern: "solid",
+      fgColor: { argb: "5A80B7" }
+    };
+    cell.font = { bold: true, color: { argb: "FFFFFF" } };
+    cell.alignment = { vertical: "middle", horizontal: "left" };
+  });
 
-export function handleItemsPerPageChange(value: string, setCurrentPage: Dispatch<SetStateAction<number>>) {
-  setCurrentPage(1)
-  return Number(value)
-}
+  // Adiciona os dados
+  consumedAlvaras.forEach((alvara, i) => {
+    const row = sheet.addRow([
+      alvara.service,
+      new Date(alvara.validity).toLocaleDateString("pt-BR"),
+      alvara.address,
+      alvara.occupation,
+      alvara.city,
+    ]);
 
-export function handleNewQuery(
-  setFlowState: Dispatch<SetStateAction<FlowState>>,
-  setSearchResults: Dispatch<SetStateAction<SearchResults>>,
-  setCity: (city: string) => void,
-  setDateRange: (range: DateRange | undefined) => void,
-  setSelectedTypeFilter: (value: 'Todos' | 'AVCB' | 'CLCB') => void,
-  setShowPaymentModal: (value: boolean) => void
-) {
-  setFlowState('subscription-active')
-  setSearchResults(null)
-  setCity('')
-  setDateRange(undefined)
-  setSelectedTypeFilter('Todos')
-  setShowPaymentModal(false)
-}
+    // Cor alternada das linhas
+    const isEven = i % 2 === 0;
+    row.eachCell(cell => {
+      cell.fill = {
+        type: "pattern",
+        pattern: "solid",
+        fgColor: { argb: isEven ? "DEE6F0" : "BCCCE2" }
+      };
+      cell.alignment = { vertical: "middle", horizontal: "left" };
+    });
+  });
+
+  // Ajusta largura das colunas
+  sheet.columns.forEach(column => {
+    let maxLength = 0;
+    column.eachCell?.({ includeEmpty: true }, cell => {
+      const value = cell.value ? cell.value.toString() : "";
+      maxLength = Math.max(maxLength, value.length);
+    });
+    column.width = maxLength < 15 ? 15 : maxLength;
+  });
+
+  const buffer = await workbook.xlsx.writeBuffer();
+  const blob = new Blob([buffer], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
+  saveAs(blob, `meus_alvaras_${new Date().toISOString().split("T")[0]}.xlsx`);
+
+  toast.success('Exportação concluída', {
+    description: `Arquivo baixado com sucesso.`,
+  });
+};

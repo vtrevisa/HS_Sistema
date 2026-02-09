@@ -9,9 +9,7 @@ import { useAlvaras } from '@/http/use-alvaras'
 import {
  buildSearchPayload,
  handleQuantityChange,
- handleNewQuery,
- handlePaymentSuccess,
- handleReleaseAlvaras
+ exportConsumedAlvaras
 } from '@/services/alvaras'
 
 import { Alert, AlertDescription } from '../ui/alert'
@@ -23,6 +21,7 @@ import { AlvarasSubscriptionBox } from './alvaras-subscription-box'
 import { PaymentDetails } from '../Modals/payment-details'
 import { AlvarasTable } from './alvaras-table'
 import { ProfileUpdatePlan } from '../Modals/profile-updateplan'
+import { MyAlvaras } from './my-alvaras'
 
 export function Alvaras() {
  const [city, setCity] = useState('')
@@ -30,13 +29,14 @@ export function Alvaras() {
  const [selectedTypeFilter, setSelectedTypeFilter] = useState<
   'Todos' | 'AVCB' | 'CLCB'
  >('Todos')
+ const [quantity, setQuantity] = useState(0)
+ const [showPlansModal, setShowPlansModal] = useState(false)
  const [showPaymentModal, setShowPaymentModal] = useState(false)
+
  const [selectedCreditsPackage, setSelectedCreditsPackage] = useState<{
   credits: number
   price: number
  } | null>(null)
- const [quantity, setQuantity] = useState(0)
- const [showPlansModal, setShowPlansModal] = useState(false)
 
  const { user, isLoading: loadingUser } = useUser()
 
@@ -60,16 +60,18 @@ export function Alvaras() {
  }
 
  const {
-  alvarasData,
-  searchAlvaras,
-  searchResults,
-  setSearchResults,
-  releaseAlvaras,
-  isActive,
-  isSearching,
-  isReleasing,
   flowState,
-  setFlowState
+  isActive,
+
+  consumedAlvaras,
+  releasedAlvaras,
+  searchResults,
+
+  searchAlvaras,
+  releaseAlvaras,
+
+  startNewQuery,
+  cancelNewQuery
  } = useAlvaras(subscriptionData)
 
  useEffect(() => {
@@ -77,14 +79,6 @@ export function Alvaras() {
    setQuantity(searchResults.totalFound)
   }
  }, [searchResults?.totalFound])
-
- if (loadingUser) {
-  return <p>Carregando...</p>
- }
-
- if (!user) {
-  return <p>Erro ao carregar usuário.</p>
- }
 
  async function handleSearchAlvaras() {
   if (!city.trim()) {
@@ -117,6 +111,17 @@ export function Alvaras() {
    toast.error('Erro ao buscar alvarás')
   }
  }
+
+ function handleCancelSearch() {
+  cancelNewQuery()
+  setCity('')
+  setDateRange(undefined)
+  setSelectedTypeFilter('Todos')
+  setQuantity(0)
+ }
+
+ if (loadingUser) return <p>Carregando...</p>
+ if (!user) return <p>Erro ao carregar usuário.</p>
 
  // Conditional rendering based on the user plan.
  if (!user.plan) {
@@ -153,19 +158,7 @@ export function Alvaras() {
      Captação de Alvarás
     </h1>
     {flowState === 'alvaras-released' && (
-     <Button
-      onClick={() =>
-       handleNewQuery(
-        setFlowState,
-        setSearchResults,
-        setCity,
-        setDateRange,
-        setSelectedTypeFilter,
-        setShowPaymentModal
-       )
-      }
-      variant="outline"
-     >
+     <Button onClick={startNewQuery} variant="outline">
       Nova Consulta
      </Button>
     )}
@@ -181,6 +174,16 @@ export function Alvaras() {
     flowState={flowState}
    />
 
+   {/* Seção Meus Alvarás - visível quando não está no fluxo de busca */}
+
+   {flowState === 'my-alvaras' && (
+    <MyAlvaras
+     alvaras={consumedAlvaras}
+     onNewQuery={startNewQuery}
+     onExport={() => exportConsumedAlvaras(consumedAlvaras)}
+    />
+   )}
+
    {/* Filtros */}
    {(flowState === 'subscription-active' ||
     flowState === 'search-result' ||
@@ -193,7 +196,8 @@ export function Alvaras() {
      selectedType={selectedTypeFilter}
      setSelectedType={setSelectedTypeFilter}
      applyFilter={handleSearchAlvaras}
-     isLoading={isSearching}
+     cancelSearch={handleCancelSearch}
+     isLoading={searchAlvaras.isPending}
     />
    )}
 
@@ -206,18 +210,17 @@ export function Alvaras() {
       used={subscriptionData.used}
       extraNeeded={searchResults.extraNeeded ?? 0}
       quantity={quantity}
-      isLoading={isReleasing}
+      isLoading={releaseAlvaras.isPending}
       onQuantityChange={(value: string) => {
        setQuantity(handleQuantityChange(value, searchResults.totalFound))
       }}
       onRelease={() =>
-       handleReleaseAlvaras({
-        releaseAlvaras,
+       releaseAlvaras.mutate({
         totalToRelease: quantity,
         city,
-        serviceType: selectedTypeFilter,
-        periodStart: dateRange!.from!,
-        periodEnd: dateRange!.to!
+        service_type: selectedTypeFilter,
+        period_start: dateRange!.from!.toISOString().split('T')[0],
+        period_end: dateRange!.to!.toISOString().split('T')[0]
        })
       }
       onPayment={pkg => {
@@ -234,23 +237,20 @@ export function Alvaras() {
      onClose={() => setShowPaymentModal(false)}
      creditsPackage={selectedCreditsPackage}
      onSuccess={() =>
-      handlePaymentSuccess({
-       releaseAlvaras,
-       payload: {
-        totalToRelease: quantity,
-        city,
-        service_type: selectedTypeFilter,
-        period_start: dateRange!.from!.toISOString().split('T')[0],
-        period_end: dateRange!.to!.toISOString().split('T')[0]
-       }
+      releaseAlvaras.mutate({
+       totalToRelease: quantity,
+       city,
+       service_type: selectedTypeFilter,
+       period_start: dateRange!.from!.toISOString().split('T')[0],
+       period_end: dateRange!.to!.toISOString().split('T')[0]
       })
      }
     />
    )}
 
    {/* Tabela de Alvarás Liberados */}
-   {flowState === 'alvaras-released' && alvarasData.length > 0 && (
-    <AlvarasTable alvarasData={alvarasData} />
+   {flowState === 'alvaras-released' && releasedAlvaras.length > 0 && (
+    <AlvarasTable alvarasData={releasedAlvaras} />
    )}
   </div>
  )

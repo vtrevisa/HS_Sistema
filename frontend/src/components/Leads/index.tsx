@@ -11,11 +11,21 @@ import { exportLeadsToExcel } from '@/services/leads'
 import { useLead } from '@/http/use-lead'
 
 import { useQueryClient } from '@tanstack/react-query'
+import { daysUntil } from '@/lib/days'
+import { useCompany } from '@/http/use-company'
 
 export function Leads() {
  const [searchTerm, setSearchTerm] = useState('')
  const [selectedFilter, setSelectedFilter] = useState('todos')
  const [selectedType, setSelectedType] = useState('todos')
+
+ const [expirationFilter, setExpirationFilter] = useState('todos')
+ const [createdAtFilter, setCreatedAtFilter] = useState('todos')
+
+ const [selectedResult, setSelectedResult] = useState<
+  'todos' | 'Ganho' | 'Perdido'
+ >('todos')
+
  const [isNewLeadModalOpen, setIsNewLeadModalOpen] = useState(false)
  const [isLeadDetailsModalOpen, setIsLeadDetailsModalOpen] = useState(false)
  const [isDeleteLeadModalOpen, setIsDeleteLeadModalOpen] = useState(false)
@@ -24,6 +34,8 @@ export function Leads() {
  const queryClient = useQueryClient()
 
  const { leadsDB, saveLeads } = useLead()
+
+ const { searchByCnpj } = useCompany()
 
  const leads = useMemo(() => leadsDB.data ?? [], [leadsDB.data])
 
@@ -38,16 +50,80 @@ export function Leads() {
    const contact = lead.contact?.toLowerCase() ?? ''
    const search = searchTerm.toLowerCase()
 
+   // Busca
    const matchesSearch = company.includes(search) || contact.includes(search)
 
+   // Status
    const matchesStatus =
     selectedFilter === 'todos' ? true : lead.status === selectedFilter
+
+   // Tipo
    const matchesType =
     selectedType === 'todos' ? true : lead.service === selectedType
-    console.log('Status:', matchesType, lead)
-   return matchesSearch && matchesStatus && matchesType
+
+   // Validade do alvará
+   let matchesExpiration = true
+
+   if (expirationFilter !== 'todos' && lead.validity) {
+    const days = daysUntil(lead.validity)
+
+    if (expirationFilter === 'vencido') {
+     matchesExpiration = days < 0
+    }
+
+    if (expirationFilter === '30') {
+     matchesExpiration = days >= 0 && days <= 30
+    }
+
+    if (expirationFilter === '60') {
+     matchesExpiration = days >= 0 && days <= 60
+    }
+   }
+
+   // Data de cadastro
+   let matchesCreatedAt = true
+   if (createdAtFilter !== 'todos') {
+    if (!lead.created_at) return false
+
+    const createdAt = new Date(lead.created_at)
+    const now = new Date()
+
+    const diffDays = (now.getTime() - createdAt.getTime()) / 86400000
+
+    if (createdAtFilter === '7') {
+     matchesCreatedAt = diffDays <= 7
+    }
+
+    if (createdAtFilter === '30') {
+     matchesCreatedAt = diffDays <= 30
+    }
+   }
+
+   // Propostas
+
+   const matchesResult =
+    selectedResult === 'todos'
+     ? true
+     : lead.archived_proposal?.status === selectedResult
+
+   return (
+    matchesSearch &&
+    matchesType &&
+    matchesStatus &&
+    matchesExpiration &&
+    matchesCreatedAt &&
+    matchesResult
+   )
   })
- }, [leads, searchTerm, selectedFilter, selectedType])
+ }, [
+  leads,
+  searchTerm,
+  selectedType,
+  selectedFilter,
+  expirationFilter,
+  createdAtFilter,
+  selectedResult
+ ])
 
  function handleNewLead(leadData: Omit<LeadRequest, 'id'>) {
   const completeAddress = [
@@ -102,10 +178,16 @@ export function Leads() {
     <LeadsFilters
      searchTerm={searchTerm}
      setSearchTerm={setSearchTerm}
-     selectedStatus={selectedFilter}
-     setSelectedStatus={setSelectedFilter}
      selectedType={selectedType}
      setSelectedType={setSelectedType}
+     selectedStatus={selectedFilter}
+     setSelectedStatus={setSelectedFilter}
+     expirationFilter={expirationFilter}
+     setExpirationFilter={setExpirationFilter}
+     createdAtFilter={createdAtFilter}
+     setCreatedAtFilter={setCreatedAtFilter}
+     selectedResult={selectedResult}
+     setSelectedResult={setSelectedResult}
     />
    </div>
 
@@ -125,6 +207,7 @@ export function Leads() {
     isOpen={isNewLeadModalOpen}
     onClose={() => setIsNewLeadModalOpen(false)}
     onLeadCreate={handleNewLead}
+    onSearchCnpj={searchByCnpj}
    />
 
    <LeadDetailsModal

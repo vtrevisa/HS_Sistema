@@ -323,69 +323,77 @@ export function LeadDetailsModal({
         Informações da Empresa
         </h3>
 
-        <div className="grid grid-cols-1 gap-3 sm:gap-4 text-sm">
-        <EditableField
-          label="CNPJ"
-          field="cnpj"
-          value={currentLead.cnpj}
-          isEditing={isEditing}
-          onChange={updateField}
-        />
-        <EditableField
-          label="Website"
-          field="website"
-          value={currentLead.website}
-          type="url"
-          isEditing={isEditing}
-          onChange={updateField}
-        />
-        <div>
-          <span className="font-medium text-gray-800 dark:text-white flex items-center gap-1">
-          <MapPin size={12} />
-          Endereço Completo:
-          </span>
-          {isEditing ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-1">
-            <Input
-            placeholder="Endereço"
-            value={editedLead?.address || ''}
-            onChange={e => updateField('address', e.target.value)}
-            />
-            <Input
-            placeholder="Número"
-            value={editedLead?.number || ''}
-            onChange={e => updateField('number', e.target.value)}
-            />
-            <Input
-            placeholder="Complemento"
-            value={editedLead?.complement || ''}
-            onChange={e => updateField('complement', e.target.value)}
-            />
-            <Input
-            placeholder="Bairro"
-            value={editedLead?.district || ''}
-            onChange={e => updateField('district', e.target.value)}
-            />
-            <Input
-            placeholder="Município"
-            value={editedLead?.city || ''}
-            onChange={e => updateField('city', e.target.value)}
-            />
-            <IMaskInput
-            mask="00000-000"
-            value={editedLead?.cep || ''}
-            onAccept={(value: string) => updateField('cep', value)}
-            className="mt-1 flex h-10 w-full rounded-md border border-input dark:border-white bg-background px-3 py-2 text-base ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm"
-            />
-          </div>
-          ) : (
-          <p className="text-gray-600 dark:text-white break-words bg-muted/50 p-3 rounded">
-            {getCompleteAddress(currentLead) || 'Não informado'}
-          </p>
-          )}
-        </div>
-        </div>
+      <div className="grid grid-cols-1 gap-3 sm:gap-4 text-sm">
+       <EditableField
+        label="CNPJ"
+        field="cnpj"
+        value={currentLead.cnpj}
+        isEditing={isEditing}
+        onChange={updateField}
+       />
+       <EditableField
+        label="Empresa"
+        field="company"
+        value={currentLead.company}
+        isEditing={isEditing}
+        onChange={updateField}
+       />
+
+       <EditableField
+        label="Website"
+        field="website"
+        value={currentLead.website}
+        type="url"
+        isEditing={isEditing}
+        onChange={updateField}
+       />
+       <div>
+        <span className="font-medium text-gray-800 dark:text-white flex items-center gap-1">
+         <MapPin size={12} />
+         Endereço Completo:
+        </span>
+        {isEditing ? (
+         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-1">
+          <Input
+           placeholder="Endereço"
+           value={editedLead?.address || ''}
+           onChange={e => updateField('address', e.target.value)}
+          />
+          <Input
+           placeholder="Número"
+           value={editedLead?.number || ''}
+           onChange={e => updateField('number', e.target.value)}
+          />
+          <Input
+           placeholder="Complemento"
+           value={editedLead?.complement || ''}
+           onChange={e => updateField('complement', e.target.value)}
+          />
+          <Input
+           placeholder="Bairro"
+           value={editedLead?.district || ''}
+           onChange={e => updateField('district', e.target.value)}
+          />
+          <Input
+           placeholder="Município"
+           value={editedLead?.city || ''}
+           onChange={e => updateField('city', e.target.value)}
+          />
+          <IMaskInput
+           mask="00000-000"
+           value={editedLead?.cep || ''}
+           onAccept={(value: string) => updateField('cep', value)}
+           className="mt-1 flex h-10 w-full rounded-md border border-input dark:border-white bg-background px-3 py-2 text-base ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm"
+          />
+         </div>
+        ) : (
+         <p className="text-gray-600 dark:text-white break-words bg-muted/50 p-3 rounded">
+          {getCompleteAddress(currentLead) || 'Não informado'}
+         </p>
+        )}
+       </div>
       </div>
+     </div>
 
       {/* Informações de Contato */}
 

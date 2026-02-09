@@ -111,6 +111,7 @@ export function NewCompanyModal({
     await searchCEP(cep)
    })()
   }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
  }, [cep])
 
  useEffect(() => {
@@ -132,6 +133,7 @@ export function NewCompanyModal({
     }
    })
   }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
  }, [cnpj, setValue])
 
  return (

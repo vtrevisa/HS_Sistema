@@ -2,22 +2,16 @@ import { useMemo, useState } from 'react'
 import { Button } from '../ui/button'
 import { Card } from '../ui/card'
 import { Badge } from '../ui/badge'
-import {
- getPaginatedData,
- getTotalPages,
- handleItemsPerPageChange,
- handlePageChange
-} from '@/services/alvaras'
-// import type { CompanyRequest } from '@/http/types/companies'
-// import { useCompany } from '@/http/use-company'
+import { getPaginatedData, getTotalPages } from '@/services/alvaras'
 
 interface AlvarasTableProps {
  alvarasData: {
   id: number
   service: string
-  endDate: Date
+  validity: Date
   address: string
   occupation: string
+  city?: string
  }[]
 }
 
@@ -27,8 +21,6 @@ export function AlvarasTable({ alvarasData }: AlvarasTableProps) {
  const [currentPage, setCurrentPage] = useState(1)
  const [itemsPerPage, setItemsPerPage] = useState(25)
 
- //const { exportCompanies } = useCompany()
-
  const totalItems = alvarasData.length
  const totalPages = getTotalPages(totalItems, itemsPerPage)
 
@@ -37,16 +29,17 @@ export function AlvarasTable({ alvarasData }: AlvarasTableProps) {
  }, [alvarasData, currentPage, itemsPerPage])
 
  const handlePrev = () => {
-  setCurrentPage(prev => handlePageChange(prev - 1, totalPages))
+  setCurrentPage(prev => Math.max(prev - 1, 1))
  }
 
  const handleNext = () => {
-  setCurrentPage(prev => handlePageChange(prev + 1, totalPages))
+  setCurrentPage(prev => Math.min(prev + 1, totalPages))
  }
 
  const handleItemsPerPageSelect = (e: React.ChangeEvent<HTMLSelectElement>) => {
-  const value = handleItemsPerPageChange(e.target.value, setCurrentPage)
+  const value = Number(e.target.value)
   setItemsPerPage(value)
+  setCurrentPage(1)
  }
 
  function handleExportAlvaras() {
@@ -71,7 +64,9 @@ export function AlvarasTable({ alvarasData }: AlvarasTableProps) {
   <Card className="p-6">
    <div className="flex flex-row items-center justify-between mb-4">
     <h2 className="text-xl font-semibold">Alvarás Liberados</h2>
-    <Button onClick={handleExportAlvaras}>Exportar Alvarás</Button>
+    <Button onClick={handleExportAlvaras}>
+     Exportar alvarás para busca de dados
+    </Button>
    </div>
 
    <div className="flex flex-row items-center justify-between gap-4 mb-4">
@@ -128,7 +123,7 @@ export function AlvarasTable({ alvarasData }: AlvarasTableProps) {
          </Badge>
         </td>
         <td className="p-4 align-middle [&:has([role=checkbox])]:pr-0">
-         {new Date(alvara.endDate).toLocaleDateString('pt-BR')}
+         {new Date(alvara.validity).toLocaleDateString('pt-BR')}
         </td>
         <td className="p-4 align-middle [&:has([role=checkbox])]:pr-0">
          {alvara.address}

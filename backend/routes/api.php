@@ -2,9 +2,11 @@
 
 use App\Http\Controllers\Api\AlvaraController;
 use App\Http\Controllers\Api\AlvaraLogController;
+use App\Http\Controllers\Api\AlvaraPurchaseController;
 use App\Http\Controllers\Api\ArchivedProposalController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\AutomationController;
+use App\Http\Controllers\Api\CalendarController;
 use App\Http\Controllers\Api\LeadController;
 use App\Http\Controllers\Api\CompanyController;
 use App\Http\Controllers\Api\GoogleSheetsController;
@@ -14,6 +16,7 @@ use App\Http\Controllers\Api\SubscriptionController;
 use App\Http\Controllers\Api\CreditPurchaseController;
 use App\Http\Controllers\Api\DashboardController;
 use App\Http\Controllers\Api\InvoiceController;
+use App\Http\Controllers\Api\TaskController;
 use Illuminate\Support\Facades\Route;
 
 // Auth
@@ -48,7 +51,15 @@ Route::post('/auth/logout', [AuthController::class, 'logout']); //POST
 Route::get('/alvaras', [AlvaraController::class, 'index']); //GET
 Route::post('/alvaras/search', [AlvaraController::class, 'search']); //POST
 Route::post('/alvaras/release', [AlvaraController::class, 'release']); //POST
+Route::get('/alvaras/consumed', [AlvaraPurchaseController::class, 'index']); //GET
+Route::post('/alvaras/consumed', [AlvaraPurchaseController::class, 'store']); //POST
+
 Route::get('/alvaras/logs', [AlvaraLogController::class, 'index']); //GET
+Route::get('/calendar/alvaras', [CalendarController::class, 'alvaras']); //GET
+
+// Tasks
+Route::get('/tasks', [TaskController::class, 'index']); //GET
+Route::post('/tasks', [TaskController::class, 'store']); //POST
 
 // Leads
 Route::get('/leads', [LeadController::class, 'index']); //GET

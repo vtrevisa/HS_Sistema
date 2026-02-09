@@ -1,4 +1,4 @@
-import { Plus, RefreshCw, Upload } from 'lucide-react'
+import { Plus, Upload } from 'lucide-react'
 import { Button } from '../ui/button'
 
 interface CompaniesActionsProps {

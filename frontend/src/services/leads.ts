@@ -188,8 +188,10 @@ function parseDataToLeads(data: any[][], debug = false): Lead[] {
 
 export async function exportLeadsToExcel(leads: LeadRequest[]) {
   if (!leads || leads.length === 0) {
-    toast.error("Nenhum lead para exportar")
-    console.warn("Nenhum lead para exportar");
+    toast.warning("Nenhum lead para exportar", {
+      description: "Você ainda não possui leads.",
+    })
+    
     return;
   }
 

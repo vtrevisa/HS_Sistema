@@ -5,13 +5,15 @@ import { Button } from '@/components/ui/button'
 interface AlvarasActionsProps {
  applyFilter: () => void
  isLoading: boolean
+ onCancel: () => void
  //exportList: () => void
  //selectedAlvaras: string[]
 }
 
 export function AlvarasActions({
  applyFilter,
- isLoading
+ isLoading,
+ onCancel
 }: //selectedAlvaras
 AlvarasActionsProps) {
  return (
@@ -32,6 +34,9 @@ AlvarasActionsProps) {
       Buscar Alvarás
      </>
     )}
+   </Button>
+   <Button variant="outline" onClick={onCancel}>
+    Cancelar
    </Button>
   </div>
  )
