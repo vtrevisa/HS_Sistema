@@ -7,6 +7,7 @@ export interface UserPlan {
 
 export interface UserRequest {
   id: number
+  avatar_url?: string | null
   role?: string
   status?: 'active' | 'inactive' | 'pending' | 'blocked'
   name: string

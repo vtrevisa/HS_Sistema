@@ -151,6 +151,7 @@ class AuthController extends Controller
                     'company' => $user->company,
                     'phone' => $user->phone,
                     'address' => $user->address,
+                    'avatar_url' => $user->avatar_url ?? null,
                     'last_login_at' => $user->last_login_at,
                     'created_at' => $user->created_at,
                     'plan_active' => $user->isPlanActive(),

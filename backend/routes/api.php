@@ -29,6 +29,7 @@ Route::get('/dashboard', [DashboardController::class, 'index']); //GET
 // Profile 
 Route::get('/auth/me', [AuthController::class, 'me']); //GET 
 Route::put('/auth/me/password/update', [AuthController::class, 'changePassword']); //PUT 
+Route::post('/user/avatar', [UserController::class, 'uploadAvatar']); //POST
 
 // Plans
 Route::get('/plans', [PlanController::class, 'index']); //GET 

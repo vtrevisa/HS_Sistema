@@ -30,6 +30,7 @@ class UserRequest extends FormRequest
             return [
                 'name'     => 'required|string',
                 'email'    => 'required|email|unique:users,email',
+                'avatar_url' => 'nullable|url',
                 'password' => 'required|min:6',
                 'role'     => 'nullable|in:admin,user',
                 'status' => 'nullable|in:active,inactive,pending,blocked',
@@ -45,6 +46,7 @@ class UserRequest extends FormRequest
         return [
             'name'     => 'sometimes|required|string',
             'email'    => 'sometimes|required|email|unique:users,email,' . $userId,
+            'avatar_url' => 'sometimes|nullable|url',
             'password' => 'sometimes|nullable|min:6',
             'role'     => 'sometimes|in:admin,user',
             'status' => 'nullable|in:active,inactive,pending,blocked',
