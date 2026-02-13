@@ -59,11 +59,11 @@ class AuthController extends Controller
                 $token,
                 60 * 24,       // 1 day
                 '/',           // path
-                'localhost',   //domain
-                false,         // secure=false in localhost, true in prod with HTTPS
+                env('SESSION_DOMAIN', null),   // domain
+                env('SESSION_SECURE_COOKIE', false),
                 true,          // httpOnly
                 false,
-                'Lax'
+                env('SESSION_SAME_SITE', 'lax')
             );
 
             return response()->json([
@@ -101,11 +101,11 @@ class AuthController extends Controller
                 '',
                 -1,
                 '/',
-                'localhost',
-                false,
+                env('SESSION_DOMAIN', null),
+                env('SESSION_SECURE_COOKIE', false),
                 true,
                 false,
-                'Lax'
+                env('SESSION_SAME_SITE', 'lax')
             );
 
             return response()->json([

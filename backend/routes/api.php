@@ -18,6 +18,7 @@ use App\Http\Controllers\Api\DashboardController;
 use App\Http\Controllers\Api\InvoiceController;
 use App\Http\Controllers\Api\TaskController;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Api\IntegrationController;
 
 // Auth
 Route::post('/auth', [AuthController::class, 'login']); //POST
@@ -30,6 +31,13 @@ Route::get('/dashboard', [DashboardController::class, 'index']); //GET
 Route::get('/auth/me', [AuthController::class, 'me']); //GET 
 Route::put('/auth/me/password/update', [AuthController::class, 'changePassword']); //PUT 
 Route::post('/user/avatar', [UserController::class, 'uploadAvatar']); //POST
+Route::get('/auth/{provider}/callback', [IntegrationController::class, 'callback']); //GET - no auth middleware, relies on state cookie or server cache to identify user
+Route::get('/auth/{provider}/start', [IntegrationController::class, 'start']); //GET - optional endpoint if frontend needs to initiate flow and set state cookie; otherwise frontend can directly redirect to provider's auth URL with state and cookie setup
+
+// Email status & disconnect
+Route::get('/email/status', [IntegrationController::class, 'emailStatus']); //GET - returns connected status per provider
+Route::delete('/email/disconnect/{provider}', [IntegrationController::class, 'disconnectEmail']); //DELETE - disconnect provider for user
+Route::post('/send-email', [IntegrationController::class, 'send']); //POST - send email using connected provider
 
 // Plans
 Route::get('/plans', [PlanController::class, 'index']); //GET 
