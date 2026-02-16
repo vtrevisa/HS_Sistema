@@ -54,8 +54,9 @@ export interface RecentTask {
 export interface Alvaras {
  id: number
  company: string
+ type: string
  validity: string
- status: 'Vencido' | 'A vencer'
+ status: string
 }
 
 export interface DashboardCards {

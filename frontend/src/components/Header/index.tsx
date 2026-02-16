@@ -38,6 +38,8 @@ import { useLogout } from '@/http/use-logout'
 import { useUser } from '@/http/use-user'
 import { useTheme } from '@/hooks/useTheme'
 
+import avcbIcon from '@/assets/avcb-icon.png'
+
 interface MenuItemProps {
  id: string
  label: string
@@ -56,7 +58,7 @@ export function Header() {
  const comercialItems: MenuItemProps[] = [
   {
    id: 'dashboard',
-   label: 'Dashboard CRM',
+   label: 'Dashboard Comercial',
    icon: LayoutDashboard,
    href: '/dashboard'
   },
@@ -80,7 +82,7 @@ export function Header() {
   },
   {
    id: 'pipeline-crm',
-   label: 'Pipeline CRM',
+   label: 'CRM - Funil de Vendas',
    icon: Trello,
    href: '/dashboard/pipeline-crm'
   },
@@ -148,22 +150,21 @@ export function Header() {
   <Sidebar collapsible="icon">
    <SidebarHeader>
     <div className="flex items-center gap-2 px-2">
-     <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-      <LayoutDashboard className="h-4 w-4" />
-     </div>
+     <img src={avcbIcon} alt="AVCB CERTO" className="h-8 w-8 object-contain" />
      {!isCollapsed && (
       <div className="flex flex-col">
-       <span className="text-sm font-semibold">Painel HS Sistema</span>
+       <span className="text-sm font-bold text-sidebar-foreground uppercase">
+        Avcb Certo
+       </span>
       </div>
      )}
     </div>
    </SidebarHeader>
 
    <SidebarContent>
-    {/* Gestão Comercial (CRM) */}
+    {/* Gestão Comercial  */}
     <SidebarGroup>
-     <SidebarGroupLabel className="text-blue-600 font-semibold flex items-center gap-2">
-      <Target className="h-4 w-4" />
+     <SidebarGroupLabel className="text-sidebar-foreground/70 font-semibold">
       {!isCollapsed && 'Gestão Comercial'}
      </SidebarGroupLabel>
      <SidebarGroupContent>
@@ -175,7 +176,7 @@ export function Header() {
            <SidebarMenuButton
             isActive={activeTab === item.id}
             tooltip={isCollapsed ? item.label : undefined}
-            className="data-[active=true]:bg-blue-50 data-[active=true]:text-blue-700 data-[active=true]:border-l-2 data-[active=true]:border-blue-500"
+            className="data-[active=true]:bg-sidebar-accent data-[active=true]:text-sidebar-accent-foreground data-[active=true]:border-l-2 data-[active=true]:border-sidebar-primary"
            >
             <item.icon className="h-4 w-4" />
             <span>{item.label}</span>
@@ -189,7 +190,9 @@ export function Header() {
     </SidebarGroup>
 
     <SidebarGroup>
-     <SidebarGroupLabel>Sistema</SidebarGroupLabel>
+     <SidebarGroupLabel className="text-sidebar-foreground/70">
+      Sistema
+     </SidebarGroupLabel>
      <SidebarGroupContent>
       <SidebarMenu>
        {systemItems

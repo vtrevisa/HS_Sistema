@@ -14,8 +14,8 @@ export function Calendario() {
   <div className="p-4 lg:p-6 space-y-4">
    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
     <div>
-     <h1 className="flex items-center gap-2 text-blue-600 dark:text-white text-2xl lg:text-3xl font-bold">
-      <CalendarIcon className="h-7 w-7 text-blue-600 dark:text-white" />
+     <h1 className="text-2xl lg:text-3xl font-bold text-foreground flex items-center gap-2">
+      <CalendarIcon className="h-7 w-7 text-primary" />
       Calendário Comercial
      </h1>
      <p className="text-muted-foreground text-sm mt-1">
