@@ -121,6 +121,34 @@ class UserController extends Controller
                 'message' => "Usuário não editado!",
             ], 400);
         }
+    } 
+
+    // Set email subject and body for user
+    public function setEmailConfig(Request $request, User $user): JsonResponse
+    {
+        $request->validate([
+            'email_subject' => 'required|string',
+            'email_body' => 'required|string',
+        ]);
+        Log::info ("-->setEmailConfig: User ID {$user->id} - Subject: {$request->email_subject} - Body: {$request->email_body}");
+        try {
+            $user->update([
+                'email_subject' => $request->email_subject,
+                'email_body' => $request->email_body,
+            ]);
+
+            return response()->json([
+                'status' => true,
+                'user' => $user,
+                'message' => "Configurações de e-mail atualizadas com sucesso!",
+            ], 200);
+        } catch (Exception $e) {
+            Log::error('setEmailConfig error', ['user_id' => $user->id, 'error' => $e->getMessage(), 'trace' => $e->getTraceAsString()]);
+            return response()->json([
+                'status' => false,
+                'message' => 'Configurações de e-mail não atualizadas!',
+            ], 500);
+        }
     }
 
     // Upload user avatar

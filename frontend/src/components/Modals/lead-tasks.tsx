@@ -8,10 +8,10 @@ interface LeadTaskModalProps {
 }
 
 const tasks = [
-    { id: 1, title: "Task 1", description: "Description 1", date: "01-02-2026", hour: "10:00", priority: "Media", user_id: 2, lead_id: 93, created_at: "2024-05-01", updated_at: "2024-05-02" },
+/*     { id: 1, title: "Task 1", description: "Description 1", date: "01-02-2026", hour: "10:00", priority: "Media", user_id: 2, lead_id: 93, created_at: "2024-05-01", updated_at: "2024-05-02" },
     { id: 2, title: "Task 2", description: "Description 2", date: "02-02-2026", hour: "09:00", priority: "Baixa", user_id: 2, lead_id: 92, created_at: "2024-05-01", updated_at: "2024-05-02" },
     { id: 1, title: "Task 1", description: "Description 1", date: "01-02-2026", hour: "08:00", priority: "Alta", user_id: 2, lead_id: 91, created_at: "2024-05-01", updated_at: "2024-05-02" }
-]
+ */]
 
 export function LeadTasksModal({ onEmptyChange }: LeadTaskModalProps) {
     useEffect(() => {

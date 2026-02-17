@@ -12,6 +12,8 @@ use App\Models\EmailToken;
 use App\Traits\AuthenticatesWithToken;
 use Laravel\Sanctum\PersonalAccessToken;
 use Illuminate\Support\Facades\Log;
+use App\Services\GmailSender;
+use Illuminate\Support\Facades\Validator;
 
 class IntegrationController extends Controller
 {
@@ -23,14 +25,16 @@ class IntegrationController extends Controller
             'client_id_env' => 'GMAIL_CLIENT_ID',
             'client_secret_env' => 'GMAIL_CLIENT_SECRET',
             'redirect_env' => 'GMAIL_REDIRECT_URI',
-            'scope' => 'https://www.googleapis.com/auth/gmail.send',
+            // include openid/email scopes so we can obtain the provider email address
+            'scope' => 'openid email profile https://www.googleapis.com/auth/gmail.send',
         ],
         'microsoft' => [
             'token_url' => 'https://login.microsoftonline.com/common/oauth2/v2.0/token',
             'client_id_env' => 'MICROSOFT_CLIENT_ID',
             'client_secret_env' => 'MICROSOFT_CLIENT_SECRET',
             'redirect_env' => 'MICROSOFT_REDIRECT_URI',
-            'scope' => 'https://graph.microsoft.com/Mail.Send offline_access User.Read',
+            // request openid/email/profile and offline access to retrieve provider email and refresh tokens
+            'scope' => 'openid email profile offline_access https://graph.microsoft.com/Mail.Send User.Read',
         ],
     ];
 
@@ -126,45 +130,46 @@ class IntegrationController extends Controller
         $refreshToken = $data['refresh_token'] ?? null;
         $expiresIn = $data['expires_in'] ?? null;
         $scope = $data['scope'] ?? null;
+
         $providerEmail = null;
 
-        // Optional: fetch user email from provider (Gmail: use token to call people/me or get id_token)
-        // For Gmail you can decode id_token if present or call https://www.googleapis.com/oauth2/v1/userinfo?alt=json&access_token=...
-        if (isset($data['id_token'])) {
-            // decode JWT (not verified here) to get email if present (or call userinfo endpoint)
+        // 1) direct field returned by provider
+        if (!empty($data['email'])) {
+            $providerEmail = $data['email'];
+        }
+
+        // 2) try extract from id_token JWT payload if present
+        if (!$providerEmail && !empty($data['id_token'])) {
             try {
                 $payload = explode('.', $data['id_token'])[1] ?? null;
                 if ($payload) {
+                    $pad = strlen($payload) % 4;
+                    if ($pad) $payload .= str_repeat('=', 4 - $pad);
                     $decoded = json_decode(base64_decode(strtr($payload, '-_', '+/')));
-                    $providerEmail = $decoded->email ?? null;
+                    $providerEmail = $decoded->email ?? $decoded->upn ?? $providerEmail;
                 }
             } catch (\Exception $e) {
-                // ignored
+                // ignore
             }
         }
 
-        // If provider is Gmail and we still don't have an email, fetch userinfo
-        if ($provider === 'gmail' && !$providerEmail && $accessToken) {
+        // 3) provider-specific userinfo calls (prefer OpenID Connect endpoints)
+        if (!$providerEmail && $accessToken) {
             try {
-                $info = Http::withToken($accessToken)
-                    ->get('https://www.googleapis.com/oauth2/v1/userinfo?alt=json');
-                if ($info->successful()) {
-                    $json = $info->json();
-                    $providerEmail = $json['email'] ?? $providerEmail;
-                }
-            } catch (\Exception $e) {
-                // ignore failures to fetch provider email
-            }
-        }
-
-        // If provider is Microsoft, fetch user email from Graph API
-        if ($provider === 'microsoft' && $accessToken) {
-            try {
-                $graphResponse = Http::withToken($accessToken)
-                    ->get('https://graph.microsoft.com/v1.0/me');
-                if ($graphResponse->successful()) {
-                    $json = $graphResponse->json();
-                    $providerEmail = $json['mail'] ?? $json['userPrincipalName'] ?? $providerEmail;
+                if ($provider === 'gmail') {
+                    $info = Http::withToken($accessToken)
+                        ->get('https://openidconnect.googleapis.com/v1/userinfo');
+                    if ($info->successful()) {
+                        $json = $info->json();
+                        $providerEmail = $json['email'] ?? $providerEmail;
+                    }
+                } elseif ($provider === 'microsoft') {
+                    $graphResponse = Http::withToken($accessToken)
+                        ->get('https://graph.microsoft.com/v1.0/me');
+                    if ($graphResponse->successful()) {
+                        $json = $graphResponse->json();
+                        $providerEmail = $json['mail'] ?? $json['userPrincipalName'] ?? $providerEmail;
+                    }
                 }
             } catch (\Exception $e) {
                 // ignore failures to fetch provider email
@@ -273,12 +278,18 @@ class IntegrationController extends Controller
             return response()->json(['status' => false, 'message' => 'Unauthenticated'], 401);
         }
 
-        $hasGmail = EmailToken::where('user_id', $user->id)->where('provider', 'gmail')->exists();
-        $hasMicrosoft = EmailToken::where('user_id', $user->id)->where('provider', 'microsoft')->exists();
+        $gmailToken = EmailToken::where('user_id', $user->id)->where('provider', 'gmail')->first();
+        $msToken = EmailToken::where('user_id', $user->id)->where('provider', 'microsoft')->first();
 
         return response()->json([
-            'gmail' => ['connected' => (bool) $hasGmail],
-            'outlook' => ['connected' => (bool) $hasMicrosoft],
+            'gmail' => [
+                'connected' => (bool) $gmailToken,
+                'email' => $gmailToken->email ?? null,
+            ],
+            'outlook' => [
+                'connected' => (bool) $msToken,
+                'email' => $msToken->email ?? null,
+            ],
         ]);
     }
 
@@ -301,6 +312,55 @@ class IntegrationController extends Controller
         $deleted = EmailToken::where('user_id', $user->id)->where('provider', $prov)->delete();
 
         return response()->json(['status' => true, 'deleted' => (bool) $deleted]);
+    }
+
+    public function send(Request $request, GmailSender $gmail/* , OutlookSender $outlook */)
+    {
+        Log::info(['request' => $request->all()]);
+        $validator = Validator::make($request->all(), [
+            'user_id' => 'required|integer',
+            'provider' => 'required|in:gmail,outlook',
+            'to' => 'required|email',
+            'subject' => 'required|string|max:255',
+            'body' => 'required|string',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'errors' => $validator->errors()
+            ], 422);
+        }
+
+        try {
+            if ($request->provider === 'gmail') {
+                $gmail->send(
+                    $request->user_id,
+                    $request->to,
+                    $request->subject,
+                    $request->body
+                );
+            } else {
+                // Se ainda não implementou Outlook, pode comentar ou chamar
+                /* $outlook->send(
+                    auth()->id(),
+                    $request->to,
+                    $request->subject,
+                    $request->body
+                ); */
+            }
+
+            return response()->json([
+                'success' => true,
+                'message' => 'E-mail enviado com sucesso!'
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'error' => $e->getMessage()
+            ], 500);
+        }
     }
 
 }

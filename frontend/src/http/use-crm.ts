@@ -1,14 +1,17 @@
 import { useCallback, useMemo, useState } from "react";
 import { useLead } from "@/http/use-lead";
 import type { LeadRequest } from "./types/leads";
+import { useUser } from "./use-user";
+import type { UserRequest } from "./types/user";
 import { usePipelineAutomation } from "./use-pipeline-automation";
 
 export function useCRM(){
-  const { leadsDB, updateLead } = useLead()
+  const { leadsDB, updateLead } = useLead();
   const { runAutomations } = usePipelineAutomation();
+  const { user } = useUser();
 
   const leads = useMemo(() => leadsDB.data ?? [], [leadsDB.data]);
-
+ 
   const statusMap = useMemo(() => ({
     lead: "Lead",
     "contato-automatico": "Primeiro contato",
@@ -89,7 +92,7 @@ export function useCRM(){
         await updateLead.mutate(updatedLead);
         console.log(`✅ Lead #${leadId} movido para: ${newStatusLabel}`);
 
-        await runAutomations(updatedLead, newStatusId);
+        await runAutomations(updatedLead, newStatusId, user as UserRequest);
       } catch (error) {
         console.error("Erro ao atualizar status do lead:", error);
       }

@@ -22,6 +22,9 @@ export interface UserRequest {
   last_login_at: string
   created_at: string
   plan: UserPlan | null
+  email_subject?: string | null
+  email_body?: string | null
+  whatsapp_message?: string | null
 }
 
 export interface UpdateUserPasswordRequest {

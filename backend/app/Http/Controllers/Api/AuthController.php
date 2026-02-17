@@ -147,6 +147,8 @@ class AuthController extends Controller
                     'role' => $user->role,
                     'name' => $user->name,
                     'email' => $user->email,
+                    'email_subject' => $user->email_subject,
+                    'email_body' => $user->email_body,
                     'cnpj' => $user->cnpj,
                     'company' => $user->company,
                     'phone' => $user->phone,
