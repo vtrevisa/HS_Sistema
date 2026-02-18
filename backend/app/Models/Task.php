@@ -15,11 +15,13 @@ class Task extends Model
         'date',
         'hour',
         'priority',
+        'completed',
         'user_id',
         'lead_id',
     ];
 
     protected $casts = [
+        'completed' => 'boolean',
         'date' => 'date',
     ];
 

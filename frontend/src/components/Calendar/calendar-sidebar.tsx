@@ -1,4 +1,4 @@
-import { ClipboardList, Clock, AlertTriangle } from 'lucide-react'
+import { ClipboardList, Clock, AlertTriangle, CheckCircle2 } from 'lucide-react'
 import { format, startOfDay } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card'
@@ -13,6 +13,7 @@ interface CalendarSidebarProps {
  dayEvents: CalendarEvent[]
  prioridadeCores: Record<string, string>
  onSchedule: (day: Date) => void
+ onToggleCompleted: (id: string, e?: React.MouseEvent) => void
 }
 
 export function CalendarSidebar({
@@ -20,7 +21,8 @@ export function CalendarSidebar({
  allEvents,
  dayEvents,
  prioridadeCores,
- onSchedule
+ onSchedule,
+ onToggleCompleted
 }: CalendarSidebarProps) {
  const today = startOfDay(new Date())
 
@@ -70,11 +72,35 @@ export function CalendarSidebar({
         return (
          <div
           key={event.id}
-          className="p-2 rounded-lg border border-blue-200 bg-blue-50/50 dark:border-blue-800 dark:bg-blue-950/20 space-y-1"
+          onClick={e => {
+           if (!event.id) return
+           onToggleCompleted(event.id, e)
+          }}
+          className={cn(
+           'p-2 rounded-lg border space-y-1 cursor-pointer transition-colors',
+           event.completed
+            ? 'border-brand-success/30 bg-brand-success/10'
+            : 'border-primary/20 bg-primary/5'
+          )}
+          title={
+           event.completed
+            ? 'Concluída — clique para desfazer'
+            : 'Clique para marcar como concluída'
+          }
          >
           <div className="flex items-center gap-2">
-           <ClipboardList className="h-3.5 w-3.5 text-blue-600" />
-           <span className="text-xs font-medium text-foreground capitalize">
+           {event.completed ? (
+            <CheckCircle2 className="h-3.5 w-3.5 text-brand-success" />
+           ) : (
+            <ClipboardList className="h-3.5 w-3.5 text-primary" />
+           )}
+
+           <span
+            className={cn(
+             'text-xs font-medium text-foreground',
+             event.completed && 'line-through opacity-70'
+            )}
+           >
             {event.title}
            </span>
           </div>
@@ -89,10 +115,12 @@ export function CalendarSidebar({
             variant="outline"
             className={cn(
              'text-[10px] px-1.5 py-0',
-             prioridadeCores[event.priority]
+             event.completed
+              ? 'bg-brand-success/20 text-brand-success'
+              : prioridadeCores[event.priority]
             )}
            >
-            {event.priority}
+            {event.completed ? 'concluída' : event.priority}
            </Badge>
           </div>
 
@@ -108,10 +136,10 @@ export function CalendarSidebar({
        return (
         <div
          key={event.id}
-         className="p-2 rounded-lg border border-red-200 bg-red-50/50 dark:border-red-800 dark:bg-red-950/20 space-y-1"
+         className="p-2 rounded-lg border border-destructive/20 bg-destructive/5 space-y-1"
         >
          <div className="flex items-center gap-2">
-          <AlertTriangle className="h-3.5 w-3.5 text-red-600" />
+          <AlertTriangle className="h-3.5 w-3.5 text-destructive" />
           <span className="text-xs font-medium text-foreground">
            {event.company}
           </span>
@@ -147,11 +175,11 @@ export function CalendarSidebar({
        <span
         className={cn(
          'w-2 h-2 rounded-full shrink-0',
-         event.eventType === 'tarefa' ? 'bg-blue-500' : 'bg-red-500'
+         event.eventType === 'tarefa' ? 'bg-primary' : 'bg-destructive'
         )}
        />
 
-       <span className="truncate text-foreground capitalize">
+       <span className="truncate text-foreground">
         {event.eventType === 'tarefa' ? event.title : `⚠ ${event.company}`}
        </span>
 

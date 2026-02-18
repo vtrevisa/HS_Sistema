@@ -44,6 +44,7 @@ export function Calendario() {
     goNext={calendar.goNext}
     goToday={calendar.goToday}
     onDayClick={calendar.handleDayClick}
+    onToggleCompleted={calendar.handleToggleCompleted}
    />
 
    {/* Modal */}

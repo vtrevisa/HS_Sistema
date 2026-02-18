@@ -6,6 +6,10 @@ import { toast } from "sonner"
 import { parseUTCDateAsLocal } from "@/lib/date";
 import { parseISO, startOfDay } from "date-fns";
 
+interface ApiError {
+  message: string
+}
+
 export function useTasks() {
   const queryClient = useQueryClient();
 
@@ -65,9 +69,52 @@ export function useTasks() {
     }
   })
 
+
+  // Mutation to set task completed
+
+  const toggleCompletedMutation = useMutation<Task, AxiosError<ApiError>, { id: string }, { previousTasks?: Task[] }>({
+    mutationFn: async ({ id }) => {
+      const { data } = await api.put<{ task: Task }>(`/tasks/${id}`)
+      return data.task
+    },
+
+    onMutate: async ({ id }) => {
+      await queryClient.cancelQueries({ queryKey: ['tasks-calendar'] })
+
+      const previousTasks = queryClient.getQueryData<Task[]>(['tasks-calendar'])
+
+      queryClient.setQueryData<Task[]>(['tasks-calendar'], old => old?.map(task => task.id === id ? { ...task, completed: !task.completed } : task) ?? [])
+
+      return { previousTasks }
+    },
+
+    onSuccess: (data) => {
+      toast.success(data.completed ? 'Tarefa concluída com sucesso' : 'Tarefa marcada como pendente')
+    },
+
+    onError: (error, _variables, context) => {
+      queryClient.setQueryData(['tasks-calendar'], context?.previousTasks)
+
+      const message = error.response?.data?.message
+
+
+      if (message) {
+        toast.warning(message)
+        return
+      }
+
+      toast.error('Erro ao atualizar a tarefa')
+    },
+
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ['tasks-calendar'] })
+    }
+  })
+
   return {
     tasks: tasksDB.data ?? [],
     alvaras: alvarasDB.data ?? [],
+    taskCompleted: toggleCompletedMutation.mutate,
     isLoading: tasksDB.isLoading,
     saveTasks: saveMutation,
   }

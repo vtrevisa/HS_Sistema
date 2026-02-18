@@ -235,7 +235,6 @@ export function Header() {
            : 'Modo Escuro'
          : undefined
        }
-       className="hover:bg-accent hover:text-accent-foreground"
       >
        {actualTheme === 'dark' ? (
         <Sun className="h-4 w-4" />

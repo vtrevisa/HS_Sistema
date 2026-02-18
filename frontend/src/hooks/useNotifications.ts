@@ -241,6 +241,7 @@ export const useNotifications = () => {
     const interval = setInterval(checkAllNotifications, 30 * 60 * 1000);
     
     return () => clearInterval(interval);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [leads, processos, settings]);
 
   const markAsRead = (notificationId: string) => {

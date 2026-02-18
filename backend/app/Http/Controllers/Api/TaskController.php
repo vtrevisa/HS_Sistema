@@ -7,6 +7,7 @@ use App\Models\Task;
 use Illuminate\Http\Request;
 use Laravel\Sanctum\PersonalAccessToken;
 use Illuminate\Validation\Rule;
+use Carbon\Carbon;
 
 class TaskController extends Controller
 {
@@ -70,5 +71,26 @@ class TaskController extends Controller
         ]);
 
         return response()->json($task, 201);
+    }
+
+
+    public function completed(int $id)
+    {
+        $task = Task::findOrFail($id);
+
+        if ($task->date->isBefore(Carbon::today())) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Não é possível concluir tarefas vencidas.'
+            ], 422);
+        }
+
+        $task->completed = !$task->completed;
+        $task->save();
+
+        return response()->json([
+            'status' => true,
+            'task' => $task,
+        ]);
     }
 }

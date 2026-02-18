@@ -51,7 +51,7 @@ export function PipelineNotification() {
  const getNotificationIcon = (type: string) => {
   switch (type) {
    case 'document_expiring':
-    return <FileText className="h-4 w-4 text-orange-600" />
+    return <FileText className="h-4 w-4 text-destructive" />
    case 'budget_status':
     return <DollarSign className="h-4 w-4 text-green-600" />
    case 'automatic_reminder':
@@ -59,7 +59,7 @@ export function PipelineNotification() {
    case 'process_due':
     return <AlertTriangle className="h-4 w-4 text-red-600" />
    case 'license_expiring':
-    return <AlertTriangle className="h-4 w-4 text-orange-600" />
+    return <AlertTriangle className="h-4 w-4 text-destructive" />
    case 'follow_up_due':
     return <Calendar className="h-4 w-4 text-red-600" />
    case 'checklist_pending':
@@ -209,8 +209,8 @@ export function PipelineNotification() {
           {filter === 'all'
            ? 'Todas'
            : filter === 'unread'
-           ? 'Não lidas'
-           : 'Alta prioridade'}
+             ? 'Não lidas'
+             : 'Alta prioridade'}
          </Button>
         ))}
        </div>
@@ -329,7 +329,7 @@ export function PipelineNotification() {
         </h3>
 
         <div className="space-y-4">
-         <div className="flex items-center justify-between">
+         {/* <div className="flex items-center justify-between">
           <div>
            <Label htmlFor="document-expiry">Vencimento de Documentos</Label>
            <p className="text-sm text-gray-600 dark:text-gray-400">
@@ -391,12 +391,12 @@ export function PipelineNotification() {
             updateSettings({ processAlerts: checked })
            }
           />
-         </div>
+         </div> */}
 
          <div className="flex items-center justify-between">
           <div>
            <Label htmlFor="push-notifications">Notificações Push</Label>
-           <p className="text-sm text-gray-600 dark:text-gray-400">
+           <p className="text-sm text-muted-foreground">
             Mostrar toasts para notificações importantes
            </p>
           </div>
@@ -412,7 +412,7 @@ export function PipelineNotification() {
          <div className="flex items-center justify-between">
           <div>
            <Label htmlFor="email-notifications">Notificações por Email</Label>
-           <p className="text-sm text-gray-600 dark:text-gray-400">
+           <p className="text-sm text-muted-foreground">
             Receber notificações importantes por email (em breve)
            </p>
           </div>

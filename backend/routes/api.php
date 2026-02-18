@@ -60,6 +60,7 @@ Route::get('/calendar/alvaras', [CalendarController::class, 'alvaras']); //GET
 // Tasks
 Route::get('/tasks', [TaskController::class, 'index']); //GET
 Route::post('/tasks', [TaskController::class, 'store']); //POST
+Route::put('/tasks/{id}', [TaskController::class, 'completed']); //PATCH
 
 // Leads
 Route::get('/leads', [LeadController::class, 'index']); //GET

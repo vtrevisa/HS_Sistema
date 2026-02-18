@@ -32,6 +32,7 @@ export function useAlvaras({ monthlyLimit, used }: Plan) {
   const [flowState, setFlowState] = useState<FlowState>("my-alvaras");
   const [searchResults, setSearchResults] = useState<SearchResults | null>(null);
   const [allAlvaras, setAllAlvaras] = useState<Alvaras[]>([])
+  const [pendingAlvaras, setPendingAlvaras] = useState<Alvaras[]>([])
   const [releasedAlvaras, setReleasedAlvaras] = useState<Alvaras[]>([])
 
 
@@ -123,10 +124,25 @@ export function useAlvaras({ monthlyLimit, used }: Plan) {
   const releaseMutation = useMutation<{ creditsUsed: number; creditsAvailable: number; extraNeeded: number;  monthlyUsed: number; savedAlvaras: number; }, Error, ReleasePayload>({
     mutationFn: async (payload) => {
 
-      const toRelease = allAlvaras.slice(0, payload.totalToRelease).filter(alvara => !releasedAlvaras.some(release => release.id === alvara.id) && !consumedAlvaras.some(consumed => consumed.service === alvara.service &&
-        consumed.city === alvara.city && consumed.address === alvara.address && new Date(consumed.validity).toDateString() === alvara.validity.toDateString())
-      );
+      // const toRelease = allAlvaras.slice(0, payload.totalToRelease).filter(alvara => !releasedAlvaras.some(release => release.id === alvara.id) && !consumedAlvaras.some(consumed => consumed.service === alvara.service &&
+      //   consumed.city === alvara.city && consumed.address === alvara.address && new Date(consumed.validity).toDateString() === alvara.validity.toDateString())
+      // );
 
+
+      const eligibleAlvaras = allAlvaras.filter(alvara => {
+        const alreadyReleased = releasedAlvaras.some(release => release.id === alvara.id)
+
+        const alreadyConsumed = consumedAlvaras.some(consumed =>
+          consumed.service === alvara.service &&
+          consumed.city === alvara.city &&
+          consumed.address === alvara.address &&
+          new Date(consumed.validity).toDateString() === alvara.validity.toDateString()
+        )
+
+        return !alreadyReleased && !alreadyConsumed
+      })
+
+      const toRelease = pendingAlvaras.length > 0 ? pendingAlvaras : eligibleAlvaras.slice(0, payload.totalToRelease)
 
       const { data } = await api.post("/alvaras/release", {
         ...payload,
@@ -139,13 +155,13 @@ export function useAlvaras({ monthlyLimit, used }: Plan) {
         })),
       });
 
-     return data;
+      return data;
     },
     onSuccess: async (data) => {
 
       await refetchConsumedAlvaras();
 
-      const newReleased = allAlvaras.slice(0, data.savedAlvaras).filter(alvara => !releasedAlvaras.some(r => r.id === alvara.id));
+      const newReleased = allAlvaras.slice(0, data.savedAlvaras).filter(alvara => !releasedAlvaras.some(release => release.id === alvara.id));
 
       setReleasedAlvaras(prev => [...prev, ...newReleased]);
 
@@ -161,14 +177,18 @@ export function useAlvaras({ monthlyLimit, used }: Plan) {
       queryClient.invalidateQueries({ queryKey: ["authUser"] });
 
       if (data.extraNeeded > 0) {
+        setPendingAlvaras(newReleased.length > 0 ? newReleased : pendingAlvaras)
+
         setFlowState('payment-required')
+
         toast.info('Créditos insuficientes', {
           description: `Você precisa comprar ${data.extraNeeded} créditos extras.`
         })
+
         return
       }
 
-      
+      setPendingAlvaras([])
       setFlowState('my-alvaras')
       toast.success('Alvarás liberados com sucesso!')
     },

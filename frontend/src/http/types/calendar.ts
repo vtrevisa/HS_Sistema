@@ -1,14 +1,15 @@
 export interface Task {
-  id?: string;
+  id: string;
   title: string;
   description: string;
   date: Date;
   hour: string;
   priority: 'baixa' | 'media' | 'alta';
+  completed?: boolean
 }
 
 export interface TaskResponse {
-  id?: string
+  id: string
   title: string
   description: string
   date: string        

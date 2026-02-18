@@ -44,7 +44,7 @@ function isAlvara(event: CalendarEvent): event is Alvara & { eventType: 'alvara'
 
 export function useCalendar() {
 
-  const { tasks, alvaras } = useTasks()
+  const { tasks, alvaras, taskCompleted } = useTasks()
 
   
   const [viewMode, setViewMode] = useState<ViewMode>('mensal')
@@ -55,9 +55,9 @@ export function useCalendar() {
   const [modalDefaultDate, setModalDefaultDate] = useState<Date | undefined>()
 
   const prioridadeCores = {
-    baixa: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400',
-    media: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400',
-    alta: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',
+    baixa: 'bg-brand-success/20 text-brand-success',
+    media: 'bg-accent text-accent-foreground',
+    alta: 'bg-destructive/10 text-destructive',
   };
 
 
@@ -156,6 +156,11 @@ export function useCalendar() {
 
   // Actions
 
+  function handleToggleCompleted(id: string, e?: React.MouseEvent) {
+    e?.stopPropagation()
+    taskCompleted({ id })
+  }
+
   function handleDayClick (day: Date) {
     setSelectedDate(day)
   }
@@ -191,6 +196,7 @@ export function useCalendar() {
     setModalDefaultDate,
 
     // actions
+    handleToggleCompleted,
     handleDayClick,
     handleScheduleFromDay,
     prioridadeCores

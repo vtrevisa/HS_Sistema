@@ -239,7 +239,30 @@ class DashboardController extends Controller
 
         // Tasks Recentes
 
+        // $tasks = Task::where('user_id', $user->id)
+        //     ->orderBy('date')
+        //     ->limit(5)
+        //     ->get()
+        //     ->map(fn($task) => [
+        //         'id' => $task->id,
+        //         'title' => $task->title,
+        //         'description' => $task->description,
+        //         'date' => Carbon::parse($task->date)->toDateString(),
+        //         'hour' => $task->hour,
+        //         'priority' => $task->priority,
+        //     ]);
+
+
+
         $tasks = Task::where('user_id', $user->id)
+            ->where(function ($query) use ($today) {
+                $query
+                    ->whereDate('date', $today)
+                    ->orWhere(function ($q) use ($today) {
+                        $q->whereDate('date', '<', $today)
+                            ->where('completed', false);
+                    });
+            })
             ->orderBy('date')
             ->limit(5)
             ->get()
@@ -250,6 +273,7 @@ class DashboardController extends Controller
                 'date' => Carbon::parse($task->date)->toDateString(),
                 'hour' => $task->hour,
                 'priority' => $task->priority,
+                'completed' => (bool) $task->completed,
             ]);
 
         // Alvarás

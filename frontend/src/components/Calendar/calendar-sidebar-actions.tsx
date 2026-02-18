@@ -15,7 +15,7 @@ export function CalendarSidebarActions({
    variant="ghost"
    size="sm"
    onClick={() => onSchedule(selectedDate)}
-   className="h-7 text-blue-600 hover:text-blue-700"
+   className="h-7 text-primary hover:text-primary/80"
   >
    <Plus className="h-3 w-3 mr-1" />
    Agendar
