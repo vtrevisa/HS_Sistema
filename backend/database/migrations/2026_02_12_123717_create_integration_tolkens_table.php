@@ -11,9 +11,10 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('email_tokens', function (Blueprint $table) {
+        Schema::create('integration_tokens', function (Blueprint $table) {
         $table->id();
         $table->foreignId('user_id')->constrained()->onDelete('cascade');
+        $table->enum('type', ['email', 'calendar', 'whatsapp', 'viafacilsp']);
         $table->enum('provider', ['gmail', 'microsoft']);
         $table->string('email');
         $table->text('access_token');
@@ -21,7 +22,9 @@ return new class extends Migration
         $table->timestamp('expires_at');
         $table->timestamps();
 
-        $table->unique(['user_id']);
+        // allow one entry per (user_id, type) so a user can have up to
+        // one token for each integration `type` (email, calendar, etc.)
+        $table->unique(['user_id', 'type']);
         });
     }
 
@@ -30,6 +33,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('email_tokens');
+        Schema::dropIfExists('integration_tokens');
     }
 };

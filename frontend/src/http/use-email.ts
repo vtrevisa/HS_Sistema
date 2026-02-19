@@ -13,7 +13,7 @@ export function useEmail() {
     queryFn: async () => {
       const { data } = await api.get('/email/status')
       console.log("📧 Email status fetched:", data);
-      // backend returns { gmail: { connected, email }, outlook: { connected, email } }
+      // backend returns { gmail: { connected, email }, microsoft: { connected, email } }
       return data as EmailStatus
     },
     staleTime: 60_000,

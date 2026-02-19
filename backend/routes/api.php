@@ -7,6 +7,7 @@ use App\Http\Controllers\Api\ArchivedProposalController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\AutomationController;
 use App\Http\Controllers\Api\CalendarController;
+use App\Http\Controllers\Api\GoogleCalendarController;
 use App\Http\Controllers\Api\LeadController;
 use App\Http\Controllers\Api\CompanyController;
 use App\Http\Controllers\Api\GoogleSheetsController;
@@ -23,7 +24,8 @@ use App\Http\Controllers\Api\IntegrationController;
 // Auth
 Route::post('/auth', [AuthController::class, 'login']); //POST
 
-//Dashboard
+// 
+// Dashboard
 Route::get('/dashboard', [DashboardController::class, 'index']); //GET 
 
 
@@ -31,15 +33,28 @@ Route::get('/dashboard', [DashboardController::class, 'index']); //GET
 Route::get('/auth/me', [AuthController::class, 'me']); //GET 
 Route::put('/auth/me/password/update', [AuthController::class, 'changePassword']); //PUT 
 Route::post('/user/avatar', [UserController::class, 'uploadAvatar']); //POST
-Route::get('/auth/{provider}/callback', [IntegrationController::class, 'callback']); //GET - no auth middleware, relies on state cookie or server cache to identify user
-Route::get('/auth/{provider}/start', [IntegrationController::class, 'start']); //GET - optional endpoint if frontend needs to initiate flow and set state cookie; otherwise frontend can directly redirect to provider's auth URL with state and cookie setup
+
+// OAuth start/callback for providers (gmail, microsoft, calendar)
+Route::get('/auth/{provider}/start', [IntegrationController::class, 'start']);
+Route::get('/auth/{provider}/callback', [IntegrationController::class, 'callback']);
+Route::prefix('calendar')->group(function () {
+    Route::get('status', [IntegrationController::class, 'calendarStatus']);
+    Route::delete('disconnect', [IntegrationController::class, 'disconnectCalendar']);
+    Route::get('calendars', [GoogleCalendarController::class, 'listCalendars']);
+    Route::get('events', [GoogleCalendarController::class, 'listEvents']);
+    Route::post('events', [GoogleCalendarController::class, 'createEvent']);
+    Route::put('events/{eventId}', [GoogleCalendarController::class, 'updateEvent']);
+    Route::delete('events/{eventId}', [GoogleCalendarController::class, 'deleteEvent']);
+});
+
 
 // Email status, config & disconnect
+// Note: generic provider routes above handle gmail, microsoft and calendar
 Route::get('/email/status', [IntegrationController::class, 'emailStatus']); //GET - returns connected status per provider
 Route::delete('/email/disconnect/{provider}', [IntegrationController::class, 'disconnectEmail']); //DELETE - disconnect provider for user
 Route::post('/send-email', [IntegrationController::class, 'send']); //POST - send email using connected provider
-// Update email subject/body for a specific user (uses route model binding)
 Route::put('/users/{user}/email-config', [UserController::class, 'setEmailConfig']); //PUT - update email config like subject and body templates
+
 
 // Plans
 Route::get('/plans', [PlanController::class, 'index']); //GET 

@@ -2,7 +2,7 @@
 
 namespace App\Services;
 
-use App\Models\EmailToken;
+use App\Models\IntegrationToken;
 use Google\Client as GoogleClient;
 use Google\Service\Gmail;
 use Google\Service\Gmail\Message;
@@ -25,7 +25,7 @@ class GmailSender
     public function send(int $userId, string $to, string $subject, string $htmlBody): bool
     {
         // 1. Buscar token do usuário
-        $token = EmailToken::where('user_id', $userId)
+        $token = IntegrationToken::where('user_id', $userId)
             ->where('provider', 'gmail')
             ->first();
 
@@ -45,8 +45,8 @@ class GmailSender
 
         // 3. Configurar cliente Google
         $client = new GoogleClient();
-        $client->setClientId(env('GMAIL_CLIENT_ID'));
-        $client->setClientSecret(env('GMAIL_CLIENT_SECRET'));
+        $client->setClientId(env('GOOGLE_CLIENT_ID'));
+        $client->setClientSecret(env('GOOGLE_CLIENT_SECRET'));
         $client->setAccessToken([
             'access_token' => $accessToken,
             'refresh_token' => $refreshToken,
@@ -110,8 +110,8 @@ class GmailSender
     private function refreshAccessToken(string $refreshToken): array
     {
         $client = new GoogleClient();
-        $client->setClientId(env('GMAIL_CLIENT_ID'));
-        $client->setClientSecret(env('GMAIL_CLIENT_SECRET'));
+        $client->setClientId(env('GOOGLE_CLIENT_ID'));
+        $client->setClientSecret(env('GOOGLE_CLIENT_SECRET'));
 
         try {
             $newToken = $client->refreshToken($refreshToken);
@@ -132,7 +132,7 @@ class GmailSender
      */
     public function isConnected(int $userId): bool
     {
-        $token = EmailToken::where('user_id', $userId)
+        $token = IntegrationToken::where('user_id', $userId)
             ->where('provider', 'gmail')
             ->first();
 
@@ -156,7 +156,7 @@ class GmailSender
      */
     public function disconnect(int $userId): bool
     {
-        return EmailToken::where('user_id', $userId)
+        return IntegrationToken::where('user_id', $userId)
             ->where('provider', 'gmail')
             ->delete();
     }

@@ -18,17 +18,17 @@ export function usePipelineAutomation() {
 
     const provider = dataRef.current?.data?.gmail?.connected
     ? "gmail"
-    : dataRef.current?.data?.outlook?.connected
-      ? "outlook"
+    : dataRef.current?.data?.microsoft?.connected
+      ? "microsoft"
       : null;
     console.log('📧 Provedor de e-mail gmail: ', dataRef.current?.data?.gmail?.connected,
-      'outlook: ', dataRef.current?.data?.outlook?.connected,
+      'microsoft: ', dataRef.current?.data?.microsoft?.connected,
       'provider selecionado: ', provider
      )
 
     switch (newStatusId) {
       case "contato-automatico": {
-        const providerEmail = dataRef.current?.data?.gmail?.email || dataRef.current?.data?.outlook?.email || null;
+        const providerEmail = dataRef.current?.data?.gmail?.email || dataRef.current?.data?.microsoft?.email || null;
         if (!providerEmail) {
           console.warn('Nenhum provedor de e-mail conectado para o usuário.');
           break;

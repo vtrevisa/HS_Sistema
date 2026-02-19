@@ -10,14 +10,23 @@ import {
 import { Button } from '../ui/button'
 import { api } from '../../lib/api'
 import type { UserRequest } from '@/http/types/user'
-import { GoogleCalendarModal, WhatsAppModal, EmailModal, ViaFacilModal } from '../Modals/profile-links'
+import { WhatsAppModal, EmailModal, ViaFacilModal } from '../Modals/profile-links'
+import { connectCalendar } from './calendarConnector'
+import { useGoogleCalendar } from '../../http/use-google-calendar'
+
 interface ProfileLinksProps {
  user: UserRequest
 }
 
 export function ProfileLinks({ user }: ProfileLinksProps) {
  const [activeModal, setActiveModal] = useState<string | null>(null)
- const [emailProvider, setEmailProvider] = useState<'gmail' | 'outlook' | null>(null)
+ const [emailProvider, setEmailProvider] = useState<'gmail' | 'microsoft' | null>(null)
+ const { connected, disconnect } = useGoogleCalendar();;
+
+  useEffect(() => {
+    console.log('useGoogleCalendar object:', { connected, disconnect });
+  }, [connected, disconnect]);
+
  useEffect(() => {
   let mounted = true
   api
@@ -25,10 +34,10 @@ export function ProfileLinks({ user }: ProfileLinksProps) {
     .then((res) => {
       const data = res.data || {}
       const gmail = data.gmail?.connected
-      const outlook = data.outlook?.connected
+      const microsoft = data.microsoft?.connected
       if (!mounted) return
       if (gmail) setEmailProvider('gmail')
-      else if (outlook) setEmailProvider('outlook')
+      else if (microsoft) setEmailProvider('microsoft')
       else setEmailProvider(null)
     })
     .catch(() => {
@@ -43,6 +52,7 @@ export function ProfileLinks({ user }: ProfileLinksProps) {
  useEffect(() => {
   // placeholder effect in case we need to init anything when user changes
  }, [user])
+ 
 
  return (
   <Card>
@@ -58,7 +68,27 @@ export function ProfileLinks({ user }: ProfileLinksProps) {
     </div>
    </CardHeader>
     <CardContent>
+
      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+    {/* Google_Calendar_icon.png */}
+    {/* {console.log('Google Calendar connected:', connected)} */}
+      {connected ? (
+        <div className="flex items-center justify-between gap-2 p-3 rounded-lg bg-muted/50">
+          <div className="flex items-center gap-3">
+            <Calendar className="h-5 w-5 text-primary" />
+            <div>
+              <div className="font-medium">Google Calendar</div>
+              </div>
+              <div className="text-sm text-muted-foreground">
+                <img src="/public/Google_Calendar_icon.png" alt="Google Calendar" className="h-10 w-10 inline mr-1" />
+              </div>
+              <div>
+              <span className="inline-block h-3 w-3 rounded-full bg-emerald-500" aria-hidden />
+            </div>
+          </div>
+          <Button variant="destructive" onClick={disconnect}>Desconectar</Button>
+        </div>
+    ):(
       <div className="flex items-center justify-between gap-2 p-3 rounded-lg bg-muted/50">
         <div className="flex items-center gap-3">
          <Calendar className="h-5 w-5 text-primary" />
@@ -67,8 +97,10 @@ export function ProfileLinks({ user }: ProfileLinksProps) {
           <div className="text-sm text-muted-foreground">Sincronize seu calendário</div>
          </div>
         </div>
-        <Button onClick={() => setActiveModal('google-calendar')}>Configurar</Button>
+        <Button onClick={connectCalendar}>Configurar</Button>
       </div>
+    )}
+      
 
       <div className="flex items-center justify-between gap-2 p-3 rounded-lg bg-muted/50">
         <div className="flex items-center gap-3">
@@ -91,8 +123,8 @@ export function ProfileLinks({ user }: ProfileLinksProps) {
           <div className="text-sm text-muted-foreground">
             {emailProvider === 'gmail' ? 
               <img src="/public/gmail-icon.png" alt="Gmail" className="h-10 w-10 inline mr-1" /> : 
-              emailProvider === 'outlook' ? 
-              <img src="/public/outlook-icon.png" alt="Outlook" className="h-4 w-4 inline mr-1" /> :
+              emailProvider === 'microsoft' ? 
+              <img src="/microsoft_office_outlook_logo_icon.png" alt="microsoft" className="h-4 w-4 inline mr-1" /> :
               ''}
           </div>
           <span className="inline-block h-3 w-3 rounded-full bg-emerald-500" aria-hidden />
@@ -138,7 +170,6 @@ export function ProfileLinks({ user }: ProfileLinksProps) {
       </div>
      </div>
 
-     <GoogleCalendarModal isOpen={activeModal === 'google-calendar'} onClose={() => setActiveModal(null)} />
      <WhatsAppModal isOpen={activeModal === 'whatsapp'} onClose={() => setActiveModal(null)} />
      <EmailModal isOpen={activeModal === 'email'} onClose={() => setActiveModal(null)} />
      <ViaFacilModal isOpen={activeModal === 'viafacil'} onClose={() => setActiveModal(null)} />

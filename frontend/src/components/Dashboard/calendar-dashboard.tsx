@@ -1,6 +1,5 @@
 import { useState, useMemo } from 'react'
 import { Calendar } from '@/components/ui/calendar'
-import { cn } from '@/lib/utils'
 import type { DayContentProps } from 'react-day-picker'
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card'
 import { AlertTriangle, CalendarIcon, ClipboardList } from 'lucide-react'
@@ -8,11 +7,7 @@ import { format } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 import { useDashboard } from '@/http/use-dashboard'
 
-interface CalendarDashboardProps {
- sectionType: 'comercial' | 'processos'
-}
-
-export function CalendarDashboard({ sectionType }: CalendarDashboardProps) {
+export function CalendarDashboard() {
  const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date())
 
  const { alvaras, tasks, isLoading } = useDashboard()
@@ -46,18 +41,13 @@ export function CalendarDashboard({ sectionType }: CalendarDashboardProps) {
   const hasEvent = tarefa || alvara
 
   return (
-   <div
-    className={cn(
-     'relative flex items-center justify-center w-full h-full rounded-md',
-     hasEvent && 'cursor-pointer font-semibold'
-    )}
-   >
+   <div className="relative w-full h-full flex items-center justify-center">
     <span>{date.getDate()}</span>
 
     {hasEvent && (
-     <div className="absolute bottom-1 flex gap-0.5">
-      {tarefa && <span className="w-1.5 h-1.5 rounded-full bg-blue-500" />}
-      {alvara && <span className="w-1.5 h-1.5 rounded-full bg-red-500" />}
+     <div className="absolute bottom-0 left-1/2 -translate-x-1/2 flex gap-0.5">
+      {tarefa && <span className="w-1.5 h-1.5 rounded-full bg-primary" />}
+      {alvara && <span className="w-1.5 h-1.5 rounded-full bg-destructive" />}
      </div>
     )}
    </div>
@@ -65,19 +55,9 @@ export function CalendarDashboard({ sectionType }: CalendarDashboardProps) {
  }
 
  return (
-  <Card
-   className={cn(
-    'border-l-4 shadow-lg rounded-xl bg-white dark:bg-gray-800 self-start border-y-0 border-r-0',
-    sectionType === 'comercial' ? 'border-blue-500' : 'border-green-500'
-   )}
-  >
+  <Card className="border-l-4 border-primary">
    <CardHeader className="pb-2">
-    <CardTitle
-     className={cn(
-      'text-lg lg:text-xl font-bold  mb-4 flex items-center gap-2',
-      sectionType === 'comercial' ? 'text-blue-600' : 'text-green-600'
-     )}
-    >
+    <CardTitle className="text-lg flex items-center gap-2 text-foreground">
      <CalendarIcon className="h-5 w-5" />
      Calendário
     </CardTitle>
@@ -113,14 +93,13 @@ export function CalendarDashboard({ sectionType }: CalendarDashboardProps) {
       table: 'w-full border-collapse',
       head_row: 'flex w-full',
       head_cell:
-       'flex-1 text-center text-[0.7rem] text-muted-foreground font-normal',
+       'flex-1 text-center text-muted-foreground rounded-md w-8 font-normal text-[0.7rem]',
       row: 'flex w-full mt-1',
       cell: 'flex-1 relative p-0 text-center h-9',
       day: 'w-full h-9 flex items-center justify-center text-xs rounded-md hover:bg-accent',
       day_selected:
-       'bg-primary dark:bg-gray-700 dark:text-white text-primary-foreground hover:bg-primary hover:text-primary-foreground',
-      day_today:
-       'bg-accent dark:bg-gray-700 dark:text-white text-accent-foreground font-semibold',
+       'bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground',
+      day_today: 'bg-accent text-accent-foreground font-semibold',
       day_outside: 'text-muted-foreground opacity-50',
       day_disabled: 'text-muted-foreground opacity-50',
       day_hidden: 'invisible'
@@ -131,15 +110,15 @@ export function CalendarDashboard({ sectionType }: CalendarDashboardProps) {
 
     <div className="mt-3 pt-3 border-t border-border flex flex-wrap gap-4 text-xs">
      <div className="flex items-center gap-1.5">
-      <span className="w-2 h-2 rounded-full bg-blue-500" />
+      <span className="w-2 h-2 rounded-full bg-primary" />
       <ClipboardList className="h-3 w-3 text-muted-foreground" />
-      <span className="text-muted-foreground">Tarefas Agendadas</span>
+      <span className="text-muted-foreground">Tarefas</span>
      </div>
 
      <div className="flex items-center gap-1.5">
-      <span className="w-2 h-2 rounded-full bg-red-500" />
+      <span className="w-2 h-2 rounded-full bg-destructive" />
       <AlertTriangle className="h-3 w-3 text-muted-foreground" />
-      <span className="text-muted-foreground">Alvarás a Vencer</span>
+      <span className="text-muted-foreground">Alvarás</span>
      </div>
     </div>
    </CardContent>

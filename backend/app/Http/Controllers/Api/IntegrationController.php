@@ -7,13 +7,14 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Validator;
 use App\Models\User;
-use App\Models\EmailToken;
+use App\Models\IntegrationToken;
+use App\Services\GmailSender;
+use App\Services\MicrosoftSender;
 use App\Traits\AuthenticatesWithToken;
 use Laravel\Sanctum\PersonalAccessToken;
-use Illuminate\Support\Facades\Log;
-use App\Services\GmailSender;
-use Illuminate\Support\Facades\Validator;
 
 class IntegrationController extends Controller
 {
@@ -22,11 +23,19 @@ class IntegrationController extends Controller
     protected $providers = [
         'gmail' => [
             'token_url' => 'https://oauth2.googleapis.com/token',
-            'client_id_env' => 'GMAIL_CLIENT_ID',
-            'client_secret_env' => 'GMAIL_CLIENT_SECRET',
-            'redirect_env' => 'GMAIL_REDIRECT_URI',
+            'client_id_env' => 'GOOGLE_CLIENT_ID',
+            'client_secret_env' => 'GOOGLE_CLIENT_SECRET',
+            'redirect_env' => 'GOOGLE_GMAIL_REDIRECT_URI',
             // include openid/email scopes so we can obtain the provider email address
             'scope' => 'openid email profile https://www.googleapis.com/auth/gmail.send',
+        ],
+        'calendar' => [
+            'token_url' => 'https://oauth2.googleapis.com/token',
+            'client_id_env' => 'GOOGLE_CLIENT_ID',
+            'client_secret_env' => 'GOOGLE_CLIENT_SECRET',
+            'redirect_env' => 'GOOGLE_CALENDAR_REDIRECT_URI',
+            // calendar scopes
+            'scope' => 'openid email profile https://www.googleapis.com/auth/calendar',
         ],
         'microsoft' => [
             'token_url' => 'https://login.microsoftonline.com/common/oauth2/v2.0/token',
@@ -63,12 +72,9 @@ class IntegrationController extends Controller
                 ->withCookie($forgetCookie);
         }
 
-        // Determine user from server-side state map (stateless flow)
-        $cookieName = "oauth_state_{$provider}";
         // read cookie the server previously set and expire it in the response
         $cookieState = $request->cookie($cookieName);
-        $forgetCookie = cookie($cookieName, '', -1);
-
+        
         // Validate cookie matches returned state to protect against CSRF
         if (!$cookieState || $cookieState !== $state) {
             return redirect(env('FRONTEND_URL', 'http://localhost:3000') . '/dashboard/minha-conta?error=invalid_state')
@@ -88,6 +94,7 @@ class IntegrationController extends Controller
                 ->withCookie($forgetCookie);
         }
 
+        // ESTE TESTE PODERIA ESTAR NO INICIO ANTES DE GERAR COOKIE
         if (!isset($this->providers[$provider])) {
             return redirect(env('FRONTEND_URL', 'http://localhost:3000') . '/dashboard/minha-conta?error=unsupported_provider')
                 ->withCookie($forgetCookie);
@@ -129,7 +136,6 @@ class IntegrationController extends Controller
         $accessToken = $data['access_token'] ?? null;
         $refreshToken = $data['refresh_token'] ?? null;
         $expiresIn = $data['expires_in'] ?? null;
-        $scope = $data['scope'] ?? null;
 
         $providerEmail = null;
 
@@ -156,7 +162,7 @@ class IntegrationController extends Controller
         // 3) provider-specific userinfo calls (prefer OpenID Connect endpoints)
         if (!$providerEmail && $accessToken) {
             try {
-                if ($provider === 'gmail') {
+                if ($provider === 'gmail' || $provider === 'calendar') {
                     $info = Http::withToken($accessToken)
                         ->get('https://openidconnect.googleapis.com/v1/userinfo');
                     if ($info->successful()) {
@@ -176,17 +182,18 @@ class IntegrationController extends Controller
             }
         }
 
-        // Save tokens in dedicated email_tokens table (one record per user)
+        // Save tokens in dedicated integration_tokens table (one record per user/type)
         $tokenData = [
-            'provider' => $provider,
+            'type' => $provider === 'calendar' ? 'calendar' : 'email',
+            'provider' => $provider === 'calendar' ? 'gmail' : $provider,
             'email' => $providerEmail ?? $user->email,
             'access_token' => $accessToken ? Crypt::encryptString($accessToken) : null,
             'refresh_token' => $refreshToken ? Crypt::encryptString($refreshToken) : null,
             'expires_at' => $expiresIn ? now()->addSeconds($expiresIn) : null,
         ];
 
-        EmailToken::updateOrCreate(
-            ['user_id' => $user->id],
+        IntegrationToken::updateOrCreate(
+            ['user_id' => $user->id, 'type' => $tokenData['type']],
             $tokenData
         );
 
@@ -239,6 +246,14 @@ class IntegrationController extends Controller
             'lax'
         );
 
+        // Escopos necessários para Calendar
+        $scope = [
+            'https://www.googleapis.com/auth/userinfo.email',
+            'https://www.googleapis.com/auth/userinfo.profile',
+            'openid',
+            'https://www.googleapis.com/auth/calendar',
+        ];
+
         // build provider auth URL
         if ($provider === 'gmail') {
             $authUrl = 'https://accounts.google.com/o/oauth2/v2/auth';
@@ -253,7 +268,20 @@ class IntegrationController extends Controller
                 'include_granted_scopes' => 'true',
             ]);
             Log::info('redirect_uri for Gmail OAuth', ['redirect_uri' => env($cfg['redirect_env'])]);
-        } else {
+        } else if ($provider === 'calendar') {
+            $authUrl = 'https://accounts.google.com/o/oauth2/v2/auth';
+            $params = http_build_query([
+                'client_id' => env($cfg['client_id_env']),
+                'redirect_uri' => env($cfg['redirect_env']),
+                'response_type' => 'code',
+                'scope' => $cfg['scope'],
+                'access_type' => 'offline',
+                'prompt' => 'consent',
+                'state' => $state,
+                'include_granted_scopes' => 'true',
+            ]);
+            Log::info('redirect_uri for Google Calendar OAuth', ['redirect_uri' => env('GOOGLE_CALENDAR_REDIRECT_URI')]);
+        } else if ($provider === 'microsoft') {
             $authUrl = 'https://login.microsoftonline.com/common/oauth2/v2.0/authorize';
             $params = http_build_query([
                 'client_id' => env($cfg['client_id_env']),
@@ -263,6 +291,9 @@ class IntegrationController extends Controller
                 'state' => $state,
                 'response_mode' => 'query',
             ]);
+            Log::info('redirect_uri for Microsoft OAuth', ['redirect_uri' => env($cfg['redirect_env'])]);
+        } else {
+            return response()->json(['status' => false, 'message' => 'Unsupported provider'], 400);
         }
 
         return redirect()->away($authUrl . '?' . $params)->withCookie($cookie);
@@ -278,15 +309,15 @@ class IntegrationController extends Controller
             return response()->json(['status' => false, 'message' => 'Unauthenticated'], 401);
         }
 
-        $gmailToken = EmailToken::where('user_id', $user->id)->where('provider', 'gmail')->first();
-        $msToken = EmailToken::where('user_id', $user->id)->where('provider', 'microsoft')->first();
+        $gmailToken = IntegrationToken::where('user_id', $user->id)->where('type', 'email')->where('provider', 'gmail')->first();
+        $msToken = IntegrationToken::where('user_id', $user->id)->where('type', 'email')->where('provider', 'microsoft')->first();
 
         return response()->json([
             'gmail' => [
                 'connected' => (bool) $gmailToken,
                 'email' => $gmailToken->email ?? null,
             ],
-            'outlook' => [
+            'microsoft' => [
                 'connected' => (bool) $msToken,
                 'email' => $msToken->email ?? null,
             ],
@@ -303,23 +334,63 @@ class IntegrationController extends Controller
             return response()->json(['status' => false, 'message' => 'Unauthenticated'], 401);
         }
 
-        // Allow 'outlook' alias map to 'microsoft'
-        $prov = $provider === 'outlook' ? 'microsoft' : $provider;
+        // Allow 'microsoft' alias map to 'microsoft'
+        $prov = $provider === 'microsoft' ? 'microsoft' : $provider;
         if (!in_array($prov, ['gmail', 'microsoft'])) {
             return response()->json(['status' => false, 'message' => 'Unsupported provider'], 400);
         }
 
-        $deleted = EmailToken::where('user_id', $user->id)->where('provider', $prov)->delete();
+        $deleted = IntegrationToken::where('user_id', $user->id)->where('provider', $prov)->delete();
 
         return response()->json(['status' => true, 'deleted' => (bool) $deleted]);
     }
 
-    public function send(Request $request, GmailSender $gmail/* , OutlookSender $outlook */)
+    /**
+     * Return calendar provider connection status for the authenticated user.
+     */
+    public function calendarStatus(Request $request)
+    {
+        $user = $request->user() ?? $this->getAuthenticatedUser($request);
+        if (!$user) {
+            return response()->json(['status' => false, 'message' => 'Unauthenticated'], 401);
+        }
+
+        $calToken = IntegrationToken::where('user_id', $user->id)->where('type', 'calendar')->where('provider', 'gmail')->first();
+
+        return response()->json([
+            'calendar' => [
+                'connected' => (bool) $calToken,
+                'email' => $calToken->email ?? null,
+            ],
+        ]);
+    }
+
+    /**
+     * Disconnect (delete) saved calendar tokens for the given provider for the authenticated user.
+     */
+    public function disconnectCalendar(Request $request, $provider)
+    {
+        $user = $request->user() ?? $this->getAuthenticatedUser($request);
+        if (!$user) {
+            return response()->json(['status' => false, 'message' => 'Unauthenticated'], 401);
+        }
+
+        $prov = $provider === 'microsoft' ? 'microsoft' : $provider;
+        if (!in_array($prov, ['gmail', 'microsoft'])) {
+            return response()->json(['status' => false, 'message' => 'Unsupported provider'], 400);
+        }
+
+        $deleted = IntegrationToken::where('user_id', $user->id)->where('type', 'calendar')->where('provider', $prov)->delete();
+
+        return response()->json(['status' => true, 'deleted' => (bool) $deleted]);
+    }
+
+    public function send(Request $request, GmailSender $gmail, MicrosoftSender $microsoft)
     {
         Log::info(['request' => $request->all()]);
         $validator = Validator::make($request->all(), [
             'user_id' => 'required|integer',
-            'provider' => 'required|in:gmail,outlook',
+            'provider' => 'required|in:gmail,microsoft',
             'to' => 'required|email',
             'subject' => 'required|string|max:255',
             'body' => 'required|string',
@@ -340,14 +411,15 @@ class IntegrationController extends Controller
                     $request->subject,
                     $request->body
                 );
-            } else {
-                // Se ainda não implementou Outlook, pode comentar ou chamar
-                /* $outlook->send(
-                    auth()->id(),
+            } else if ($request->provider === 'microsoft') {
+                $microsoft->send(
+                    $request->user_id,
                     $request->to,
                     $request->subject,
                     $request->body
-                ); */
+                );
+            } else {
+                throw new \Exception('Unsupported provider');
             }
 
             return response()->json([
@@ -362,5 +434,9 @@ class IntegrationController extends Controller
             ], 500);
         }
     }
+
+    
+
+    
 
 }

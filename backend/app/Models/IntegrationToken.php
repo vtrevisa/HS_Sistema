@@ -4,12 +4,13 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
-class EmailToken extends Model
+class IntegrationToken extends Model
 {
-    protected $table = 'email_tokens';
+    protected $table = 'integration_tokens';
 
     protected $fillable = [
         'user_id',
+        'type',
         'provider',
         'email',
         'access_token',

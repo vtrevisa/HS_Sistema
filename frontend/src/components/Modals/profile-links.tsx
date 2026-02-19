@@ -8,22 +8,6 @@ interface BaseModalProps {
   onClose: () => void
 }
 
-export function GoogleCalendarModal({ isOpen, onClose }: BaseModalProps) {
-  return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-lg">
-        <DialogHeader>
-          <DialogTitle>Configurar Google Calendar</DialogTitle>
-        </DialogHeader>
-        <div className="text-sm text-muted-foreground">Conecte sua conta do Google Calendar e autorize sincronização de eventos.</div>
-        <div className="mt-6 flex justify-end">
-          <Button variant="ghost" onClick={onClose}>Fechar</Button>
-        </div>
-      </DialogContent>
-    </Dialog>
-  )
-}
-
 export function WhatsAppModal({ isOpen, onClose }: BaseModalProps) {
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -62,7 +46,7 @@ export function EmailModal({ isOpen, onClose }: BaseModalProps) {
         <select value={provider} onChange={e => setProvider(e.target.value as 'gmail')} className="w-flex items-center justify-between gap-2 p-3 rounded-lg bg-muted/50">
           <option value="">Provedor</option>
           <option value="gmail">Gmail</option>
-          <option value="microsoft">Outlook/Hotmail</option>
+          <option value="microsoft">microsoft/Hotmail</option>
         </select>
         <div className="mt-6 flex justify-end">
           <Button variant='default' onClick={() => handleConnect(provider)}>Conectar</Button>
@@ -89,7 +73,6 @@ export function ViaFacilModal({ isOpen, onClose }: BaseModalProps) {
 }
 
 export default {
-  GoogleCalendarModal,
   WhatsAppModal,
   EmailModal,
   ViaFacilModal
