@@ -53,6 +53,7 @@ Route::post('/alvaras/search', [AlvaraController::class, 'search']); //POST
 Route::post('/alvaras/release', [AlvaraController::class, 'release']); //POST
 Route::get('/alvaras/consumed', [AlvaraPurchaseController::class, 'index']); //GET
 Route::post('/alvaras/consumed', [AlvaraPurchaseController::class, 'store']); //POST
+Route::post('/alvaras/export', [AlvaraPurchaseController::class, 'export']); //POST
 
 Route::get('/alvaras/logs', [AlvaraLogController::class, 'index']); //GET
 Route::get('/calendar/alvaras', [CalendarController::class, 'alvaras']); //GET

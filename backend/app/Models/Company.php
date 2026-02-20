@@ -25,9 +25,15 @@ class Company extends Model
         'contact',
         'phone',
         'cnpj',
-        'email'
+        'email',
+        'origin',
+        'origin_id',
     ];
 
+
+    protected $casts = [
+        'validity' => 'date',
+    ];
 
     public function user()
     {

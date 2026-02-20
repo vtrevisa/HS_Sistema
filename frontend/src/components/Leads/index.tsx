@@ -50,8 +50,16 @@ export function Leads() {
    const matchesSearch = company.includes(search) || contact.includes(search)
 
    // Status
-   const matchesStatus =
-    selectedFilter === 'todos' ? true : lead.status === selectedFilter
+   const matchesStatus = () => {
+    if (selectedFilter === 'todos') return true
+
+    // Ganho ou Perdido
+    if (selectedFilter === 'Ganho' || selectedFilter === 'Perdido') {
+     return lead.archived_proposal?.status === selectedFilter
+    }
+
+    return lead.status === selectedFilter
+   }
 
    // Tipo
    const matchesType =
@@ -61,15 +69,29 @@ export function Leads() {
    const matchesDate = () => {
     if (!dateRange?.from || !dateRange?.to) return true
 
-    const rawDate = lead.expiration_date ?? lead.created_at
-    if (!rawDate) return false
+    const from = new Date(dateRange.from)
+    from.setHours(0, 0, 0, 0)
 
-    const leadDate = new Date(rawDate)
+    const to = new Date(dateRange.to)
+    to.setHours(23, 59, 59, 999)
 
-    return leadDate >= dateRange.from && leadDate <= dateRange.to
+    let matchesCreatedAt = false
+    let matchesExpirationDate = false
+
+    if (lead.created_at) {
+     const createdAt = new Date(lead.created_at)
+     matchesCreatedAt = createdAt >= from && createdAt <= to
+    }
+
+    if (lead.expiration_date) {
+     const expirationDate = new Date(lead.expiration_date)
+     matchesExpirationDate = expirationDate >= from && expirationDate <= to
+    }
+
+    return matchesCreatedAt || matchesExpirationDate
    }
 
-   return matchesSearch && matchesType && matchesStatus && matchesDate()
+   return matchesSearch && matchesType && matchesStatus() && matchesDate()
   })
  }, [leads, searchTerm, selectedType, selectedFilter, dateRange])
 

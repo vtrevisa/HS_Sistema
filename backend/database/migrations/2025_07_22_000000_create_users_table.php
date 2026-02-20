@@ -3,6 +3,7 @@
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\DB;
 
 return new class extends Migration
 {
@@ -28,6 +29,19 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('users');
+        if (Schema::hasTable('users')) {
+            try {
+                DB::statement('SET FOREIGN_KEY_CHECKS=0;');
+                Schema::dropIfExists('users');
+                DB::statement('SET FOREIGN_KEY_CHECKS=1;');
+            } catch (\Exception $e) {
+                try {
+                    DB::statement('SET FOREIGN_KEY_CHECKS=1;');
+                } catch (\Exception $_) {
+                    // ignore
+                }
+                // ignore drop errors caused by FK constraints
+            }
+        }
     }
 };

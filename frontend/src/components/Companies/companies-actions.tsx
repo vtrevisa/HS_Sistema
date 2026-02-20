@@ -1,4 +1,4 @@
-import { Plus, Upload } from 'lucide-react'
+import { Plus, Upload, UserPlus } from 'lucide-react'
 import { Button } from '../ui/button'
 
 interface CompaniesActionsProps {
@@ -13,12 +13,18 @@ export function CompaniesActions({
 }: CompaniesActionsProps) {
  return (
   <div className="flex gap-2 flex-col sm:flex-row">
-   <Button
-    onClick={onImportClick}
-    className="bg-green-600 hover:bg-green-700 dark:text-white"
-   >
+   <Button onClick={onImportClick}>
     <Upload className="h-4 w-4 mr-2" />
     Importar Planilha
+   </Button>
+
+   <Button
+    onClick={() => {}}
+    variant="outline"
+    className="bg-brand-success/10 text-brand-success hover:text-brand-success border-brand-success/30 hover:bg-brand-success/20"
+   >
+    <UserPlus className="h-4 w-4 mr-2" />
+    Gerar Todos Leads
    </Button>
 
    {/* <Button
@@ -31,7 +37,8 @@ export function CompaniesActions({
 
    <Button
     onClick={onNewCompanyClick}
-    className="bg-background hover:bg-accent hover:text-accent-foreground dark:hover:bg-red-600 text-primary border border-input px-4 py-2 rounded-lg flex items-center gap-2 transition-colors"
+    variant="outline"
+    className="bg-secondary text-secondary-foreground"
    >
     <Plus size={20} />
     Cadastro Manual

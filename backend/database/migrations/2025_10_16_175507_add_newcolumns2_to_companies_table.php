@@ -22,11 +22,23 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('companies', function (Blueprint $table) {
-            $table->dropColumn([
-                'website',
-                'contact',
-            ]);
-        });
+        if (Schema::hasTable('companies')) {
+            try {
+                Schema::table('companies', function (Blueprint $table) {
+                    try {
+                        $cols = [];
+                        if (Schema::hasColumn('companies', 'website')) $cols[] = 'website';
+                        if (Schema::hasColumn('companies', 'contact')) $cols[] = 'contact';
+                        if (!empty($cols)) {
+                            $table->dropColumn($cols);
+                        }
+                    } catch (\Exception $e) {
+                        // ignore if columns already removed
+                    }
+                });
+            } catch (\Exception $e) {
+                // ignore overall errors during rollback
+            }
+        }
     }
 };

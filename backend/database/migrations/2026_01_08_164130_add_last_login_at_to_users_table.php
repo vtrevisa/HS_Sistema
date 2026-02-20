@@ -21,8 +21,20 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('users', function (Blueprint $table) {
-            $table->dropColumn('last_login_at');
-        });
+        if (Schema::hasTable('users')) {
+            try {
+                Schema::table('users', function (Blueprint $table) {
+                    try {
+                        if (Schema::hasColumn('users', 'last_login_at')) {
+                            $table->dropColumn('last_login_at');
+                        }
+                    } catch (\Exception $e) {
+                        // ignore if column doesn't exist
+                    }
+                });
+            } catch (\Exception $e) {
+                // ignore overall errors during rollback
+            }
+        }
     }
 };

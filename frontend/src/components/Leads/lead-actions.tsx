@@ -11,7 +11,7 @@ export function LeadsActions({
  onExportClick
 }: LeadsActionsProps) {
  return (
-  <div className="flex flex-col sm:flex-row gap-2">
+  <div className="flex gap-2">
    <button
     onClick={onExportClick}
     className="bg-primary hover:bg-primary/90 text-primary-foreground px-4 py-2 rounded-lg flex items-center gap-2 transition-colors"

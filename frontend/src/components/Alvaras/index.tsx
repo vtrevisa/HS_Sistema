@@ -6,11 +6,7 @@ import type { DateRange } from 'react-day-picker'
 import { useUser } from '@/http/use-user'
 import { useAlvaras } from '@/http/use-alvaras'
 
-import {
- buildSearchPayload,
- handleQuantityChange,
- exportConsumedAlvaras
-} from '@/services/alvaras'
+import { buildSearchPayload, handleQuantityChange } from '@/services/alvaras'
 
 import { Alert, AlertDescription } from '../ui/alert'
 import { Button } from '../ui/button'
@@ -19,7 +15,6 @@ import { AlvarasFilters } from './alvaras-filters'
 import { AlvarasCounter } from './alvaras-counter'
 import { AlvarasSubscriptionBox } from './alvaras-subscription-box'
 import { PaymentDetails } from '../Modals/payment-details'
-import { AlvarasTable } from './alvaras-table'
 import { ProfileUpdatePlan } from '../Modals/profile-updateplan'
 import { MyAlvaras } from './my-alvaras'
 
@@ -66,7 +61,8 @@ export function Alvaras() {
   isActive,
 
   consumedAlvaras,
-  releasedAlvaras,
+  exportAlvaras,
+
   searchResults,
 
   searchAlvaras,
@@ -130,6 +126,21 @@ export function Alvaras() {
   setQuantity(0)
  }
 
+ function handleExportAlvaras() {
+  const alvaraIds = consumedAlvaras
+   .filter(alvara => !alvara.exported_at)
+   .map(alvara => alvara.id)
+
+  if (alvaraIds.length === 0) {
+   toast.warning('Nenhum alvará disponível para exportação')
+   return
+  }
+
+  exportAlvaras.mutate({
+   alvara_ids: alvaraIds
+  })
+ }
+
  if (loadingUser) return <p>Carregando...</p>
  if (!user) return <p>Erro ao carregar usuário.</p>
 
@@ -190,7 +201,7 @@ export function Alvaras() {
     <MyAlvaras
      alvaras={consumedAlvaras}
      onNewQuery={handleNewQuery}
-     onExport={() => exportConsumedAlvaras(consumedAlvaras)}
+     onExport={() => handleExportAlvaras()}
     />
    )}
 
@@ -256,11 +267,6 @@ export function Alvaras() {
       })
      }
     />
-   )}
-
-   {/* Tabela de Alvarás Liberados */}
-   {flowState === 'alvaras-released' && releasedAlvaras.length > 0 && (
-    <AlvarasTable alvarasData={releasedAlvaras} />
    )}
   </div>
  )

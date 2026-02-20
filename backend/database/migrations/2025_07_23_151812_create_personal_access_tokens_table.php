@@ -28,6 +28,10 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('personal_access_tokens');
+        try {
+            Schema::dropIfExists('personal_access_tokens');
+        } catch (\Exception $e) {
+            // ignore errors during rollback
+        }
     }
 };

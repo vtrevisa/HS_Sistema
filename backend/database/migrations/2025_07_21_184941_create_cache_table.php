@@ -29,7 +29,11 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('cache');
-        Schema::dropIfExists('cache_locks');
+        try {
+            Schema::dropIfExists('cache');
+            Schema::dropIfExists('cache_locks');
+        } catch (\Exception $e) {
+            // ignore errors during rollback
+        }
     }
 };

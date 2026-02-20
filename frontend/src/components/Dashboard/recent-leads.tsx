@@ -1,29 +1,13 @@
 import type { RecentLead } from '@/http/types/dashboard'
 import { CircleAlert, Users } from 'lucide-react'
 import { Card, CardContent } from '../ui/card'
+import { getStatusColor } from '@/services/leads'
 
 interface RecentLeadsProps {
  leads: RecentLead[]
 }
 
 export function RecentLeads({ leads }: RecentLeadsProps) {
- const getStatusStyle = (status: string) => {
-  switch (status) {
-   case 'Lead':
-    return 'bg-gray-200 text-gray-800 dark:bg-gray-600 dark:text-white'
-   case 'Primeiro contato':
-    return 'bg-blue-100 text-blue-800 dark:bg-blue-600/30 dark:text-white'
-   case 'Follow-up':
-    return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-600/30 dark:text-white'
-   case 'Proposta enviada':
-    return 'bg-orange-100 text-orange-800 dark:bg-orange-600/30 dark:text-white'
-   case 'Cliente fechado':
-    return 'bg-green-100 text-green-800 dark:bg-green-600/30 dark:text-white'
-   default:
-    return 'bg-muted text-muted-foreground'
-  }
- }
-
  if (leads.length === 0) {
   return (
    <Card className="h-[110px]">
@@ -56,7 +40,7 @@ export function RecentLeads({ leads }: RecentLeadsProps) {
       </div>
       <div className="text-left sm:text-right">
        <span
-        className={`px-2 lg:px-3 py-1 rounded-full text-xs font-medium ${getStatusStyle(
+        className={`px-2 lg:px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(
          lead.status
         )}`}
        >

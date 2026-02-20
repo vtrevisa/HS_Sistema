@@ -3,6 +3,7 @@ import { api } from "@/lib/api";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import type { Alvara, Alvaras, ReleasePayload, SearchAlvarasPayload } from "./types/alvaras";
+import type { AxiosError } from "axios";
 
 export type FlowState =
   "no-subscription"
@@ -196,12 +197,30 @@ export function useAlvaras({ monthlyLimit, used }: Plan) {
       toast.error("Erro ao liberar alvarás");
     }
   });
+
+  const exportAlvarasMutation =  useMutation<{ status: boolean }, AxiosError, { alvara_ids: number[] }>({
+    mutationFn: async (payload) => {
+      const { data } = await api.post('/alvaras/export', payload)
+      return data
+    },
+    onSuccess: () => {
+      toast.success('Alvarás exportados com sucesso!')
+
+      queryClient.invalidateQueries({ queryKey: ['alvaras-consumed'] })
+    },
+    onError: error => {
+      toast.error('Erro ao exportar alvarás', {
+        description: error.message,
+      })
+    },
+  })
   
 
   return {
     flowState,
     isActive: flowState !== 'no-subscription',
     consumedAlvaras,
+    exportAlvaras: exportAlvarasMutation,
     allAlvaras,
     releasedAlvaras,
     searchResults,

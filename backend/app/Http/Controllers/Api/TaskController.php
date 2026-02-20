@@ -78,13 +78,6 @@ class TaskController extends Controller
     {
         $task = Task::findOrFail($id);
 
-        if ($task->date->isBefore(Carbon::today())) {
-            return response()->json([
-                'status' => false,
-                'message' => 'Não é possível concluir tarefas vencidas.'
-            ], 422);
-        }
-
         $task->completed = !$task->completed;
         $task->save();
 

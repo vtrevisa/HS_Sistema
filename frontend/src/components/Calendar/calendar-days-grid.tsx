@@ -97,7 +97,7 @@ export function CalendarDaysGrid({
             ? event.completed
               ? 'bg-brand-success/15 text-brand-success line-through'
               : 'bg-primary/10 text-primary'
-            : 'bg-destructive/10 text-primary'
+            : 'bg-destructive/10 text-destructive'
           )}
          >
           {event.eventType === 'tarefa' ? (

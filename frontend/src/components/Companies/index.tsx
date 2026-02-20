@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 
 import { CompaniesActions } from './companies-actions'
 import { CompaniesTable } from './companies-table'
@@ -9,8 +9,16 @@ import type { LeadRequest } from '@/http/types/leads'
 import { CompanyDetailsModal } from '../Modals/company-details'
 import { ImportAlvarasModal } from '../Modals/import-alvaras'
 import { useLead } from '@/http/use-lead'
+import { CompaniesFilters } from './companies-filters'
+import type { DateRange } from 'react-day-picker'
 
 export function Companies() {
+ const [city, setCity] = useState('')
+ const [searchTerm, setSearchTerm] = useState('')
+ const [selectedFilter, setSelectedFilter] = useState('todos')
+ const [selectedType, setSelectedType] = useState('todos')
+ const [dateRange, setDateRange] = useState<DateRange | undefined>()
+
  const [isNewCompanyModalOpen, setIsNewCompanyModalOpen] = useState(false)
  const [selectedCompany, setSelectedCompany] = useState<CompanyRequest | null>(
   null
@@ -34,6 +42,65 @@ export function Companies() {
  } = useCompany()
 
  const { saveLeads } = useLead()
+
+ // Filter leads from context
+ const filteredCompanies = useMemo(() => {
+  return companies.filter(company => {
+   const companySearch = company.company?.toLowerCase() ?? ''
+   const address = company.address?.toLowerCase() ?? ''
+   const search = searchTerm.toLowerCase()
+
+   const removeAccents = (str: string) =>
+    str.normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+
+   // City
+   const matchesCity =
+    city === ''
+     ? true
+     : removeAccents(company.city?.toLowerCase() ?? '') ===
+       removeAccents(city.toLowerCase())
+
+   // Busca
+   const matchesSearch =
+    companySearch.includes(search) || address.includes(search)
+
+   // Status
+   const matchesStatus =
+    selectedFilter === 'todos' ? true : company.status === selectedFilter
+
+   // Service
+   const matchesType =
+    selectedType === 'todos' ? true : company.service === selectedType
+
+   // Validity
+   const matchesDate = () => {
+    if (!dateRange?.from || !dateRange?.to) return true
+
+    const from = new Date(dateRange.from)
+    from.setHours(0, 0, 0, 0)
+
+    const to = new Date(dateRange.to)
+    to.setHours(23, 59, 59, 999)
+
+    let matchesValidity = false
+
+    if (company.validity) {
+     const validity = new Date(company.validity)
+     matchesValidity = validity >= from && validity <= to
+    }
+
+    return matchesValidity
+   }
+
+   return (
+    matchesCity &&
+    matchesSearch &&
+    matchesStatus &&
+    matchesType &&
+    matchesDate()
+   )
+  })
+ }, [companies, city, searchTerm, selectedFilter, selectedType, dateRange])
 
  // Create new company
  function handleNewCompany(companyData: Omit<CompanyRequest, 'id'>) {
@@ -108,7 +175,7 @@ export function Companies() {
  return (
   <div className="p-4 lg:p-6 space-y-6">
    <div className="flex sm:items-center justify-between flex-col sm:flex-row gap-2">
-    <h1 className="text-2xl lg:text-3xl font-bold text-blue-600 dark:text-white">
+    <h1 className="text-3xl font-bold text-foreground">
      Busca de Dados da Empresa
     </h1>
     <CompaniesActions
@@ -117,10 +184,25 @@ export function Companies() {
      onImportClick={() => setIsImportModalOpen(true)}
     />
    </div>
+
+   {/* Filtros */}
+   <CompaniesFilters
+    city={city}
+    setCity={setCity}
+    searchTerm={searchTerm}
+    setSearchTerm={setSearchTerm}
+    selectedStatus={selectedFilter}
+    setSelectedStatus={setSelectedFilter}
+    selectedType={selectedType}
+    setSelectedType={setSelectedType}
+    dateRange={dateRange}
+    setDateRange={setDateRange}
+   />
+
    {/* Tabela de Empresas */}
    {!isLoading && (
     <CompaniesTable
-     companies={companies}
+     companies={filteredCompanies}
      enhanceData={enhanceData}
      processingEnrichment={processingEnrichment}
      gererateNewLead={gererateNewLead}

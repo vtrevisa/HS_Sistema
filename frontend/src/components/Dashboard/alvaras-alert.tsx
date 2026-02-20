@@ -14,7 +14,7 @@ export function AlvarasAlert({ alvaras }: AlvarasAlertProps) {
    case 'vencido':
     return 'bg-destructive/10 text-destructive'
    case 'ate-60-dias':
-    return 'bg-accent text-accent-foreground'
+    return 'bg-accent text-amber-700'
    default:
     return 'bg-muted text-muted-foreground'
   }

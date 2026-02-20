@@ -419,6 +419,7 @@ export function LeadDetailsModal({
            variant="outline"
            size="sm"
            className="mt-2 w-full"
+           title={`${currentLead.phone ? `Enviar mensagem para ${currentLead.phone}` : ''}`}
            onClick={() =>
             window.open(`https://wa.me/55${formatedPhone}`, '_blank')
            }
@@ -443,6 +444,7 @@ export function LeadDetailsModal({
            variant="outline"
            size="sm"
            className="mt-2 w-full"
+           title={`${currentLead.email ? `Enviar email para ${currentLead.email}` : ''}`}
            onClick={() => window.open(`mailto:${currentLead.email}`, '_blank')}
           >
            <Mail size={14} className="mr-2" />

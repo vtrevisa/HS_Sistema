@@ -25,8 +25,20 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('archived_proposals', function (Blueprint $table) {
-            $table->dropColumn('user_id');
-        });
+        if (Schema::hasTable('archived_proposals')) {
+            try {
+                Schema::table('archived_proposals', function (Blueprint $table) {
+                    try {
+                        if (Schema::hasColumn('archived_proposals', 'user_id')) {
+                            $table->dropColumn('user_id');
+                        }
+                    } catch (\Exception $e) {
+                        // ignore if column/constraint already removed
+                    }
+                });
+            } catch (\Exception $e) {
+                // ignore overall errors during rollback
+            }
+        }
     }
 };

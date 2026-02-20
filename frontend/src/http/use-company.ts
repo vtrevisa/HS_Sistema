@@ -24,43 +24,7 @@ export function useCompany() {
   });
 
   // Mutation to save companies
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const exportMutation = useMutation<CompanyRequest[], AxiosError<any>, Omit<CompanyRequest, 'id'>[]>({
-     mutationFn: async (companies) => {
-      const responses = await Promise.all(
-        companies.map(company =>
-          api.post<CompanyRequest>("/companies", company).then(res => res.data)
-        )
-      )
-      return responses
-    },
-    onSuccess: (savedCompanies) => {
-
-      setTimeout(() => {
-        toast.success(
-          savedCompanies.length === 1
-          ? '1 alvará foi exportado com sucesso!'
-          : `${savedCompanies.length} alvarás foram exportados com sucesso!`
-        )
-      }, 3200)
-
-    },
-    onError: (error) => {
-      const messages =
-      error.response?.data?.erros
-        ? Object.values(error.response.data.erros).flat().join("\n")
-        : "Erro desconhecido."
-
-      setTimeout(() => {
-        toast.error('Erro ao exportar alvarás no sistema!', {
-          description: messages
-        })
-      }, 3200)
-    }
-  })
-
-
-    const saveMutation = useMutation<CompanyRequest[], AxiosError, Omit<CompanyRequest, 'id'>[]>({
+  const saveMutation = useMutation<CompanyRequest[], AxiosError, Omit<CompanyRequest, 'id'>[]>({
     mutationFn: async (companies) => {
       const responses = await Promise.all(
         companies.map(company =>
@@ -76,8 +40,6 @@ export function useCompany() {
       alert('Erro ao exportar alvarás: ' + error.message)
     }
   })
-
-  
 
   // Mutation to update companies
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -220,7 +182,6 @@ export function useCompany() {
     refetchCompanies: companiesDB.refetch,
     isLoading: companiesDB.isLoading,
     saveCompanies: saveMutation,
-    exportCompanies: exportMutation,
     updateCompany: updateMutation,
     searchByCnpj: searchCnpjMutation,
     searchByAddress: searchByAddressMutation,

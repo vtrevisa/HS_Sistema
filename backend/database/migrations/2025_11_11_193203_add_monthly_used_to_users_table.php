@@ -21,8 +21,20 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('users', function (Blueprint $table) {
-            $table->dropColumn('monthly_used');
-        });
+        if (Schema::hasTable('users')) {
+            try {
+                Schema::table('users', function (Blueprint $table) {
+                    try {
+                        if (Schema::hasColumn('users', 'monthly_used')) {
+                            $table->dropColumn('monthly_used');
+                        }
+                    } catch (\Exception $e) {
+                        // ignore if column already removed
+                    }
+                });
+            } catch (\Exception $e) {
+                // ignore overall errors during rollback
+            }
+        }
     }
 };

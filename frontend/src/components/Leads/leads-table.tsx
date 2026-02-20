@@ -2,6 +2,7 @@ import type { LeadRequest } from '@/http/types/leads'
 import { Calendar, Mail, MapPin, Pencil, Phone, Trash } from 'lucide-react'
 import { WhatsappLogoIcon } from '@phosphor-icons/react'
 import { Badge } from '../ui/badge'
+import { getStatusColor } from '@/services/leads'
 
 interface LeadsTableProps {
  leads: LeadRequest[]
@@ -28,25 +29,6 @@ export function LeadsTable({
   if (lead.city) parts.push(lead.city)
 
   return parts.join(', ')
- }
-
- function getStatusColor(status: string) {
-  switch (status) {
-   case 'Lead':
-    return 'bg-gray-200 text-gray-800 dark:bg-gray-600 dark:text-white'
-   case 'Primeiro contato':
-    return 'bg-blue-100 text-blue-800 dark:bg-blue-600/30 dark:text-white'
-   case 'Follow-up':
-    return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-600/30 dark:text-white'
-   case 'Proposta enviada':
-    return 'bg-orange-100 text-orange-800 dark:bg-orange-600/30 dark:text-white'
-   case 'Cliente fechado':
-    return 'bg-green-100 text-green-800 dark:bg-green-600/30 dark:text-white'
-   case 'Arquivado':
-    return 'bg-red-100 text-red-800 dark:bg-red-600/30 dark:text-white'
-   default:
-    return 'bg-gray-200 text-gray-800 dark:bg-gray-600 dark:text-white'
-  }
  }
 
  function isVencimentoProximo(vencimento: string) {
@@ -177,10 +159,8 @@ export function LeadsTable({
              }
              className={
               proposalStatus === 'Ganho'
-               ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100 hover:bg-green-100'
-               : proposalStatus === 'Perdido'
-                 ? 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-100 hover:bg-red-100'
-                 : 'bg-black text-white dark:bg-white dark:text-black hover:bg-black'
+               ? 'bg-brand-success/20 text-brand-success hover:bg-brand-success/20'
+               : 'bg-destructive/10 text-destructive hover:bg-destructive/10'
              }
             >
              {proposalStatus || 'Não arquivada'}
@@ -283,12 +263,6 @@ export function LeadsTable({
           <p className="text-sm text-muted-foreground truncate">
            {lead.contact}
           </p>
-          {/* {lead.categoria && (
-          <p className="text-xs text-purple-600 dark:text-purple-400 mt-1 flex items-center gap-1">
-           <span>📍</span>
-           <span>{lead.categoria.replace(/_/g, ' ')}</span>
-          </p>
-         )} */}
          </div>
         </div>
         <div className="flex gap-2 ml-2">

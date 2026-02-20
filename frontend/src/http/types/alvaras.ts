@@ -53,4 +53,5 @@ export interface Alvaras {
   address: string;
   occupation: string;
   city?: string;
+  exported_at?: Date
 }

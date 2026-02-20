@@ -30,8 +30,6 @@ export function AlvarasSubscriptionBox({
 
  const [displayedAvailable, setDisplayedAvailable] = useState(available)
 
- console.log(displayedAvailable)
-
  const displayedPercentage = useMemo(() => {
   return monthlyLimit > 0
    ? Math.min((displayedUsed / monthlyLimit) * 100, 100)
