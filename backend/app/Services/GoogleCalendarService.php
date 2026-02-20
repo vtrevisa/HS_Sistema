@@ -9,6 +9,10 @@ use Google\Service\Calendar\EventDateTime;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\Log;
 use Exception;
+use App\Models\Task;
+use App\Models\GoogleCalendarSync;
+use Illuminate\Support\Carbon;
+use Google\Service\Calendar\Event as GoogleEvent;
 
 class GoogleCalendarService
 {
@@ -221,14 +225,142 @@ class GoogleCalendarService
     }
 
     /**
-     * Verifica se o usuário tem calendário conectado.
+     * List events raw (returns Google Event objects and pagination/sync tokens)
+     * Returns: ['items' => [...], 'nextPageToken' => string|null, 'nextSyncToken' => string|null]
      */
-    public function isConnected(int $userId): bool
+    public function listEventsRaw(int $userId, string $calendarId = 'primary', array $optParams = []): array
     {
-        $token = IntegrationToken::where('user_id', $userId)->where('type', 'calendar')->where('provider', 'gmail')->first();
-        if (!$token) return false;
-        if ($token->expires_at && $token->expires_at->isPast() && !$token->refresh_token) return false;
-        return true;
+        $client = $this->getAuthenticatedClient($userId);
+        $service = new Calendar($client);
+
+        $events = $service->events->listEvents($calendarId, $optParams);
+
+        return [
+            'items' => $events->getItems(),
+            'nextPageToken' => $events->getNextPageToken(),
+            'nextSyncToken' => $events->getNextSyncToken(),
+        ];
+    }
+
+    /**
+     * Sync all calendars for a user using Google syncToken incremental sync.
+     * Stores/updates tasks with google_event_id and calendar_id.
+     * Returns summary array calendarId => count
+     */
+    public function syncUserCalendars(int $userId, array $options = []): array
+    {
+        $summary = [];
+        $calendars = $this->listCalendars($userId);
+
+        // If calendarId provided in options, filter to that calendar only
+        if (!empty($options['calendarId'])) {
+            $calendars = array_filter($calendars, function ($c) use ($options) {
+                return $c['id'] === $options['calendarId'];
+            });
+        }
+
+        foreach ($calendars as $cal) {
+            $calendarId = $cal['id'];
+            $syncedCount = 0;
+
+            $syncRecord = GoogleCalendarSync::firstOrCreate(
+                ['user_id' => $userId, 'calendar_id' => $calendarId],
+                ['sync_token' => null, 'last_synced_at' => null]
+            );
+
+            $opt = array_merge([
+                'singleEvents' => true,
+                'orderBy' => 'startTime',
+                'timeMin' => now()->toRfc3339String(),
+                'maxResults' => 2500,
+            ], $options);
+
+            if (!empty($syncRecord->sync_token)) {
+                $opt['syncToken'] = $syncRecord->sync_token;
+            }
+
+            $pageToken = null;
+            $nextSyncToken = null;
+
+            do {
+                if ($pageToken) $opt['pageToken'] = $pageToken;
+
+                try {
+                    $res = $this->listEventsRaw($userId, $calendarId, $opt);
+                } catch (\Google\Service\Exception $e) {
+                    // 410 means syncToken is invalid/expired — do full sync without token
+                    if ((int) $e->getCode() === 410) {
+                        unset($opt['syncToken']);
+                        $res = $this->listEventsRaw($userId, $calendarId, $opt);
+                    } else {
+                        Log::warning('Google listEventsRaw failed', ['user' => $userId, 'calendar' => $calendarId, 'error' => $e->getMessage()]);
+                        break;
+                    }
+                }
+
+                $items = $res['items'] ?? [];
+                foreach ($items as $item) {
+                    // $item is Google_Event object
+                    if (!($item instanceof GoogleEvent)) {
+                        continue;
+                    }
+
+                    $eventId = $item->getId();
+                    if (!$eventId) continue;
+
+                    // extract start
+                    $startObj = $item->getStart();
+                    $startRaw = null;
+                    if ($startObj) {
+                        $startRaw = $startObj->getDateTime() ?: $startObj->getDate();
+                    }
+
+                    $startDate = null;
+                    $startHour = null;
+                    if ($startRaw) {
+                        try {
+                            $c = Carbon::parse($startRaw);
+                            $startDate = $c->toDateString();
+                            $timeStr = $c->format('H:i:s');
+                            // if event had no time (all-day), treat hour as null
+                            $startHour = (strpos($startRaw, 'T') === false) ? null : $timeStr;
+                        } catch (\Exception $e) {
+                            $startDate = null;
+                            $startHour = null;
+                        }
+                    }
+
+                    Task::updateOrCreate(
+                        ['user_id' => $userId, 'google_event_id' => $eventId],
+                        [
+                            'title' => $item->getSummary() ?? 'Sem título',
+                            'description' => $item->getDescription() ?? null,
+                            'date' => $startDate,
+                            'hour' => $startHour,
+                            'google_event_id' => $eventId,
+                            'calendar_id' => $calendarId,
+                        ]
+                    );
+
+                    $syncedCount++;
+                }
+
+                $pageToken = $res['nextPageToken'] ?? null;
+                $nextSyncToken = $res['nextSyncToken'] ?? $nextSyncToken;
+
+            } while ($pageToken);
+
+            // persist nextSyncToken if returned
+            if ($nextSyncToken) {
+                $syncRecord->sync_token = $nextSyncToken;
+                $syncRecord->last_synced_at = now();
+                $syncRecord->save();
+            }
+
+            $summary[$calendarId] = $syncedCount;
+        }
+
+        return $summary;
     }
 
     /**

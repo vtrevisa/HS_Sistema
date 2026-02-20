@@ -125,30 +125,6 @@ class GmailSender
     }
 
     /**
-     * Verifica se o usuário tem uma conta Gmail válida conectada.
-     *
-     * @param int $userId
-     * @return bool
-     */
-    public function isConnected(int $userId): bool
-    {
-        $token = IntegrationToken::where('user_id', $userId)
-            ->where('provider', 'gmail')
-            ->first();
-
-        if (!$token) {
-            return false;
-        }
-
-        // Se expirado e sem refresh_token, considera desconectado
-        if ($token->expires_at->isPast() && !$token->refresh_token) {
-            return false;
-        }
-
-        return true;
-    }
-
-    /**
      * Desconecta a conta Gmail do usuário.
      *
      * @param int $userId

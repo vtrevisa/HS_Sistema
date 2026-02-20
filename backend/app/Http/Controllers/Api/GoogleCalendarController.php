@@ -133,4 +133,23 @@ class GoogleCalendarController extends Controller
             return response()->json(['error' => $e->getMessage()], 500);
         }
     }
+
+    /**
+     * Trigger an async sync that saves Google Calendar events into Tasks.
+     */
+    public function sync(Request $request)
+    {
+        try {
+            $user = $request->user() ?? $this->getAuthenticatedUser($request);
+            if (! $user) {
+                return response()->json(['error' => 'Unauthenticated'], 401);
+            }
+
+            \App\Jobs\SyncGoogleCalendarJob::dispatch($user->id);
+
+            return response()->json(['accepted' => true], 202);
+        } catch (\Exception $e) {
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
+    }
 }

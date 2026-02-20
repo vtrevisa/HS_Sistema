@@ -1,5 +1,6 @@
 import { Plus } from 'lucide-react'
 import { Button } from '../ui/button'
+import { useGoogleCalendar } from '../../http/use-google-calendar'
 
 interface CalendarActionsProps {
  setModalOpen: (open: boolean) => void
@@ -12,7 +13,23 @@ export function CalendarActions({
  setModalDefaultDate,
  selectedDate
 }: CalendarActionsProps) {
+  const syncRefresh = async () => {
+    try {
+         await syncEvents();
+     } catch (e) {
+         console.error('Erro ao obter logs do calendário', e);
+     }
+     window.location.reload();
+  }
+  const { syncEvents } = useGoogleCalendar()
  return (
+  <div className="flex items-center gap-2">
+    <Button
+     variant="default"
+     onClick={async () => {syncRefresh()}}
+ >
+     Atualizar
+ </Button>
   <Button
    onClick={() => {
     setModalDefaultDate(selectedDate || new Date())
@@ -23,5 +40,6 @@ export function CalendarActions({
    <Plus className="h-4 w-4 mr-2" />
    Agendar Tarefa
   </Button>
+  </div>
  )
 }

@@ -17,6 +17,8 @@ class Task extends Model
         'priority',
         'user_id',
         'lead_id',
+        'google_event_id',
+        'calendar_id',
     ];
 
     protected $casts = [

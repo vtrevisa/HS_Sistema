@@ -197,6 +197,15 @@ class IntegrationController extends Controller
             $tokenData
         );
 
+        // Dispatch initial sync job for calendar tokens (non-blocking)
+        if (($tokenData['type'] ?? null) === 'calendar') {
+            try {
+                \App\Jobs\SyncGoogleCalendarJob::dispatch($user->id);
+            } catch (\Exception $e) {
+                Log::warning('Failed to dispatch SyncGoogleCalendarJob: ' . $e->getMessage(), ['user' => $user->id]);
+            }
+        }
+
         // Redirect to frontend success page (or return JSON)
         // Use FRONTEND_URL env so backend and frontend hosts can differ
         $frontendUrl = env('FRONTEND_URL', 'http://localhost:3000') . '/dashboard/minha-conta?provider_connected=' . $provider;

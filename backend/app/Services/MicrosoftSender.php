@@ -143,30 +143,6 @@ class MicrosoftSender
     }
 
     /**
-     * Verifica se o usuário tem uma conta Microsoft válida conectada.
-     *
-     * @param int $userId
-     * @return bool
-     */
-    public function isConnected(int $userId): bool
-    {
-        $token = IntegrationToken::where('user_id', $userId)
-            ->where('provider', 'microsoft')
-            ->first();
-
-        if (!$token) {
-            return false;
-        }
-
-        // Se expirou mas tem refresh_token, ainda está conectado (vai renovar automático)
-        if ($token->expires_at->isPast() && !$token->refresh_token) {
-            return false;
-        }
-
-        return true;
-    }
-
-    /**
      * Desconecta a conta Microsoft do usuário.
      *
      * @param int $userId

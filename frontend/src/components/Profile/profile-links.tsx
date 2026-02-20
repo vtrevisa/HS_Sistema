@@ -21,7 +21,7 @@ interface ProfileLinksProps {
 export function ProfileLinks({ user }: ProfileLinksProps) {
  const [activeModal, setActiveModal] = useState<string | null>(null)
  const [emailProvider, setEmailProvider] = useState<'gmail' | 'microsoft' | null>(null)
- const { connected, disconnect } = useGoogleCalendar();;
+ const { connected, disconnect } = useGoogleCalendar()
 
   useEffect(() => {
     console.log('useGoogleCalendar object:', { connected, disconnect });
@@ -86,7 +86,9 @@ export function ProfileLinks({ user }: ProfileLinksProps) {
               <span className="inline-block h-3 w-3 rounded-full bg-emerald-500" aria-hidden />
             </div>
           </div>
-          <Button variant="destructive" onClick={disconnect}>Desconectar</Button>
+          <div className="flex items-center gap-2">
+            <Button variant="destructive" onClick={disconnect}>Desconectar</Button>
+          </div>
         </div>
     ):(
       <div className="flex items-center justify-between gap-2 p-3 rounded-lg bg-muted/50">

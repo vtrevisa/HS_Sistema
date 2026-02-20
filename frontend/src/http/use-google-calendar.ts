@@ -30,7 +30,7 @@ export const useGoogleCalendar = () => {
             const connectedFlag = res.data?.connected ?? res.data?.calendar?.connected ?? false;
             setConnected(connectedFlag);
             if (connectedFlag) {
-                fetchEvents();
+                syncEvents();
             }
         } catch (error) {
             console.error('Erro ao verificar status do calendário', error);
@@ -39,30 +39,61 @@ export const useGoogleCalendar = () => {
         }
     };
 
-    const fetchEvents = async (params?: any) => {
+    const syncEvents = async () => {
         try {
-            const res = await api.get('/calendar/events', { params });
-            setEvents(res.data);
-        } catch (error) {
-            console.error('Erro ao buscar eventos', error);
+        // trigger backend sync that saves Google events as Tasks
+        await api.post('/calendar/sync').catch(e => console.warn('Failed to dispatch calendar sync', e));
+        const calRes = await api.get('/calendar/calendars');
+        console.log('DEBUG /calendar/calendars response:', calRes);
+
+        const calendars = Array.isArray(calRes.data) ? calRes.data : calRes.data.items ?? [];
+        const now = new Date().toISOString();
+        const timeMax = new Date(); timeMax.setMonth(timeMax.getMonth() + 6); // ex: próximos 6 meses
+
+        const eventsResByCal = await Promise.all(
+        calendars.map(c =>
+            api.get('/calendar/events', {
+            params: {
+                calendarId: c.id,
+                singleEvents: true,
+                orderBy: 'startTime',
+                timeMin: now,
+                timeMax: timeMax.toISOString(),
+                maxResults: 2500
+            }
+            })
+            .then(r => ({ calendar: c, response: r }))
+            .catch(err => ({ calendar: c, error: err }))
+        )
+        );
+
+        console.log('DEBUG aggregated events per calendar:', eventsResByCal);
+
+        // opcional: juntar todos os eventos em um único array
+        const allEvents = eventsResByCal.flatMap(x => (x.response?.data ?? []));
+        console.log('DEBUG allEvents combined:', allEvents);
+        return { calendars, eventsResByCal, allEvents };
+        } catch (e) {
+            console.error('Erro ao agregar eventos:', e);
+            throw e;
         }
     };
 
     const createEvent = async (eventData: any) => {
         const res = await api.post('/calendar/events', eventData);
-        await fetchEvents();
+        await syncEvents();
         return res.data;
     };
 
     const updateEvent = async (eventId: string, eventData: any) => {
         const res = await api.put(`/calendar/events/${eventId}`, eventData);
-        await fetchEvents();
+        await syncEvents();
         return res.data;
     };
 
     const deleteEvent = async (eventId: string) => {
         await api.delete(`/calendar/events/${eventId}`);
-        await fetchEvents();
+        await syncEvents();
     };
 
     const disconnect = async () => {
@@ -76,7 +107,7 @@ export const useGoogleCalendar = () => {
         events,
         loading,
         connectCalendar,
-        fetchEvents,
+        syncEvents,
         createEvent,
         updateEvent,
         deleteEvent,

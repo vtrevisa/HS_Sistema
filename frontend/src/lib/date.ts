@@ -9,18 +9,28 @@ export function parseUTCDateAsLocal(dateString: string): Date {
 }
 
 export function formatUpcomingTasksDate(dateStr: string, hourStr: string) {
+  if (!dateStr) return '';
+
+  // Prepare dates without mutating original Date objects
   const today = new Date();
-  const taskDate = new Date(`${dateStr}T${hourStr}`);
-  
-  const diffTime = taskDate.setHours(0,0,0,0) - today.setHours(0,0,0,0);
+  const todayZero = new Date(today);
+  todayZero.setHours(0, 0, 0, 0);
+
+  // If hourStr is missing, default to midnight so date parsing works
+  const safeHour = hourStr ?? '00:00:00';
+  const taskDate = new Date(`${dateStr}T${safeHour}`);
+  const taskZero = new Date(taskDate);
+  taskZero.setHours(0, 0, 0, 0);
+
+  const diffTime = taskZero.getTime() - todayZero.getTime();
   const diffDays = diffTime / (1000 * 60 * 60 * 24);
 
-  const hourFormatted = hourStr.slice(0, 5); // Pega HH:MM
+  const hourFormatted = hourStr ? hourStr.slice(0, 5) : '';
 
-  if (diffDays === 0) return `Hoje, ${hourFormatted}`;
-  if (diffDays === 1) return `Amanhã, ${hourFormatted}`;
+  if (diffDays === 0) return hourFormatted ? `Hoje, ${hourFormatted}` : 'Hoje';
+  if (diffDays === 1) return hourFormatted ? `Amanhã, ${hourFormatted}` : 'Amanhã';
 
-  const day = String(taskDate.getDate()).padStart(2, "0");
-  const month = String(taskDate.getMonth() + 1).padStart(2, "0");
-  return `${day}/${month}, ${hourFormatted}`;
+  const day = String(taskDate.getDate()).padStart(2, '0');
+  const month = String(taskDate.getMonth() + 1).padStart(2, '0');
+  return hourFormatted ? `${day}/${month}, ${hourFormatted}` : `${day}/${month}`;
 }

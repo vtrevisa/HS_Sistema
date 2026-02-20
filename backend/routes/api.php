@@ -41,6 +41,7 @@ Route::prefix('calendar')->group(function () {
     Route::get('status', [IntegrationController::class, 'calendarStatus']);
     Route::delete('disconnect', [IntegrationController::class, 'disconnectCalendar']);
     Route::get('calendars', [GoogleCalendarController::class, 'listCalendars']);
+    Route::post('sync', [GoogleCalendarController::class, 'sync']);
     Route::get('events', [GoogleCalendarController::class, 'listEvents']);
     Route::post('events', [GoogleCalendarController::class, 'createEvent']);
     Route::put('events/{eventId}', [GoogleCalendarController::class, 'updateEvent']);
