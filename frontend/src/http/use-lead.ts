@@ -43,7 +43,7 @@ export function useLead() {
         toast.success(
           savedLeads.length === 1
           ? '1 lead foi gerado com sucesso!'
-          : `${savedLeads.length} leads foram geradoscd com sucesso!`
+          : `${savedLeads.length} leads foram gerados com sucesso!`
         )
       }, 3200)
     },

@@ -15,6 +15,8 @@ import type { LeadRequest } from '@/http/types/leads'
 import { exportLeadsToExcel } from '@/services/leads'
 import { useLead } from '@/http/use-lead'
 import { useCompany } from '@/http/use-company'
+import { NewTaskModal } from '../Modals/new-task'
+import { useTasks } from '@/http/use-tasks'
 
 export function Leads() {
  const [searchTerm, setSearchTerm] = useState('')
@@ -25,6 +27,8 @@ export function Leads() {
  const [isNewLeadModalOpen, setIsNewLeadModalOpen] = useState(false)
  const [isLeadDetailsModalOpen, setIsLeadDetailsModalOpen] = useState(false)
  const [isDeleteLeadModalOpen, setIsDeleteLeadModalOpen] = useState(false)
+ const [isAgendarTarefaOpen, setIsAgendarTarefaOpen] = useState(false)
+
  const [selectedLead, setSelectedLead] = useState<LeadRequest | null>(null)
 
  const queryClient = useQueryClient()
@@ -32,6 +36,8 @@ export function Leads() {
  const { leadsDB, saveLeads } = useLead()
 
  const { searchByCnpj } = useCompany()
+
+ const { saveTasks } = useTasks()
 
  const leads = useMemo(() => leadsDB.data ?? [], [leadsDB.data])
 
@@ -178,6 +184,7 @@ export function Leads() {
 
    <LeadDetailsModal
     isOpen={isLeadDetailsModalOpen}
+    onOpenTask={() => setIsAgendarTarefaOpen(true)}
     onClose={closeLeadDetails}
     lead={selectedLead}
    />
@@ -186,6 +193,13 @@ export function Leads() {
     isOpen={isDeleteLeadModalOpen}
     onClose={() => setIsDeleteLeadModalOpen(false)}
     lead={selectedLead}
+   />
+
+   <NewTaskModal
+    isOpen={isAgendarTarefaOpen}
+    onOpenChange={() => setIsAgendarTarefaOpen(false)}
+    onSave={task => saveTasks.mutate(task)}
+    leadId={selectedLead?.id}
    />
   </div>
  )

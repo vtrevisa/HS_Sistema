@@ -1,6 +1,6 @@
 import { api } from "@/lib/api";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import type { Alvara, AlvaraResponse, Task, TaskResponse } from "./types/calendar";
+import type { Alvara, AlvaraResponse, CreateTask, Task, TaskResponse } from "./types/calendar";
 import type { AxiosError } from "axios";
 import { toast } from "sonner"
 import { parseUTCDateAsLocal } from "@/lib/date";
@@ -24,9 +24,9 @@ export function useTasks() {
          date: parseUTCDateAsLocal(task.date),
        }))
     },
-    refetchOnWindowFocus: true,       
+    staleTime: 1000 * 60 * 2,              
+    refetchOnWindowFocus: false,       
     refetchOnReconnect: true,         
-    staleTime: 0,                
   });
 
   //List all alvaras
@@ -48,13 +48,13 @@ export function useTasks() {
 
   // Mutation to save tasks
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const saveMutation = useMutation<Task, AxiosError<any>, Task>({
+  const saveMutation = useMutation<Task, AxiosError<any>, CreateTask>({
     mutationFn: async task => {
       const { data } = await api.post<Task>('/tasks', task)
       return data
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['tasks'] })
+      queryClient.invalidateQueries({ queryKey: ['tasks-calendar'] })
 
       toast.success('Tarefa agendada com sucesso!')
     },

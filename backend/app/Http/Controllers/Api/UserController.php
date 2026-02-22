@@ -8,6 +8,10 @@ use App\Models\User;
 use Exception;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
+use Laravel\Sanctum\PersonalAccessToken;
 
 class UserController extends Controller
 {
@@ -117,6 +121,43 @@ class UserController extends Controller
                 'message' => "Usuário não editado!",
             ], 400);
         }
+    }
+
+    // Upload user avatar
+
+    public function uploadAvatar(Request $request)
+    {
+        $token = $request->cookie('auth-token');
+        $accessToken = PersonalAccessToken::findToken($token);
+        $user = $accessToken?->tokenable;
+
+        if (!$token || !$accessToken || !$user) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Usuário não autenticado ou token inválido.'
+            ], 401);
+        }
+
+        $request->validate(['avatar' => 'required|image|max:5120']);
+
+        if (!$request->hasFile('avatar')) {
+            Log::error('uploadAvatar: Nenhum arquivo enviado.');
+            return response()->json(['status' => false, 'message' => 'Nenhum arquivo enviado.'], 400);
+        }
+
+        $path = $request->file('avatar')->store("avatars/{$user->id}", 'public');
+
+        $url = Storage::url($path);
+
+        $user->avatar_url = $url;
+        $user->save();
+
+        return response()->json([
+            'status' => true,
+            'message' => 'Avatar enviado com sucesso.',
+            'avatar_url' => $url,
+            'path' => $path,
+        ], 200);
     }
 
 

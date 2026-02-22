@@ -49,7 +49,7 @@ export function Calendario() {
 
    {/* Modal */}
    <NewTaskModal
-    open={calendar.modalOpen}
+    isOpen={calendar.modalOpen}
     onOpenChange={calendar.setModalOpen}
     defaultDate={calendar.modalDefaultDate}
     onSave={task => saveTasks.mutate(task)}

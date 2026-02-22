@@ -11,6 +11,8 @@ import { PipelineLeadCard } from './pipeline-lead-card'
 
 import type { LeadRequest } from '@/http/types/leads'
 import { useCompany } from '@/http/use-company'
+import { NewTaskModal } from '../Modals/new-task'
+import { useTasks } from '@/http/use-tasks'
 
 export function Pipeline() {
  const {
@@ -26,9 +28,12 @@ export function Pipeline() {
 
  const { searchByCnpj } = useCompany()
 
+ const { saveTasks } = useTasks()
+
  const [isNewLeadModalOpen, setIsNewLeadModalOpen] = useState(false)
  const [selectedLead, setSelectedLead] = useState<LeadRequest | null>(null)
  const [isLeadDetailsModalOpen, setIsLeadDetailsModalOpen] = useState(false)
+ const [isAgendarTarefaOpen, setIsAgendarTarefaOpen] = useState(false)
 
  const CRM_STATUSES = [
   { id: 'lead', title: 'Lead / Contato', deadline: 7 },
@@ -40,7 +45,6 @@ export function Pipeline() {
 
  function handleNewLead(leadData: Omit<LeadRequest, 'id'>) {
   saveLeads.mutate([leadData])
-  console.log('Novo lead criado:', leadData)
  }
 
  function handleLeadClick(lead: LeadRequest) {
@@ -186,7 +190,15 @@ export function Pipeline() {
    <LeadDetailsModal
     isOpen={isLeadDetailsModalOpen}
     onClose={() => setIsLeadDetailsModalOpen(false)}
+    onOpenTask={() => setIsAgendarTarefaOpen(true)}
     lead={selectedLead}
+   />
+
+   <NewTaskModal
+    isOpen={isAgendarTarefaOpen}
+    onOpenChange={() => setIsAgendarTarefaOpen(false)}
+    onSave={task => saveTasks.mutate(task)}
+    leadId={selectedLead?.id}
    />
   </div>
  )

@@ -45,6 +45,12 @@ export type LeadStatus =
   | "cliente-fechado"
   | "arquivado"
 
+type Attachment = {
+   id?: number
+   name: string
+   url: string
+}
+
 export interface LeadRequest {
   id?: number;
   company?: string;
@@ -66,6 +72,7 @@ export interface LeadRequest {
   cnpj?: string;
   phone?: string;
   email?: string;
+  attachments?: Attachment[]
   website?: string;
   archived_proposal?: ArchivedProposal | null
   categoria?: string;

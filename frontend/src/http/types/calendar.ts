@@ -6,7 +6,10 @@ export interface Task {
   hour: string;
   priority: 'baixa' | 'media' | 'alta';
   completed?: boolean
+  lead_id?: number;
 }
+
+export type CreateTask = Omit<Task, 'id' | 'completed'>
 
 export interface TaskResponse {
   id: string

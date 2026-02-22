@@ -3,11 +3,13 @@ import { Button } from '../ui/button'
 
 interface CompaniesActionsProps {
  onNewCompanyClick: () => void
- enhanceAllData: () => void
+ generateAllLeads?: () => Promise<void>
+ //enhanceAllData: () => void
  onImportClick: () => void
 }
 
 export function CompaniesActions({
+ generateAllLeads,
  onImportClick,
  onNewCompanyClick
 }: CompaniesActionsProps) {
@@ -19,7 +21,7 @@ export function CompaniesActions({
    </Button>
 
    <Button
-    onClick={() => {}}
+    onClick={generateAllLeads}
     variant="outline"
     className="bg-brand-success/10 text-brand-success hover:text-brand-success border-brand-success/30 hover:bg-brand-success/20"
    >

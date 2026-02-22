@@ -19,20 +19,22 @@ import { cn } from '@/lib/utils'
 import { format } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 import { toast } from 'sonner'
-import type { Task } from '@/http/types/calendar'
+import type { CreateTask } from '@/http/types/calendar'
 
 interface NewTaskModalProps {
- open: boolean
+ isOpen: boolean
  onOpenChange: (open: boolean) => void
- onSave: (task: Task) => void
+ onSave: (task: CreateTask) => void
  defaultDate?: Date
+ leadId?: number
 }
 
 export function NewTaskModal({
- open,
+ isOpen,
  onOpenChange,
  onSave,
- defaultDate
+ defaultDate,
+ leadId
 }: NewTaskModalProps) {
  const [title, setTitle] = useState('')
  const [description, setDescription] = useState('')
@@ -61,7 +63,8 @@ export function NewTaskModal({
    description,
    date,
    hour,
-   priority
+   priority,
+   lead_id: leadId
   })
 
   // reset
@@ -74,16 +77,16 @@ export function NewTaskModal({
  }
 
  useEffect(() => {
-  if (open) {
+  if (isOpen) {
    setDate(defaultDate || new Date())
   }
- }, [defaultDate, open])
+ }, [defaultDate, isOpen])
 
  return (
-  <Dialog open={open} onOpenChange={onOpenChange}>
+  <Dialog open={isOpen} onOpenChange={onOpenChange}>
    <DialogContent className="sm:max-w-[480px]">
     <DialogHeader>
-     <DialogTitle className="text-blue-600">Agendar Nova Tarefa</DialogTitle>
+     <DialogTitle className="text-primary">Agendar Nova Tarefa</DialogTitle>
      <DialogDescription className="sr-only">
       Formulário para criar uma nova tarefa no calendário
      </DialogDescription>
@@ -170,7 +173,7 @@ export function NewTaskModal({
      </Button>
      <Button
       onClick={handleSaveTask}
-      className="bg-blue-600 hover:bg-blue-700 text-white"
+      className="bg-primary hover:bg-primary/90 text-primary-foreground transition-colors"
      >
       Agendar Tarefa
      </Button>

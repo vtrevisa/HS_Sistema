@@ -3,6 +3,15 @@ import * as XLSX from "xlsx";
 import { saveAs } from "file-saver";
 import { toast } from "sonner";
 
+export function toDateOnly(value?: string | null) {
+ if (!value) return null
+
+ const date = new Date(value)
+ return isNaN(date.getTime())
+  ? null
+  : date.toISOString().split('T')[0]
+}
+
 export function extractSheetId(url: string): string | null {
   const match = url.match(/\/spreadsheets\/d\/([a-zA-Z0-9-_]+)/);
   return match ? match[1] : null;
@@ -327,15 +336,15 @@ export async function exportLeadsToExcel(leads: LeadRequest[]) {
 export function getStatusColor(status: string) {
  switch (status) {
    case 'Lead':
-    return 'border border-blue-200 bg-blue-50 text-blue-700 dark:border-blue-900 dark:bg-blue-950/30 dark:text-blue-300'
+    return 'border border-blue-200 bg-blue-50 text-blue-700 dark:border-blue-900 dark:bg-blue-950/30 dark:text-blue-300 hover:bg-blue-50'
    case 'Primeiro contato':
-    return 'border border-indigo-200 bg-indigo-50 text-indigo-700 dark:border-indigo-900 dark:bg-indigo-950/30 dark:text-indigo-300'
+    return 'border border-indigo-200 bg-indigo-50 text-indigo-700 dark:border-indigo-900 dark:bg-indigo-950/30 dark:text-indigo-300 hover:bg-indigo-50'
    case 'Follow-up':
-    return 'border border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-900 dark:bg-amber-950/30 dark:text-amber-300'
+    return 'border border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-900 dark:bg-amber-950/30 dark:text-amber-300 hover:bg-amber-50'
    case 'Proposta enviada':
-    return 'border border-red-200 bg-red-50 text-red-700 dark:border-red-900 dark:bg-red-950/30 dark:text-red-300'
+    return 'border border-red-200 bg-red-50 text-red-700 dark:border-red-900 dark:bg-red-950/30 dark:text-red-300 hover:bg-red-50'
    case 'Cliente fechado':
-    return 'border border-green-200 bg-green-50 text-green-700 dark:border-green-900 dark:bg-green-950/30 dark:text-green-300'
+    return 'border border-green-200 bg-green-50 text-green-700 dark:border-green-900 dark:bg-green-950/30 dark:text-green-300 hover:bg-green-50'
    default:
     return 'border border-border bg-muted text-muted-foreground'
   }

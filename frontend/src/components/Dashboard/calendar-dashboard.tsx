@@ -112,13 +112,13 @@ export function CalendarDashboard() {
      <div className="flex items-center gap-1.5">
       <span className="w-2 h-2 rounded-full bg-primary" />
       <ClipboardList className="h-3 w-3 text-muted-foreground" />
-      <span className="text-muted-foreground">Tarefas</span>
+      <span className="text-muted-foreground">Tarefas Agendadas</span>
      </div>
 
      <div className="flex items-center gap-1.5">
       <span className="w-2 h-2 rounded-full bg-destructive" />
       <AlertTriangle className="h-3 w-3 text-muted-foreground" />
-      <span className="text-muted-foreground">Alvarás</span>
+      <span className="text-muted-foreground">Alvarás a Vencer</span>
      </div>
     </div>
    </CardContent>
