@@ -13,20 +13,13 @@ export function CalendarActions({
  setModalDefaultDate,
  selectedDate
 }: CalendarActionsProps) {
-  const syncRefresh = async () => {
-    try {
-         await syncEvents();
-     } catch (e) {
-         console.error('Erro ao obter logs do calendário', e);
-     }
-     window.location.reload();
-  }
+    
   const { syncEvents } = useGoogleCalendar()
  return (
   <div className="flex items-center gap-2">
     <Button
      variant="default"
-     onClick={async () => {syncRefresh()}}
+     onClick={async () => {await syncEvents()}}
  >
      Atualizar
  </Button>

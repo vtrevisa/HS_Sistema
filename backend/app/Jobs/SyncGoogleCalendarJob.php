@@ -3,6 +3,7 @@
 namespace App\Jobs;
 
 use App\Services\GoogleCalendarService;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -22,6 +23,8 @@ class SyncGoogleCalendarJob implements ShouldQueue
 
     public function handle(GoogleCalendarService $calendarService)
     {
+        Log::info('SyncGoogleCalendarJob handle start', ['userId' => $this->userId]);
+
         $options = [
             'timeMin' => now()->toRfc3339String(),
             'timeMax' => now()->addMonths(6)->toRfc3339String(),
@@ -30,6 +33,12 @@ class SyncGoogleCalendarJob implements ShouldQueue
             'maxResults' => 2500,
         ];
 
-        $calendarService->syncUserCalendars($this->userId, $options);
+        try {
+            $calendarService->syncUserCalendars($this->userId, $options);
+            Log::info('SyncGoogleCalendarJob handle finished', ['userId' => $this->userId]);
+        } catch (\Exception $e) {
+            Log::error('SyncGoogleCalendarJob handle failed', ['userId' => $this->userId, 'error' => $e->getMessage()]);
+            throw $e;
+        }
     }
 }

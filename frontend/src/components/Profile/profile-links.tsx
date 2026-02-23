@@ -126,7 +126,7 @@ export function ProfileLinks({ user }: ProfileLinksProps) {
             {emailProvider === 'gmail' ? 
               <img src="/public/gmail-icon.png" alt="Gmail" className="h-10 w-10 inline mr-1" /> : 
               emailProvider === 'microsoft' ? 
-              <img src="/microsoft_office_outlook_logo_icon.png" alt="microsoft" className="h-4 w-4 inline mr-1" /> :
+              <img src="/microsoft_office_outlook_logo_icon.png" alt="microsoft" className="h-10 w-10 inline mr-1" /> :
               ''}
           </div>
           <span className="inline-block h-3 w-3 rounded-full bg-emerald-500" aria-hidden />

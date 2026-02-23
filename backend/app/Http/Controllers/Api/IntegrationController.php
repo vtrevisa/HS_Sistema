@@ -349,7 +349,11 @@ class IntegrationController extends Controller
             return response()->json(['status' => false, 'message' => 'Unsupported provider'], 400);
         }
 
-        $deleted = IntegrationToken::where('user_id', $user->id)->where('provider', $prov)->delete();
+        // Only delete email-type tokens for this provider — do not remove calendar tokens
+        $deleted = IntegrationToken::where('user_id', $user->id)
+            ->where('type', 'email')
+            ->where('provider', $prov)
+            ->delete();
 
         return response()->json(['status' => true, 'deleted' => (bool) $deleted]);
     }

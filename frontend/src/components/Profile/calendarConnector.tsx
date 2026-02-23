@@ -1,5 +1,3 @@
-/* import { useGoogleCalendar } from '../../http/use-google-calendar';
- */
 const api = import.meta.env.VITE_API_URL || '';
 
 function buildUrl(path: string) {

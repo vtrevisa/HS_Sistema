@@ -17,6 +17,12 @@ use Google\Service\Calendar\Event as GoogleEvent;
 class GoogleCalendarService
 {
     /**
+     * Cache Google client instances per user to avoid recreating and
+     * re-refreshing tokens multiple times during one sync.
+     * @var array<int, \Google\Client>
+     */
+    private array $clientCache = [];
+    /**
      * Retorna o cliente Google autenticado para o usuário.
      *
      * @param int $userId
@@ -37,46 +43,93 @@ class GoogleCalendarService
             throw new Exception('Erro ao decriptografar tokens.');
         }
 
-        $client = new GoogleClient();
-        $client->setClientId(env('GOOGLE_CLIENT_ID'));
-        $client->setClientSecret(env('GOOGLE_CLIENT_SECRET'));
+        // Reuse client if available
+        if (isset($this->clientCache[$userId]) && $this->clientCache[$userId] instanceof GoogleClient) {
+            $client = $this->clientCache[$userId];
+        } else {
+            $client = new GoogleClient();
+            $client->setClientId(env('GOOGLE_CLIENT_ID'));
+            $client->setClientSecret(env('GOOGLE_CLIENT_SECRET'));
+            $this->clientCache[$userId] = $client;
+        }
 
-        $expiresIn = $token->expires_at ? $token->expires_at->diffInSeconds(now()) : 0;
+        // Calculate seconds until expiry (non-negative)
+        $expiresIn = 0;
+        if ($token->expires_at) {
+            $expiresIn = max(0, $token->expires_at->getTimestamp() - time());
+        }
+
+        // Provide token info to the client so it can compute expiry correctly
         $client->setAccessToken([
             'access_token' => $accessToken,
             'refresh_token' => $refreshToken,
             'expires_in' => $expiresIn,
+            'created' => time(),
         ]);
 
-        if ($client->isAccessTokenExpired()) {
-            if (!$refreshToken) {
-                throw new Exception('Token expirado e sem refresh_token. Reconecte o calendário.');
-            }
-
-            Log::info("Token Google Calendar expirado para usuário {$userId}. Renovando...");
-            $newToken = $client->fetchAccessTokenWithRefreshToken($refreshToken);
-
-            if (isset($newToken['error'])) {
-                throw new Exception('Falha ao renovar token: ' . ($newToken['error_description'] ?? $newToken['error']));
-            }
-
-            // Atualiza refresh_token se o provedor retornou um novo
-            if (!empty($newToken['refresh_token'])) {
-                $token->refresh_token = Crypt::encryptString($newToken['refresh_token']);
-            }
-
-            $token->access_token = Crypt::encryptString($newToken['access_token']);
-            $token->expires_at = now()->addSeconds($newToken['expires_in'] ?? 0);
-            $token->save();
-
-            // Setar access token completo no cliente
-            $client->setAccessToken([
-                'access_token' => $newToken['access_token'],
-                'refresh_token' => $newToken['refresh_token'] ?? $refreshToken,
-                'expires_in' => $newToken['expires_in'] ?? 0,
+        // Log token state for diagnosis (no secrets)
+        try {
+            Log::info('Google token state', [
+                'userId' => $userId,
+                'token_expires_at' => $token->expires_at ? $token->expires_at->toDateTimeString() : null,
+                'computed_expires_in' => $expiresIn,
+                'has_refresh_token' => !empty($refreshToken),
             ]);
-            Log::info("Token Google Calendar renovado.");
+        } catch (\Exception $e) {
+            // ignore logging errors
         }
+
+        // Refresh only when necessary: client reports expired or stored expiry is within threshold
+        $refreshThreshold = 30; // seconds
+
+        $clientReportsExpired = false;
+        try {
+            $clientReportsExpired = $client->isAccessTokenExpired();
+        } catch (\Exception $e) {
+            // If client check fails, fall back to attempt refresh
+            $clientReportsExpired = true;
+        }
+
+        if ($expiresIn > $refreshThreshold && !$clientReportsExpired) {
+            return $client;
+        }
+
+        if (!$refreshToken) {
+            throw new Exception('Token expirado e sem refresh_token. Reconecte o calendário.');
+        }
+
+        Log::info("Token Google Calendar próximo do fim/expirado para usuário {$userId}. Renovando...");
+        try {
+            $newToken = $client->fetchAccessTokenWithRefreshToken($refreshToken);
+        } catch (\Exception $e) {
+            throw new Exception('Falha ao renovar token: ' . $e->getMessage());
+        }
+
+        if (isset($newToken['error'])) {
+            throw new Exception('Falha ao renovar token: ' . ($newToken['error_description'] ?? $newToken['error']));
+        }
+
+        // Update stored tokens if provided
+        if (!empty($newToken['refresh_token'])) {
+            $token->refresh_token = Crypt::encryptString($newToken['refresh_token']);
+        }
+
+        if (!empty($newToken['access_token'])) {
+            $token->access_token = Crypt::encryptString($newToken['access_token']);
+        }
+
+        $token->expires_at = now()->addSeconds($newToken['expires_in'] ?? 0);
+        $token->save();
+
+        // Set fresh access token on client
+        $client->setAccessToken([
+            'access_token' => $newToken['access_token'] ?? $accessToken,
+            'refresh_token' => $newToken['refresh_token'] ?? $refreshToken,
+            'expires_in' => $newToken['expires_in'] ?? 0,
+            'created' => time(),
+        ]);
+
+        Log::info("Token Google Calendar renovado para usuário {$userId}.");
 
         return $client;
     }
@@ -249,6 +302,8 @@ class GoogleCalendarService
      */
     public function syncUserCalendars(int $userId, array $options = []): array
     {
+        file_put_contents('/tmp/gcal_debug.txt', 'hit start '.date('c').PHP_EOL, FILE_APPEND);
+        Log::info('syncUserCalendars start', ['userId' => $userId, 'options' => $options]);
         $summary = [];
         $calendars = $this->listCalendars($userId);
 
@@ -260,6 +315,7 @@ class GoogleCalendarService
         }
 
         foreach ($calendars as $cal) {
+            $eventIds = [];
             $calendarId = $cal['id'];
             $syncedCount = 0;
 
@@ -308,6 +364,8 @@ class GoogleCalendarService
                     $eventId = $item->getId();
                     if (!$eventId) continue;
 
+                    $eventIds[] = $eventId;
+
                     // extract start
                     $startObj = $item->getStart();
                     $startRaw = null;
@@ -350,6 +408,56 @@ class GoogleCalendarService
 
             } while ($pageToken);
 
+            // Remove any events that are no longer in the calendar
+                Log::info('EVENT_IDS', ['ids' => $eventIds, 'calendarId' => $calendarId, 'userId' => $userId]);
+
+                // Diagnostic logs: list current tasks for this user/calendar
+                try {
+                    $existingTasks = Task::where('user_id', $userId)
+                        ->where('calendar_id', $calendarId)
+                        ->pluck('google_event_id')
+                        ->toArray();
+
+                    Log::info('TASKS_BEFORE_DELETE', [
+                        'userId' => $userId,
+                        'calendarId' => $calendarId,
+                        'existing_count' => count($existingTasks),
+                        'existing_ids_sample' => array_slice($existingTasks, 0, 20),
+                        'fetched_event_count' => count($eventIds),
+                        'fetched_ids_sample' => array_slice($eventIds, 0, 20),
+                    ]);
+                } catch (\Exception $e) {
+                    Log::error('TASKS_BEFORE_DELETE_FAILED', ['error' => $e->getMessage(), 'userId' => $userId, 'calendarId' => $calendarId]);
+                }
+
+                try {
+                    if (!empty($eventIds)) {
+                        $deleted = Task::where('user_id', $userId)
+                            ->where('calendar_id', $calendarId)
+                            ->whereNotIn('google_event_id', $eventIds)
+                            ->delete();
+
+                        Log::info('TASKS_DELETED', ['deleted' => $deleted, 'userId' => $userId, 'calendarId' => $calendarId]);
+                    } else {
+                        // sem eventos retornados: apagar todas as tasks deste calendário
+                        $deleted = Task::where('user_id', $userId)
+                            ->where('calendar_id', $calendarId)
+                            ->delete();
+
+                        Log::info('TASKS_DELETED_ALL', ['deleted' => $deleted, 'userId' => $userId, 'calendarId' => $calendarId]);
+                    }
+
+                    // Log remaining tasks after deletion
+                    try {
+                        $remaining = Task::where('user_id', $userId)->where('calendar_id', $calendarId)->pluck('google_event_id')->toArray();
+                        Log::info('TASKS_AFTER_DELETE', ['remaining_count' => count($remaining), 'remaining_sample' => array_slice($remaining, 0, 20), 'userId' => $userId, 'calendarId' => $calendarId]);
+                    } catch (\Exception $e) {
+                        Log::error('TASKS_AFTER_DELETE_FAILED', ['error' => $e->getMessage(), 'userId' => $userId, 'calendarId' => $calendarId]);
+                    }
+                } catch (\Exception $e) {
+                    Log::error('TASK_DELETE_FAILED', ['error' => $e->getMessage(), 'trace' => $e->getTraceAsString(), 'userId' => $userId, 'calendarId' => $calendarId]);
+                }
+
             // persist nextSyncToken if returned
             if ($nextSyncToken) {
                 $syncRecord->sync_token = $nextSyncToken;
@@ -359,6 +467,8 @@ class GoogleCalendarService
 
             $summary[$calendarId] = $syncedCount;
         }
+
+        file_put_contents('/tmp/gcal_debug.txt', 'hit end '.date('c').PHP_EOL, FILE_APPEND);
 
         return $summary;
     }
