@@ -11,8 +11,10 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('users', function (Blueprint $table) {
-            $table->integer('monthly_used')->default(0)->after('credits');
+        Schema::table('tasks', function (Blueprint $table) {
+            $table->boolean('completed')
+                ->default(false)
+                ->after('priority');
         });
     }
 
@@ -21,19 +23,19 @@ return new class extends Migration
      */
     public function down(): void
     {
-        if (Schema::hasTable('users')) {
+        if (Schema::hasTable('tasks')) {
             try {
-                Schema::table('users', function (Blueprint $table) {
+                Schema::table('tasks', function (Blueprint $table) {
                     try {
-                        if (Schema::hasColumn('users', 'monthly_used')) {
-                            $table->dropColumn('monthly_used');
+                        if (Schema::hasColumn('tasks', 'completed')) {
+                            $table->dropColumn('completed');
                         }
                     } catch (\Exception $e) {
-                        // ignore if column already removed
+                        // ignore if column doesn't exist or other SQL errors during rollback
                     }
                 });
             } catch (\Exception $e) {
-                // ignore overall errors during rollback
+                // ignore overall table alteration errors during rollback
             }
         }
     }

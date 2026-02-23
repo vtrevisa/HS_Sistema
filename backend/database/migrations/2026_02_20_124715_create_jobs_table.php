@@ -27,6 +27,10 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('jobs');
+        try {
+            Schema::dropIfExists('jobs');
+        } catch (\Exception $e) {
+            // ignore errors during rollback
+        }
     }
 };

@@ -21,6 +21,10 @@ return new class extends Migration
 
     public function down()
     {
-        Schema::dropIfExists('google_calendar_syncs');
+        try {
+            Schema::dropIfExists('google_calendar_syncs');
+        } catch (\Exception $e) {
+            // ignore errors during rollback
+        }
     }
 };

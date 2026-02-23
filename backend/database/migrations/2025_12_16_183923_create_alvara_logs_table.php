@@ -29,6 +29,10 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('alvara_logs');
+        try {
+            Schema::dropIfExists('alvara_logs');
+        } catch (\Exception $e) {
+            // ignore errors during rollback
+        }
     }
 };

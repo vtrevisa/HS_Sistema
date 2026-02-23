@@ -24,8 +24,20 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('users', function (Blueprint $table) {
-            $table->dropColumn(['email_subject', 'email_body', 'whatsapp_message']);
-        });
+        if (Schema::hasTable('users')) {
+            try {
+                Schema::table('users', function (Blueprint $table) {
+                    try {
+                        if (Schema::hasColumn('users', 'email_subject') || Schema::hasColumn('users', 'email_body') || Schema::hasColumn('users', 'whatsapp_message')) {
+                            $table->dropColumn(['email_subject', 'email_body', 'whatsapp_message']);
+                        }
+                    } catch (\Exception $e) {
+                        // ignore if columns/constraints already removed
+                    }
+                });
+            } catch (\Exception $e) {
+                // ignore overall errors during rollback
+            }
+        }
     }
 };

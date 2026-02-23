@@ -33,6 +33,10 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('archived_proposals');
+        try {
+            Schema::dropIfExists('archived_proposals');
+        } catch (\Exception $e) {
+            // ignore errors during rollback
+        }
     }
 };

@@ -29,6 +29,10 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('invoices');
+        try {
+            Schema::dropIfExists('invoices');
+        } catch (\Exception $e) {
+            // ignore if drop fails
+        }
     }
 };

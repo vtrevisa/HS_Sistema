@@ -26,18 +26,28 @@ return new class extends Migration
 
     public function down()
     {
-        Schema::table('tasks', function (Blueprint $table) {
+        if (Schema::hasTable('tasks')) {
             try {
-                $table->dropUnique('tasks_user_google_event_unique');
+                Schema::table('tasks', function (Blueprint $table) {
+                    try {
+                        $table->dropUnique('tasks_user_google_event_unique');
+                    } catch (\Exception $e) {
+                        // ignore
+                    }
+                    try {
+                        if (Schema::hasColumn('tasks', 'google_event_id')) {
+                            $table->dropColumn('google_event_id');
+                        }
+                        if (Schema::hasColumn('tasks', 'calendar_id')) {
+                            $table->dropColumn('calendar_id');
+                        }
+                    } catch (\Exception $e) {
+                        // ignore
+                    }
+                });
             } catch (\Exception $e) {
-                // ignore
+                // ignore overall errors during rollback
             }
-            if (Schema::hasColumn('tasks', 'google_event_id')) {
-                $table->dropColumn('google_event_id');
-            }
-            if (Schema::hasColumn('tasks', 'calendar_id')) {
-                $table->dropColumn('calendar_id');
-            }
-        });
+        }
     }
 };

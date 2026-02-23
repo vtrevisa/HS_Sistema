@@ -24,8 +24,20 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('users', function (Blueprint $table) {
-            $table->dropColumn('avatar_url');
-        });
+        if (Schema::hasTable('users')) {
+            try {
+                Schema::table('users', function (Blueprint $table) {
+                    try {
+                        if (Schema::hasColumn('users', 'avatar_url')) {
+                            $table->dropColumn('avatar_url');
+                        }
+                    } catch (\Exception $e) {
+                        // ignore if column doesn't exist
+                    }
+                });
+            } catch (\Exception $e) {
+                // ignore overall errors during rollback
+            }
+        }
     }
 };

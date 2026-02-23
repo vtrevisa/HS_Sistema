@@ -24,8 +24,20 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('credit_purchases', function (Blueprint $table) {
-            $table->dropColumn('transaction_id');
-        });
+        if (Schema::hasTable('credit_purchases')) {
+            try {
+                Schema::table('credit_purchases', function (Blueprint $table) {
+                    try {
+                        if (Schema::hasColumn('credit_purchases', 'transaction_id')) {
+                            $table->dropColumn('transaction_id');
+                        }
+                    } catch (\Exception $e) {
+                        // ignore if column already removed
+                    }
+                });
+            } catch (\Exception $e) {
+                // ignore overall errors during rollback
+            }
+        }
     }
 };
