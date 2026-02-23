@@ -26,6 +26,7 @@ interface NewTaskModalProps {
  onOpenChange: (open: boolean) => void
  onSave: (task: CreateTask) => void
  defaultDate?: Date
+ task?: any | null
  leadId?: number
 }
 
@@ -34,6 +35,7 @@ export function NewTaskModal({
  onOpenChange,
  onSave,
  defaultDate,
+ task,
  leadId
 }: NewTaskModalProps) {
  const [title, setTitle] = useState('')
@@ -58,35 +60,56 @@ export function NewTaskModal({
    return
   }
 
+  const formattedHour = hour.length === 8 ? hour.slice(0, 5) : hour
+
   onSave({
    title,
    description,
    date,
-   hour,
+   hour: formattedHour,
    priority,
    lead_id: leadId
   })
 
   // reset
-  setTitle('')
-  setDescription('')
-  setHour('09:00')
-  setPriority('media')
+  if (!task) {
+   setTitle('')
+   setDescription('')
+   setHour('09:00')
+   setPriority('media')
+  }
 
   onOpenChange(false)
  }
 
  useEffect(() => {
-  if (isOpen) {
-   setDate(defaultDate || new Date())
-  }
- }, [defaultDate, isOpen])
+  if (!isOpen) return
 
+  if (task) {
+   // Modo edição
+   setTitle(task.title)
+   setDescription(task.description ?? '')
+   setDate(new Date(task.date))
+   setHour(
+    task.hour?.length === 8 ? task.hour.slice(0, 5) : (task.hour ?? '09:00')
+   )
+   setPriority(task.priority ?? 'media')
+  } else {
+   // Modo nova tarefa (reset total)
+   setTitle('')
+   setDescription('')
+   setDate(defaultDate || new Date())
+   setHour('09:00')
+   setPriority('media')
+  }
+ }, [task, isOpen, defaultDate])
  return (
   <Dialog open={isOpen} onOpenChange={onOpenChange}>
    <DialogContent className="sm:max-w-[480px]">
     <DialogHeader>
-     <DialogTitle className="text-primary">Agendar Nova Tarefa</DialogTitle>
+     <DialogTitle className="text-primary">
+      {task ? 'Editar Tarefa' : 'Agendar Nova Tarefa'}
+     </DialogTitle>
      <DialogDescription className="sr-only">
       Formulário para criar uma nova tarefa no calendário
      </DialogDescription>
@@ -175,7 +198,7 @@ export function NewTaskModal({
       onClick={handleSaveTask}
       className="bg-primary hover:bg-primary/90 text-primary-foreground transition-colors"
      >
-      Agendar Tarefa
+      {task ? 'Salvar Alterações' : 'Agendar Tarefa'}
      </Button>
     </DialogFooter>
    </DialogContent>

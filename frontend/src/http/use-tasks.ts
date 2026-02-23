@@ -69,12 +69,41 @@ export function useTasks() {
     }
   })
 
+  // Mutation to update task
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const updateMutation = useMutation<Task, AxiosError<any>, Partial<Task>>({
+    mutationFn: async task => {
+      const { data } = await api.put<Task>(`/tasks/${task.id}`, task)
+      return data
+    },
+
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['tasks-calendar'] })
+
+      toast.success('Tarefa editada com sucesso!')
+    },
+
+    onError: (error) => {
+      const messages = Object
+        .values(error.response?.data.erros ?? {})
+        .flat()
+        .join('\n')
+
+      setTimeout(() => {
+        toast.error('Erro ao editar a tarefa!', {
+          description: messages
+        })
+      }, 3200)
+    }
+  })
+
+
 
   // Mutation to set task completed
 
   const toggleCompletedMutation = useMutation<Task, AxiosError<ApiError>, { id: string }, { previousTasks?: Task[] }>({
     mutationFn: async ({ id }) => {
-      const { data } = await api.put<{ task: Task }>(`/tasks/${id}`)
+      const { data } = await api.put<{ task: Task }>(`/tasks/${id}/completed`)
       return data.task
     },
 
@@ -117,5 +146,6 @@ export function useTasks() {
     taskCompleted: toggleCompletedMutation.mutate,
     isLoading: tasksDB.isLoading,
     saveTasks: saveMutation,
+    updateTask: updateMutation
   }
 }

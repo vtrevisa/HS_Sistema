@@ -4,11 +4,23 @@ import { CalendarGrid } from './calendar-grid'
 import { useCalendar } from '@/http/use-calendar'
 import { NewTaskModal } from '../Modals/new-task'
 import { useTasks } from '@/http/use-tasks'
+import type { CreateTask } from '@/http/types/calendar'
 
 export function Calendario() {
  const calendar = useCalendar()
 
- const { saveTasks } = useTasks()
+ const { saveTasks, updateTask } = useTasks()
+
+ function handleSaveTask(task: CreateTask) {
+  if (calendar.taskToEdit) {
+   updateTask.mutate({
+    id: calendar.taskToEdit.id,
+    ...task
+   })
+  } else {
+   saveTasks.mutate(task)
+  }
+ }
 
  return (
   <div className="p-4 lg:p-6 space-y-4">
@@ -45,14 +57,22 @@ export function Calendario() {
     goToday={calendar.goToday}
     onDayClick={calendar.handleDayClick}
     onToggleCompleted={calendar.handleToggleCompleted}
+    onEditTask={calendar.handleEditTask}
    />
 
    {/* Modal */}
    <NewTaskModal
     isOpen={calendar.modalOpen}
-    onOpenChange={calendar.setModalOpen}
+    onOpenChange={open => {
+     calendar.setModalOpen(open)
+
+     if (!open) {
+      calendar.setTaskToEdit(null)
+     }
+    }}
     defaultDate={calendar.modalDefaultDate}
-    onSave={task => saveTasks.mutate(task)}
+    task={calendar.taskToEdit}
+    onSave={handleSaveTask}
    />
   </div>
  )

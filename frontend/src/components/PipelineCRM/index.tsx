@@ -13,6 +13,7 @@ import type { LeadRequest } from '@/http/types/leads'
 import { useCompany } from '@/http/use-company'
 import { NewTaskModal } from '../Modals/new-task'
 import { useTasks } from '@/http/use-tasks'
+import { formatBRLCompact } from '@/lib/currency'
 
 export function Pipeline() {
  const {
@@ -91,11 +92,7 @@ export function Pipeline() {
            {summary.count} cards
           </span>
           <span className="font-semibold text-foreground">
-           {new Intl.NumberFormat('pt-BR', {
-            style: 'currency',
-            currency: 'BRL',
-            notation: 'compact'
-           }).format(summary.totalValue)}
+           {formatBRLCompact(summary.totalValue)}
           </span>
          </div>
         </div>
@@ -151,11 +148,7 @@ export function Pipeline() {
           {summary.count} cards
          </span>
          <span className="font-semibold text-foreground">
-          {new Intl.NumberFormat('pt-BR', {
-           style: 'currency',
-           currency: 'BRL',
-           notation: 'compact'
-          }).format(summary.totalValue)}
+          {formatBRLCompact(summary.totalValue)}
          </span>
         </div>
        </div>

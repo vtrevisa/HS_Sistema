@@ -1,6 +1,6 @@
 {
-  "name": "MyWebSite",
-  "short_name": "MySite",
+  "name": "AVCB CERTO",
+  "short_name": "AVCB CERTO",
   "icons": [
     {
       "src": "/web-app-manifest-192x192.png",
@@ -15,7 +15,7 @@
       "purpose": "maskable"
     }
   ],
-  "theme_color": "#b22325",
-  "background_color": "#b22325",
+  "theme_color": "#a61e24",
+  "background_color": "#a61e24",
   "display": "standalone"
 }

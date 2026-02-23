@@ -1,4 +1,10 @@
-import { ClipboardList, Clock, AlertTriangle, CheckCircle2 } from 'lucide-react'
+import {
+ Clock,
+ AlertTriangle,
+ CheckCircle2,
+ Pencil,
+ RotateCcw
+} from 'lucide-react'
 import { format, startOfDay } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card'
@@ -13,6 +19,7 @@ interface CalendarSidebarProps {
  dayEvents: CalendarEvent[]
  prioridadeCores: Record<string, string>
  onSchedule: (day: Date) => void
+ onEditTask: (task: CalendarEvent) => void
  onToggleCompleted: (id: string, e?: React.MouseEvent) => void
 }
 
@@ -22,6 +29,7 @@ export function CalendarSidebar({
  dayEvents,
  prioridadeCores,
  onSchedule,
+ onEditTask,
  onToggleCompleted
 }: CalendarSidebarProps) {
  const today = startOfDay(new Date())
@@ -72,37 +80,50 @@ export function CalendarSidebar({
         return (
          <div
           key={event.id}
-          onClick={e => {
-           if (!event.id) return
-           onToggleCompleted(event.id, e)
-          }}
           className={cn(
-           'p-2 rounded-lg border space-y-1 cursor-pointer transition-colors',
+           'p-2 rounded-lg border space-y-1 transition-colors',
            event.completed
             ? 'border-brand-success/30 bg-brand-success/10'
             : 'border-primary/20 bg-primary/5'
           )}
-          title={
-           event.completed
-            ? 'Concluída — clique para desfazer'
-            : 'Clique para marcar como concluída'
-          }
          >
-          <div className="flex items-center gap-2">
-           {event.completed ? (
-            <CheckCircle2 className="h-3.5 w-3.5 text-brand-success" />
-           ) : (
-            <ClipboardList className="h-3.5 w-3.5 text-primary" />
-           )}
-
+          <div className="flex items-start justify-between gap-2">
            <span
             className={cn(
-             'text-xs font-medium text-foreground',
+             'text-xs font-medium',
              event.completed && 'line-through opacity-70'
             )}
            >
             {event.title}
            </span>
+           <div className="flex items-center gap-2">
+            <button
+             type="button"
+             onClick={() => onToggleCompleted(event.id)}
+             title={
+              event.completed
+               ? 'Desmarcar como concluída'
+               : 'Marcar como concluída'
+             }
+            >
+             {event.completed ? (
+              <RotateCcw className="h-3 w-3 cursor-pointer hover:opacity-70 transition-opacity" />
+             ) : (
+              <CheckCircle2 className="h-4 w-4 cursor-pointer hover:opacity-70 transition-opacity" />
+             )}
+            </button>
+
+            <button
+             type="button"
+             onClick={e => {
+              e.stopPropagation()
+              onEditTask(event)
+             }}
+             title="Editar tarefa"
+            >
+             <Pencil className="h-4 w-4 cursor-pointer hover:opacity-70 transition-opacity" />
+            </button>
+           </div>
           </div>
 
           <div className="flex items-center gap-2">

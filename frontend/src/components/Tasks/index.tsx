@@ -1,22 +1,29 @@
 import { useTasks } from '@/http/use-tasks'
 import { format } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
-import { CalendarPlus, CheckCircle2, Clock } from 'lucide-react'
+import {
+ CalendarPlus,
+ CheckCircle2,
+ Clock,
+ Pencil,
+ RotateCcw
+} from 'lucide-react'
+import { useState } from 'react'
+import { NewTaskModal } from '../Modals/new-task'
 
 interface TasksProps {
  leadId?: number
 }
 
 export function Tasks({ leadId }: TasksProps) {
- const { tasks, taskCompleted, isLoading } = useTasks()
+ // eslint-disable-next-line @typescript-eslint/no-explicit-any
+ const [modalTask, setModalTask] = useState<any | null>(null)
+
+ const { tasks, taskCompleted, updateTask, isLoading } = useTasks()
 
  const filteredTasks = leadId
   ? tasks.filter(task => task.lead_id === leadId)
   : tasks
-
- function handleToggleCompleted(id: string) {
-  taskCompleted({ id })
- }
 
  if (isLoading) {
   return (
@@ -43,18 +50,12 @@ export function Tasks({ leadId }: TasksProps) {
       .map(task => (
        <div
         key={task.id}
-        className={`flex items-center gap-3 p-3 rounded-lg cursor-pointer transition-all ${
+        className={`flex justify-between gap-4 p-3 rounded-lg cursor-pointer transition-all ${
          task.completed
           ? 'bg-brand-success/10 border border-brand-success/30'
           : 'bg-muted/50 border border-border hover:border-primary/30'
         }`}
-        onClick={() => handleToggleCompleted(task.id)}
        >
-        <div
-         className={`flex-shrink-0 ${task.completed ? 'text-brand-success' : 'text-muted-foreground'}`}
-        >
-         {task.completed ? <CheckCircle2 size={18} /> : <Clock size={18} />}
-        </div>
         <div className="flex-1 min-w-0">
          <p
           className={`text-sm font-medium ${task.completed ? 'line-through text-brand-success' : 'text-foreground'}`}
@@ -66,7 +67,8 @@ export function Tasks({ leadId }: TasksProps) {
            {task.description}
           </p>
          )}
-         <p className="text-xs text-muted-foreground mt-1">
+         <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1">
+          <Clock className="h-3 w-3" />
           {format(new Date(task.date), 'dd/MM/yyyy', { locale: ptBR })} às{' '}
           {task.hour}
           {' · '}
@@ -87,13 +89,55 @@ export function Tasks({ leadId }: TasksProps) {
           </span>
          </p>
         </div>
-        <span className="text-xs text-muted-foreground flex-shrink-0">
-         {task.completed ? 'Concluída' : 'Clique p/ concluir'}
-        </span>
+
+        <div className="flex items-start gap-2 shrink-0">
+         {/* Concluir */}
+         <button
+          type="button"
+          onClick={e => {
+           e.stopPropagation()
+           taskCompleted({ id: task.id })
+          }}
+          className="cursor-pointer hover:opacity-70 transition-opacity"
+          title={
+           task.completed ? 'Desmarcar como concluída' : 'Marcar como concluída'
+          }
+         >
+          {task.completed ? (
+           <RotateCcw className="h-3 w-3 text-brand-success" />
+          ) : (
+           <CheckCircle2 className="h-4 w-4 text-primary" />
+          )}
+         </button>
+
+         {/* Editar */}
+         <button
+          type="button"
+          onClick={e => {
+           e.stopPropagation()
+           setModalTask(task)
+          }}
+          className="cursor-pointer hover:opacity-70 transition-opacity"
+          title="Editar tarefa"
+         >
+          <Pencil className="h-4 w-4 text-primary" />
+         </button>
+        </div>
        </div>
       ))}
     </div>
    )}
+
+   <NewTaskModal
+    isOpen={!!modalTask}
+    onOpenChange={open => !open && setModalTask(null)}
+    task={modalTask}
+    onSave={updated => {
+     if (!modalTask) return
+     updateTask.mutate({ ...modalTask, ...updated })
+     setModalTask(null)
+    }}
+   />
   </div>
  )
 }

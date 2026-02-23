@@ -1,14 +1,29 @@
 import type { CalendarDay, ViewMode } from '@/http/use-calendar'
 import { CardContent } from '../ui/card'
+import {
+ Tooltip,
+ TooltipContent,
+ TooltipProvider,
+ TooltipTrigger
+} from '../ui/tooltip'
 import { cn } from '@/lib/utils'
 import { format } from 'date-fns'
-import { AlertTriangle, CheckCircle2, ClipboardList } from 'lucide-react'
+import {
+ AlertTriangle,
+ CheckCircle2,
+ Pencil,
+ RotateCcw,
+ ClipboardList
+} from 'lucide-react'
+import { motion, AnimatePresence } from 'framer-motion'
 
 interface CalendarDaysGridProps {
  weekDays: string[]
  calendarDays: CalendarDay[]
  viewMode: ViewMode
  onDayClick: (day: Date) => void
+ // eslint-disable-next-line @typescript-eslint/no-explicit-any
+ onEditTask: (task: any) => void
  onToggleCompleted: (id: string, e?: React.MouseEvent) => void
 }
 
@@ -17,6 +32,7 @@ export function CalendarDaysGrid({
  calendarDays,
  viewMode,
  onDayClick,
+ onEditTask,
  onToggleCompleted
 }: CalendarDaysGridProps) {
  const hasCompletedTasks = calendarDays
@@ -83,35 +99,96 @@ export function CalendarDaysGrid({
        </div>
 
        <div className="space-y-0.5">
-        {day.events.slice(0, viewMode === 'semanal' ? 5 : 2).map(event => (
-         <div
-          key={event.id}
-          onClick={e => {
-           if (event.eventType !== 'tarefa') return
-           e.stopPropagation()
-           onToggleCompleted(event.id)
-          }}
-          className={cn(
-           'text-[10px] truncate px-1 py-0.5 rounded cursor-pointer transition-colors flex items-center gap-0.5',
-           event.eventType === 'tarefa'
-            ? event.completed
-              ? 'bg-brand-success/15 text-brand-success line-through'
-              : 'bg-primary/10 text-primary'
-            : 'bg-destructive/10 text-destructive'
-          )}
-         >
-          {event.eventType === 'tarefa' ? (
-           <>
-            {event.completed && (
-             <CheckCircle2 className="h-2.5 w-2.5 shrink-0" />
-            )}
-            {event.title}
-           </>
-          ) : (
-           `⚠ ${event.company}`
-          )}
-         </div>
-        ))}
+        <AnimatePresence>
+         {day.events.slice(0, viewMode === 'semanal' ? 5 : 2).map(event => (
+          <motion.div
+           key={event.id}
+           initial={{ opacity: 0, y: -2 }}
+           animate={{ opacity: 1, y: 0 }}
+           exit={{ opacity: 0, scale: 0.95 }}
+           transition={{ duration: 0.2 }}
+           onClick={e => {
+            if (event.eventType !== 'tarefa') return
+            if (event.completed) return
+            e.stopPropagation()
+            onEditTask(event)
+           }}
+           className={cn(
+            'relative text-[10px] truncate px-1 py-0.5 rounded cursor-pointer transition-colors flex items-center gap-0.5',
+            event.eventType === 'tarefa'
+             ? event.completed
+               ? 'bg-brand-success/15 text-brand-success'
+               : 'bg-primary/10 text-primary'
+             : 'bg-destructive/10 text-destructive'
+           )}
+          >
+           {event.eventType === 'tarefa' ? (
+            <span
+             className={cn(
+              'truncate flex-1',
+              event.completed && 'line-through opacity-80'
+             )}
+            >
+             {event.title}
+            </span>
+           ) : (
+            <span className="truncate flex-1">⚠ {event.company}</span>
+           )}
+
+           {/* (hover) */}
+           {event.eventType === 'tarefa' && (
+            <div className="flex items-center gap-1 shrink-0">
+             <TooltipProvider delayDuration={200}>
+              {event.completed && (
+               <Tooltip>
+                <TooltipTrigger asChild>
+                 <RotateCcw
+                  className="h-3 w-3 cursor-pointer hover:opacity-70 transition-opacity"
+                  onClick={e => {
+                   e.stopPropagation()
+                   onToggleCompleted(event.id)
+                  }}
+                 />
+                </TooltipTrigger>
+                <TooltipContent side="top">Desmarcar tarefa</TooltipContent>
+               </Tooltip>
+              )}
+              {!event.completed && (
+               <Tooltip>
+                <TooltipTrigger asChild>
+                 <CheckCircle2
+                  className="h-3 w-3 cursor-pointer hover:opacity-70 transition-opacity"
+                  onClick={e => {
+                   e.stopPropagation()
+                   onToggleCompleted(event.id)
+                  }}
+                 />
+                </TooltipTrigger>
+                <TooltipContent side="top">
+                 Marcar como concluída
+                </TooltipContent>
+               </Tooltip>
+              )}
+              {!event.completed && (
+               <Tooltip>
+                <TooltipTrigger asChild>
+                 <Pencil
+                  className="h-3 w-3 cursor-pointer hover:opacity-70 transition-opacity"
+                  onClick={e => {
+                   e.stopPropagation()
+                   onEditTask(event)
+                  }}
+                 />
+                </TooltipTrigger>
+                <TooltipContent side="top">Editar tarefa</TooltipContent>
+               </Tooltip>
+              )}
+             </TooltipProvider>
+            </div>
+           )}
+          </motion.div>
+         ))}
+        </AnimatePresence>
 
         {viewMode === 'mensal' && day.events.length > 2 && (
          <span className="text-[10px] text-muted-foreground">

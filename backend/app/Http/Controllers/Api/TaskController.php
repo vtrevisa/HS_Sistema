@@ -73,6 +73,45 @@ class TaskController extends Controller
         return response()->json($task, 201);
     }
 
+    public function update(Request $request, $id)
+    {
+        $token = $request->cookie('auth-token');
+        $accessToken = PersonalAccessToken::findToken($token);
+        $user = $accessToken?->tokenable;
+
+        if (!$token || !$accessToken || !$user) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Usuário não autenticado ou token inválido.'
+            ], 401);
+        }
+
+        $task = Task::where('id', $id)
+            ->where('user_id', $user->id)
+            ->first();
+
+        if (!$task) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Tarefa não encontrada.'
+            ], 404);
+        }
+
+        $validated = $request->validate([
+            'title'       => ['sometimes', 'required', 'string', 'max:255'],
+            'description' => ['nullable', 'string'],
+            'date'        => ['sometimes', 'required', 'date'],
+            'hour'        => ['nullable', 'date_format:H:i'],
+            'priority'    => ['sometimes', Rule::in(['baixa', 'media', 'alta'])],
+            'lead_id'     => ['nullable', 'exists:leads,id'],
+            'completed'   => ['sometimes', 'boolean'],
+        ]);
+
+        $task->update($validated);
+
+        return response()->json($task, 200);
+    }
+
 
     public function completed(int $id)
     {

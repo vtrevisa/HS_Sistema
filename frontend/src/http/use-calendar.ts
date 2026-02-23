@@ -50,13 +50,14 @@ export function useCalendar() {
   const [viewMode, setViewMode] = useState<ViewMode>('mensal')
   const [currentDate, setCurrentDate] = useState(new Date())
   const [selectedDate, setSelectedDate] = useState<Date | null>(new Date())
+  const [taskToEdit, setTaskToEdit] = useState<Task | null>(null)
 
   const [modalOpen, setModalOpen] = useState(false)
   const [modalDefaultDate, setModalDefaultDate] = useState<Date | undefined>()
 
   const prioridadeCores = {
     baixa: 'bg-brand-success/20 text-brand-success',
-    media: 'bg-accent text-accent-foreground',
+    media: 'bg-accent text-amber-700',
     alta: 'bg-destructive/10 text-destructive',
   };
 
@@ -166,7 +167,15 @@ export function useCalendar() {
   }
 
   function handleScheduleFromDay (day: Date) {
+    setTaskToEdit(null)
     setModalDefaultDate(day)
+    setModalOpen(true)
+  }
+
+  function handleEditTask(event: CalendarEvent) {
+    if (event.eventType !== 'tarefa') return
+    setTaskToEdit(event)
+    setModalDefaultDate(new Date(event.date))
     setModalOpen(true)
   }
 
@@ -184,6 +193,10 @@ export function useCalendar() {
     selectedDayEvents,
     events: allEvents,
 
+    // Edit
+    taskToEdit,
+    setTaskToEdit,
+
     // navigation
     goNext,
     goPrev,
@@ -199,6 +212,7 @@ export function useCalendar() {
     handleToggleCompleted,
     handleDayClick,
     handleScheduleFromDay,
+    handleEditTask,
     prioridadeCores
   }
 

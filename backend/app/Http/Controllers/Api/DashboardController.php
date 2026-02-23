@@ -234,23 +234,7 @@ class DashboardController extends Controller
 
         // Leads Recentes (últimos 5)
 
-        $recentLeads = Lead::where('user_id', $user->id)->latest()->take(5)->select('id', 'company', 'service', 'expiration_date', 'status')->get();
-
-
-        // Tasks Recentes
-
-        // $tasks = Task::where('user_id', $user->id)
-        //     ->orderBy('date')
-        //     ->limit(5)
-        //     ->get()
-        //     ->map(fn($task) => [
-        //         'id' => $task->id,
-        //         'title' => $task->title,
-        //         'description' => $task->description,
-        //         'date' => Carbon::parse($task->date)->toDateString(),
-        //         'hour' => $task->hour,
-        //         'priority' => $task->priority,
-        //     ]);
+        $recentLeads = Lead::where('user_id', $user->id)->latest()->take(6)->select('id', 'company', 'service', 'expiration_date', 'status')->get();
 
 
 
@@ -287,8 +271,9 @@ class DashboardController extends Controller
                         $next60Days
                     ]);
             })
-            ->orderByRaw("validity < '{$today}' DESC")
+            ->orderByRaw("validity < '{$today}' ASC")
             ->orderBy('validity')
+            ->limit(5)
             ->get()
             ->map(function ($lead) use ($today) {
                 $validity = Carbon::parse($lead->validity)->startOfDay();
@@ -309,10 +294,6 @@ class DashboardController extends Controller
                     'status' => $status,
                 ];
             });
-
-
-
-
 
         // Tasks
 
