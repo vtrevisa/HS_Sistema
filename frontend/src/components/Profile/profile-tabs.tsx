@@ -11,7 +11,6 @@ import { ProfilePlan } from './profile-plan'
 import { ProfilePaymentHistory } from './profile-paymenthistory'
 import { ProfileSecurity } from './profile-security'
 import { ProfileCancelSubscription } from './profile-cancelsubscription'
-import { ProfileLinks } from './profile-links'
 import type { UserRequest } from '@/http/types/user'
 import { ProfileLinks } from './profile-links'
 

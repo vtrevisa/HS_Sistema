@@ -30,31 +30,18 @@ export function Companies() {
   useState(false)
  const [isDeleteCompanyModalOpen, setIsDeleteCompanyModalOpen] = useState(false)
  const [isImportModalOpen, setIsImportModalOpen] = useState(false)
- const [loadingCompanyId, setLoadingCompanyId] = useState <  string | number | null  >(null)
- const [isDeleteCompanyModalOpen, setIsDeleteCompanyModalOpen] = useState(false)
- const [dateRange, setDateRange] = useState<DateRange | undefined>()
- const [selectedStatus, setSelectedStatus] = useState('todos')
+ const [loadingCompanyId, setLoadingCompanyId] = useState<
+  string | number | null
+ >(null)
 
- //--------useRef--------//
- const loadingCompanyIdRef = useRef<string | number | null>(null)
- 
- //--------useEffect--------//
- useEffect(() => {
-   loadingCompanyIdRef.current = loadingCompanyId
- }, [loadingCompanyId])
-
- //--------useCompany, useLead, useMemo--------// 
- const { saveLeads } = useLead()
- const { companiesDB } = useCompany()
- const leads = useMemo(() => companiesDB.data ?? [], [companiesDB.data])
  const {
+  companies,
   isLoading,
   refetchCompanies,
   saveCompanies,
   enhanceData,
   processingEnrichment,
-  searchByCnpj,
-  updateCompany
+  searchByCnpj
  } = useCompany()
 
  const { saveLeads, leadsDB } = useLead()
@@ -128,7 +115,7 @@ export function Companies() {
   if (!company) return
 
   setLoadingCompanyId(company.id)
-  
+
   const validityDate = company.validity
    ? new Date(company.validity)
    : new Date()
@@ -160,9 +147,6 @@ export function Companies() {
   }
 
   saveLeads.mutate([newLead], {
-   onSuccess:() => {
-    if (company?.id) updateCompany.mutate({...company, status: 'lead'})
-   },
    onSettled: () => {
     setTimeout(() => {
      setLoadingCompanyId(null)
@@ -261,7 +245,6 @@ export function Companies() {
      generateAllLeads={generateAllLeads}
      onNewCompanyClick={() => setIsNewCompanyModalOpen(true)}
      onImportClick={() => setIsImportModalOpen(true)}
-     generateAllLeads={generateAllLeads}
     />
    </div>
 

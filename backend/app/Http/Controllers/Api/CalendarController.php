@@ -11,7 +11,7 @@ class CalendarController extends Controller
 {
     public function alvaras(Request $request)
     {
-        Log::info('Fetching alvaras for user', ['user_id' => $request->user()->id]);
+
         $token = $request->cookie('auth-token');
         $accessToken = PersonalAccessToken::findToken($token);
         $user = $accessToken?->tokenable;

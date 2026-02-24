@@ -98,6 +98,9 @@ export function useCompany() {
   });
 
   //Mutation to delete company
+   
+  //Mutation to delete company
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const deleteMutation = useMutation<void, AxiosError<any>, number>({
     mutationFn: async (id: number) => {
       await api.delete(`/companies/${id}`)
@@ -106,7 +109,7 @@ export function useCompany() {
       queryClient.invalidateQueries({ queryKey: ["companies"] })
 
       setTimeout(() => {
-        toast.success("Empresa deletada com sucesso!")
+        toast.success("Empresa e lead associados deletados com sucesso!")
       }, 1200)
     },
     onError: (error) => {
@@ -196,26 +199,7 @@ export function useCompany() {
 
   };
 
-  //Mutation to delete company
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const deleteMutation = useMutation<void, AxiosError<any>, number>({
-    mutationFn: async (id: number) => {
-      await api.delete(`/companies/${id}`)
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["companies"] })
-
-      setTimeout(() => {
-        toast.success("Empresa e lead associados deletados com sucesso!")
-      }, 1200)
-    },
-    onError: (error) => {
-      const messages = Object.values(error.response?.data.erros).flat().join("\n")
-      setTimeout(() => {
-        toast.error("Erro ao deletar empresa no sistema!", { description: messages })
-      }, 1200)
-    }
-  })
+  
   
 
   return {
@@ -228,6 +212,7 @@ export function useCompany() {
     searchByAddress: searchByAddressMutation,
     deleteCompany: deleteMutation,
     enhanceData,
+    enhanceAllData,
     processingEnrichment,
     companiesDB,
   }

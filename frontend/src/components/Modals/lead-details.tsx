@@ -190,8 +190,7 @@ export function LeadDetailsModal({
 
  return (
   <Dialog open={isOpen} onOpenChange={onClose}>
-   <DialogContent className={`max-h-[90vh] overflow-y-auto mx-4 sm:mx-auto transition-all duration-200 ease-in-out ${
-    isTaskEmpty === false ? 'max-w-5xl' : 'max-w-2xl'}`}>
+   <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto mx-4 sm:mx-auto">
     <DialogHeader className="pt-6">
      <DialogTitle className="flex items-center justify-between text-lg sm:text-xl">
       <div className="flex items-center gap-2">
@@ -232,7 +231,7 @@ export function LeadDetailsModal({
       </div>
      </DialogTitle>
     </DialogHeader>
-    
+
     {/* Proposals Actions */}
     <ProposalsActions
      isEditing={isEditing}
@@ -259,27 +258,27 @@ export function LeadDetailsModal({
     {/* Histórico de Tarefas Agendadas */}
     {hasTasksForLead && <Tasks leadId={lead.id} />}
 
-      <div className="space-y-4 sm:space-y-6">
-      {/* Status e Serviço */}
-      <div className="flex gap-2 sm:gap-3 flex-wrap">
-        <Badge className={`${getStatusColor(currentLead.status)} capitalize`}>
-        {currentLead.status}
-        </Badge>
-        {currentLead.isOverdue && (
-        <Badge variant="destructive" className="flex items-center gap-1">
-          <AlertTriangle size={12} />
-          Prazo vencido
-        </Badge>
-        )}
-        {(currentLead.daysInStage ?? 0) > 0 && (
-        <Badge variant="outline" className="flex items-center gap-1">
-          <Clock size={12} />
-          {currentLead.daysInStage} dias no estágio
-        </Badge>
-        )}
-      </div>
+    <div className="space-y-4 sm:space-y-6">
+     {/* Status e Serviço */}
+     <div className="flex gap-2 sm:gap-3 flex-wrap">
+      <Badge className={`${getStatusColor(currentLead.status)} capitalize`}>
+       {currentLead.status}
+      </Badge>
+      {currentLead.isOverdue && (
+       <Badge variant="destructive" className="flex items-center gap-1">
+        <AlertTriangle size={12} />
+        Prazo vencido
+       </Badge>
+      )}
+      {(currentLead.daysInStage ?? 0) > 0 && (
+       <Badge variant="outline" className="flex items-center gap-1">
+        <Clock size={12} />
+        {currentLead.daysInStage} dias no estágio
+       </Badge>
+      )}
+     </div>
 
-      {/* Informações do Serviço */}
+     {/* Informações do Serviço */}
 
      <div className="bg-card border border-border dark:border-white p-3 sm:p-4 rounded-lg">
       <h3 className="font-semibold text-gray-800 dark:text-white mb-3 flex items-center gap-2 text-sm sm:text-base">
@@ -329,13 +328,13 @@ export function LeadDetailsModal({
       </div>
      </div>
 
-      {/* Informações da Empresa */}
+     {/* Informações da Empresa */}
 
-      <div className="bg-card border border-border dark:border-white p-3 sm:p-4 rounded-lg">
-        <h3 className="font-semibold text-gray-800 dark:text-white mb-3 flex items-center gap-2 text-sm sm:text-base">
-        <Building size={16} />
-        Informações da Empresa
-        </h3>
+     <div className="bg-card border border-border dark:border-white p-3 sm:p-4 rounded-lg">
+      <h3 className="font-semibold text-gray-800 dark:text-white mb-3 flex items-center gap-2 text-sm sm:text-base">
+       <Building size={16} />
+       Informações da Empresa
+      </h3>
 
       <div className="grid grid-cols-1 gap-3 sm:gap-4 text-sm">
        <EditableField
@@ -409,7 +408,7 @@ export function LeadDetailsModal({
       </div>
      </div>
 
-      {/* Informações de Contato */}
+     {/* Informações de Contato */}
 
      <div className="bg-card border border-border dark:border-white p-3 sm:p-4 rounded-lg">
       <h3 className="font-semibold text-gray-800 dark:text-white mb-3 flex items-center gap-2 text-sm sm:text-base">
@@ -477,82 +476,82 @@ export function LeadDetailsModal({
       </div>
      </div>
 
-      {/* Informações de anexo */}
+     {/* Informações de anexo */}
 
-      {/* Lista de anexos */}
-      {currentLead.attachments && currentLead.attachments.length > 0 && (
-        <div className="mb-4">
-        <h4 className="font-medium text-card-foreground mb-2">
-          Arquivos anexados:
-        </h4>
-        <div className="space-y-2">
-          {currentLead.attachments.map((attachment, index) => (
-          <div
-            key={attachment.id || index}
-            className="flex items-center gap-2 p-2 bg-muted/50 rounded text-sm"
-          >
-            <FileText
-            size={14}
-            className="text-muted-foreground dark:text-white"
-            />
-            <span className="flex-1 truncate">{attachment.name}</span>
-            <Button variant="ghost" size="sm" asChild>
-            <a href={attachment.url} target="_blank" rel="noopener noreferrer">
-              Abrir
-            </a>
-            </Button>
-            {isEditing && (
-            <Button
-              variant="destructive"
-              size="sm"
-              onClick={() => handleRemoveAttachment(index)}
-              disabled={deleteLeadAttachment.isPending}
-            >
-              <Trash2 size={14} />
-            </Button>
-            )}
-          </div>
-          ))}
-        </div>
-        </div>
-      )}
-
-      {/* Upload de arquivo */}
-      {isEditing && (
-        <div className="bg-card border border-border dark:border-white p-3 sm:p-4 rounded-lg">
-        <h3 className="font-semibold text-gray-800 dark:text-white mb-3 flex items-center gap-2 text-sm sm:text-base">
-          <FileText size={16} />
-          Adicionar novos anexos
-        </h3>
-        <div className="mb-4">
-          <Label
-          htmlFor={`file-modal-${currentLead.id}`}
-          className="cursor-pointer"
-          >
-          <div className="flex items-center justify-center gap-2 border-2 border-dashed border-border dark:border-white rounded-lg p-4 hover:border-muted-foreground transition-colors">
-            <Upload size={16} className="text-muted-foreground" />
-            <span className="text-sm text-muted-foreground dark:text-white">
-            {isFileUploading
-              ? 'Enviando arquivo...'
-              : 'Anexar arquivo (PDF, DOC, etc.)'}
-            </span>
-          </div>
-          </Label>
-          <Input
-          id={`file-modal-${currentLead.id}`}
-          type="file"
-          accept=".pdf,.doc,.docx"
-          className="hidden"
-          multiple
-          onChange={handleFileUpload}
-          disabled={isFileUploading}
+     {/* Lista de anexos */}
+     {currentLead.attachments && currentLead.attachments.length > 0 && (
+      <div className="mb-4">
+       <h4 className="font-medium text-card-foreground mb-2">
+        Arquivos anexados:
+       </h4>
+       <div className="space-y-2">
+        {currentLead.attachments.map((attachment, index) => (
+         <div
+          key={attachment.id || index}
+          className="flex items-center gap-2 p-2 bg-muted/50 rounded text-sm"
+         >
+          <FileText
+           size={14}
+           className="text-muted-foreground dark:text-white"
           />
-        </div>
-        </div>
-      )}
+          <span className="flex-1 truncate">{attachment.name}</span>
+          <Button variant="ghost" size="sm" asChild>
+           <a href={attachment.url} target="_blank" rel="noopener noreferrer">
+            Abrir
+           </a>
+          </Button>
+          {isEditing && (
+           <Button
+            variant="destructive"
+            size="sm"
+            onClick={() => handleRemoveAttachment(index)}
+            disabled={deleteLeadAttachment.isPending}
+           >
+            <Trash2 size={14} />
+           </Button>
+          )}
+         </div>
+        ))}
+       </div>
+      </div>
+     )}
 
-      {/* Histórico de atividades */}
-      {/* {currentLead.activities && currentLead.activities.length > 0 && (
+     {/* Upload de arquivo */}
+     {isEditing && (
+      <div className="bg-card border border-border dark:border-white p-3 sm:p-4 rounded-lg">
+       <h3 className="font-semibold text-gray-800 dark:text-white mb-3 flex items-center gap-2 text-sm sm:text-base">
+        <FileText size={16} />
+        Adicionar novos anexos
+       </h3>
+       <div className="mb-4">
+        <Label
+         htmlFor={`file-modal-${currentLead.id}`}
+         className="cursor-pointer"
+        >
+         <div className="flex items-center justify-center gap-2 border-2 border-dashed border-border dark:border-white rounded-lg p-4 hover:border-muted-foreground transition-colors">
+          <Upload size={16} className="text-muted-foreground" />
+          <span className="text-sm text-muted-foreground dark:text-white">
+           {isFileUploading
+            ? 'Enviando arquivo...'
+            : 'Anexar arquivo (PDF, DOC, etc.)'}
+          </span>
+         </div>
+        </Label>
+        <Input
+         id={`file-modal-${currentLead.id}`}
+         type="file"
+         accept=".pdf,.doc,.docx"
+         className="hidden"
+         multiple
+         onChange={handleFileUpload}
+         disabled={isFileUploading}
+        />
+       </div>
+      </div>
+     )}
+
+     {/* Histórico de atividades */}
+     {/* {currentLead.activities && currentLead.activities.length > 0 && (
         <div>
         <h4 className="font-medium text-card-foreground mb-2">
           Histórico de alterações:
@@ -576,18 +575,8 @@ export function LeadDetailsModal({
         </div>
         </div>
       )} */}
-      </div>
     </div>
-      <div className="flex-1 min-w-0">
-        <LeadTasksModal
-        onEmptyChange={isEmpty => {
-          if (isEmpty) setIsTaskEmpty(true)
-          else setIsTaskEmpty(false)
-        }}
-        />
-      </div>
-  </div>
-  </DialogContent>
+   </DialogContent>
   </Dialog>
  )
 }

@@ -8,7 +8,6 @@ interface CompaniesActionsProps {
 }
 
 export function CompaniesActions({
- generateAllLeads,
  onImportClick,
  generateAllLeads,
  onNewCompanyClick
@@ -22,7 +21,7 @@ export function CompaniesActions({
 
    <Button
     onClick={generateAllLeads}
-    className="bg-blue-600 hover:bg-blue-700 dark:text-white"
+    className="bg-brand-success/10 text-brand-success hover:text-brand-success border-brand-success/30 hover:bg-brand-success/20"
    >
     <RefreshCw className="h-4 w-4 mr-2" />
     Gerar Todos Leads
