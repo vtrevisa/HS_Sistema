@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
+use App\Models\EmailTemplate;
 
 class User extends Authenticatable
 {
@@ -136,5 +137,24 @@ class User extends Authenticatable
     public function planChangeRequests()
     {
         return $this->hasMany(PlanChangeRequest::class);
+    }
+
+    protected static function booted()
+    {
+        static::created(function (User $user) {
+            // Create 5 default templates for new user if none exist
+            $existing = EmailTemplate::where('user_id', $user->id)->count();
+            if ($existing > 0) return;
+
+            for ($i = 1; $i <= 5; $i++) {
+                EmailTemplate::create([
+                    'subject' => "Template {$i} - Assunto padrão",
+                    'body' => "Olá,\n\nEste é o template padrão número {$i}.\n\nAtenciosamente,",
+                    'user_id' => $user->id,
+                    'active' => $i === 1,
+                    'position' => (string) $i,
+                ]);
+            }
+        });
     }
 }

@@ -49,6 +49,7 @@ class IntegrationController extends Controller
 
     public function callback(Request $request, $provider)
     {
+        Log::info('OAuth callback received', ['provider' => $provider, 'query' => $request->query()]);
         $code = $request->query('code');
         $state = $request->query('state');
 
@@ -214,6 +215,7 @@ class IntegrationController extends Controller
 
     public function start(Request $request, $provider)
     {
+        Log::info('Starting OAuth flow', ['provider' => $provider, 'user_id' => $request->user()->id ?? null]);
         if (!isset($this->providers[$provider])) {
             return response()->json(['status' => false, 'message' => 'Unsupported provider'], 400);
         }
@@ -276,7 +278,6 @@ class IntegrationController extends Controller
                 'state' => $state,
                 'include_granted_scopes' => 'true',
             ]);
-            Log::info('redirect_uri for Gmail OAuth', ['redirect_uri' => env($cfg['redirect_env'])]);
         } else if ($provider === 'calendar') {
             $authUrl = 'https://accounts.google.com/o/oauth2/v2/auth';
             $params = http_build_query([
@@ -289,7 +290,6 @@ class IntegrationController extends Controller
                 'state' => $state,
                 'include_granted_scopes' => 'true',
             ]);
-            Log::info('redirect_uri for Google Calendar OAuth', ['redirect_uri' => env('GOOGLE_CALENDAR_REDIRECT_URI')]);
         } else if ($provider === 'microsoft') {
             $authUrl = 'https://login.microsoftonline.com/common/oauth2/v2.0/authorize';
             $params = http_build_query([
@@ -300,7 +300,6 @@ class IntegrationController extends Controller
                 'state' => $state,
                 'response_mode' => 'query',
             ]);
-            Log::info('redirect_uri for Microsoft OAuth', ['redirect_uri' => env($cfg['redirect_env'])]);
         } else {
             return response()->json(['status' => false, 'message' => 'Unsupported provider'], 400);
         }
@@ -313,6 +312,7 @@ class IntegrationController extends Controller
      */
     public function emailStatus(Request $request)
     {
+        Log::info('Checking email integration status for user', ['user_id' => $request->user()->id ?? null]);
         $user = $request->user() ?? $this->getAuthenticatedUser($request);
         if (!$user) {
             return response()->json(['status' => false, 'message' => 'Unauthenticated'], 401);
@@ -338,6 +338,7 @@ class IntegrationController extends Controller
      */
     public function disconnectEmail(Request $request, $provider)
     {
+        Log::info('Disconnecting email integration', ['provider' => $provider, 'user_id' => $request->user()->id ?? null]);
         $user = $request->user() ?? $this->getAuthenticatedUser($request);
         if (!$user) {
             return response()->json(['status' => false, 'message' => 'Unauthenticated'], 401);
@@ -363,6 +364,7 @@ class IntegrationController extends Controller
      */
     public function calendarStatus(Request $request)
     {
+        Log::info('Checking calendar integration status for user', ['user_id' => $request->user()->id ?? null]);
         $user = $request->user() ?? $this->getAuthenticatedUser($request);
         if (!$user) {
             return response()->json(['status' => false, 'message' => 'Unauthenticated'], 401);
@@ -383,6 +385,7 @@ class IntegrationController extends Controller
      */
     public function disconnectCalendar(Request $request, $provider)
     {
+        Log::info('Disconnecting calendar integration', ['provider' => $provider, 'user_id' => $request->user()->id ?? null]);
         $user = $request->user() ?? $this->getAuthenticatedUser($request);
         if (!$user) {
             return response()->json(['status' => false, 'message' => 'Unauthenticated'], 401);
@@ -397,59 +400,4 @@ class IntegrationController extends Controller
 
         return response()->json(['status' => true, 'deleted' => (bool) $deleted]);
     }
-
-    public function send(Request $request, GmailSender $gmail, MicrosoftSender $microsoft)
-    {
-        Log::info(['request' => $request->all()]);
-        $validator = Validator::make($request->all(), [
-            'user_id' => 'required|integer',
-            'provider' => 'required|in:gmail,microsoft',
-            'to' => 'required|email',
-            'subject' => 'required|string|max:255',
-            'body' => 'required|string',
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json([
-                'success' => false,
-                'errors' => $validator->errors()
-            ], 422);
-        }
-
-        try {
-            if ($request->provider === 'gmail') {
-                $gmail->send(
-                    $request->user_id,
-                    $request->to,
-                    $request->subject,
-                    $request->body
-                );
-            } else if ($request->provider === 'microsoft') {
-                $microsoft->send(
-                    $request->user_id,
-                    $request->to,
-                    $request->subject,
-                    $request->body
-                );
-            } else {
-                throw new \Exception('Unsupported provider');
-            }
-
-            return response()->json([
-                'success' => true,
-                'message' => 'E-mail enviado com sucesso!'
-            ]);
-
-        } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'error' => $e->getMessage()
-            ], 500);
-        }
-    }
-
-    
-
-    
-
 }

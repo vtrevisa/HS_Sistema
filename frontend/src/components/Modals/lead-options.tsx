@@ -4,6 +4,8 @@ import { Input } from '../ui/input'
 import { useEffect, useState } from "react"
 import type { UserRequest } from "@/http/types/user"
 import { useEmail } from "@/http/use-email"
+import { useTemplates } from "@/http/use-templates"
+import { Plus } from "lucide-react"
 
 interface BaseModalProps {
     isOpen: boolean
@@ -12,28 +14,39 @@ interface BaseModalProps {
 }
 
 export function EmailConfigModal({ isOpen, onClose, user }: BaseModalProps) {
-    const [subject, setSubject] = useState(user?.email_subject ?? '');
-    const [body, setBody] = useState(user?.email_body ?? '');
-    const { updateEmailConfig } = useEmail();
+  const [subject, setSubject] = useState(user?.email_subject ?? '');
+  const [body, setBody] = useState(user?.email_body ?? '');
+  const { updateEmailConfig } = useEmail();
+  const [position, setPosition] = useState<string>('1');
+  const [active, setActive] = useState<boolean>(false);
+  const { getTemplates } = useTemplates();
+
+
+
+  console.log("Available templates: ", getTemplates.data);
 
     useEffect(() => {
-      setSubject(user?.email_subject ?? '');
-      setBody(user?.email_body ?? '');
+      setSubject('');
+      setBody('');
+      setPosition('1');
+      setActive(false);
     }, [user]);
     
-    function handleSaveConfig (subject: string, body: string) {
-      console.log("Saving email config: ", { subject, body }, " para: ", {user});
+    function handleSaveConfig (subject: string, body: string, position: string = '1', active: boolean = true) {
+      console.log("Saving email config: ", { subject, body, position, active }, " para: ", {user});
       if (!subject || !body) return ;
       if (!user?.id) return ;
 
 
-      const payload = {
-        ...user,
+      const payload: any = {
+        id: user.id,
         email_subject: subject,
         email_body: body,
+        position,
+        active,
       }
 
-      updateEmailConfig.mutate(payload, {
+      updateEmailConfig.mutate(payload as any, {
         onSuccess: () => {
           onClose()
           console.log("Email config updated successfully");
@@ -48,25 +61,53 @@ export function EmailConfigModal({ isOpen, onClose, user }: BaseModalProps) {
         <DialogHeader>
           <DialogTitle>Configurar Email</DialogTitle>
         </DialogHeader>
-        <Input
-            type="text" 
-            value={user?.email_subject ?? subject}
-            onChange={e => 
-              setSubject(e.target.value )}
-            className={inputClass + " h-10 mb-3"}
-            placeholder="Assunto do Email"
-        />
+        <div className="flex">
+          <div className="w-40 pr-4 border-r">
+            <div className="mb-2 text-sm text-muted-foreground">Templates</div>
+            <div className="space-y-2">
+              {getTemplates.data?.map(n => (
+                <button key={n.position} type="button" className={`w-full flex items-center justify-center px-3 py-2 rounded border ${position === String(n.position) ? 'bg-primary text-white hover:bg-primary/90' : 'bg-background hover:bg-muted'}`}
+                onClick={() => {setSubject(n.subject); setBody(n.body); setPosition(String(n.position))}} >
+                  {n.subject}
+                </button>
+              ))}
+              {(getTemplates.data?.length ?? 0) < 5 && (
+                <button key="new" type="button" className="w-full flex items-center justify-center px-3 py-2 rounded border bg-background hover:bg-muted" onClick={() => {
+                  // compute next available position 1..5
+                  const used = new Set(getTemplates.data?.map(t => Number(t.position)) || []);
+                  let next = 1;
+                  for (let i = 1; i <= 5; i++) {
+                    if (!used.has(i)) { next = i; break; }
+                  }
+                  setSubject(''); setBody(''); setPosition(String(next)); setActive(false);
+                }}>
+                  <Plus />
+                </button>
+              )}
+            </div>
+          </div>
 
-        <label className="sr-only">Corpo do email</label>
-        <Input
-            type="text"
-            value={user?.email_body ?? body}
-            className={inputClass + " min-h-[160px] resize-y mb-3"}
-            placeholder="Corpo do Email"
-            onChange={e => setBody(e.target.value)}
-        />
+          <div className="flex-1 pl-4">
+            <Input
+              type="text"
+              value={subject}
+              onChange={e => setSubject(e.target.value)}
+              className={inputClass + " h-10 mb-3"}
+              placeholder="Assunto do Email"
+            />
+
+            <label className="sr-only">Corpo do email</label>
+            <Input
+              type="text"
+              value={body}
+              className={inputClass + " min-h-[160px] resize-y mb-3"}
+              placeholder="Corpo do Email"
+              onChange={e => setBody(e.target.value)}
+            />
+          </div>
+        </div>
         <div className="mt-6 flex">
-          <Button onClick={() => handleSaveConfig(subject, body)}> Salvar</Button>
+          <Button onClick={() => handleSaveConfig(subject, body, position, active)}> Salvar</Button>
           <Button variant="ghost" className="ml-auto" onClick={onClose}>Fechar</Button>
         </div>
       </DialogContent>

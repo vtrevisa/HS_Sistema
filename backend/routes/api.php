@@ -5,6 +5,7 @@ use App\Http\Controllers\Api\AlvaraLogController;
 use App\Http\Controllers\Api\AlvaraPurchaseController;
 use App\Http\Controllers\Api\ArchivedProposalController;
 use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\EmailController;
 use App\Http\Controllers\Api\AutomationController;
 use App\Http\Controllers\Api\CalendarController;
 use App\Http\Controllers\Api\GoogleCalendarController;
@@ -53,9 +54,11 @@ Route::prefix('calendar')->group(function () {
 // Note: generic provider routes above handle gmail, microsoft and calendar
 Route::get('/email/status', [IntegrationController::class, 'emailStatus']); //GET - returns connected status per provider
 Route::delete('/email/disconnect/{provider}', [IntegrationController::class, 'disconnectEmail']); //DELETE - disconnect provider for user
-Route::post('/send-email', [IntegrationController::class, 'send']); //POST - send email using connected provider
-Route::put('/users/{user}/email-config', [UserController::class, 'setEmailConfig']); //PUT - update email config like subject and body templates
+Route::post('/send-email', [EmailController::class, 'send']); //POST - send email using connected provider
+Route::put('/users/{user}/email-config', [EmailController::class, 'setEmailConfig']); //PUT - update email config like subject and body templates
 
+//Templates
+Route::get('/email/templates', [EmailController::class, 'getTemplates']); //GET
 
 // Plans
 Route::get('/plans', [PlanController::class, 'index']); //GET 
@@ -72,7 +75,7 @@ Route::post('/subscription/start', [SubscriptionController::class, 'start']); //
 Route::post('/credits/purchase', [CreditPurchaseController::class, 'store']); //POST
 
 // Logout
-Route::post('/auth/logout', [AuthController::class, 'logout']); //POST
+Route::post('/auth/logout', [AuthController::class, 'logout']); //PindexOST
 
 // Alvaras
 Route::get('/alvaras', [AlvaraController::class, 'index']); //GET

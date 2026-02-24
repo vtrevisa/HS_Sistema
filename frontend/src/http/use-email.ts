@@ -1,8 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { api } from '@/lib/api'
 import type { AxiosError } from "axios";
-import type { EmailStatus } from './types/email';
-import type { UserRequest } from './types/user';
+import type { EmailStatus, EmailTemplate } from './types/email';
 
 //Fn to get the email provider and if connectd
 export function useEmail() {
@@ -20,21 +19,25 @@ export function useEmail() {
   })
   
   // Fn to update the subject and body of the email in the user config
-  const updateEmailConfigMutation = useMutation<UserRequest, AxiosError<any>, UserRequest>({
-    mutationFn: async (user: UserRequest) => {
-      if (!user.id) throw new Error("Usuário não encontrado!");
+  const updateEmailConfigMutation = useMutation<EmailTemplate, AxiosError<any>, any>({
+    mutationFn: async (payload: any) => {
+      // payload can come from the modal and include: id, email_subject, email_body, position, active
+      const userId = payload.id || payload.user_id || (payload.template && payload.template.user_id);
+      if (!userId) throw new Error("User id not provided for email config");
 
-      const payload = {
-        email_subject: user.email_subject,
-        email_body: user.email_body,
+      const bodyPayload: any = {
+        email_subject: payload.email_subject ?? payload.subject ?? payload.template?.subject,
+        email_body: payload.email_body ?? payload.body ?? payload.template?.body,
+        position: payload.position ?? payload.template?.position,
+        active: payload.active ?? payload.template?.active ?? false,
       };
 
-      const { data } = await api.put<{ status: boolean; user: UserRequest }>(
-        `/users/${user.id}/email-config`,
-        payload
+      const { data } = await api.put<{ status: boolean; template: EmailTemplate }>(
+        `/users/${userId}/email-config`,
+        bodyPayload
       );
 
-      return data.user;
+      return data.template;
     },
     onSuccess: (updatedUser) => {
       queryClient.invalidateQueries({ queryKey: ["authUser"] });
