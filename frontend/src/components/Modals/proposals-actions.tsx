@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { CalendarCheck, UserCheck, UserX } from 'lucide-react'
+import { UserCheck, UserX } from 'lucide-react'
 import { Button } from '../ui/button'
 import {
  Dialog,
@@ -21,7 +21,7 @@ export function ProposalsActions({
  isEditing,
  currentLead,
  handleGanho,
- handlePerdido,
+ handlePerdido
 }: ProposalsActionsProps) {
  const [lossReason, setLossReason] = useState('')
  const [open, setOpen] = useState(false)
@@ -90,16 +90,6 @@ export function ProposalsActions({
       </div>
      </DialogContent>
     </Dialog>
-
-    <Button 
-        variant="default"
-        className="bg-amber-400 hover:bg-amber-500 text-white"
-        //onClick={modal de agendar tarefas}
-    >
-        <CalendarCheck size={16} className="mr-2" />
-        Agendar Tarefa
-    </Button>
-
    </div>
   </div>
  )
