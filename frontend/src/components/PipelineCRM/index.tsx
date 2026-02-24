@@ -1,5 +1,13 @@
 import { useState } from 'react'
 import { Plus } from 'lucide-react'
+import {
+    DropdownMenu,
+    DropdownMenuTrigger,
+    DropdownMenuContent,
+    DropdownMenuItem,
+} from '@/components/ui/dropdown-menu'
+import { EllipsisVertical } from 'lucide-react'
+import { EmailConfigModal, WhatsAppConfigModal } from '../Modals/lead-options'
 
 import { useCRM } from '@/http/use-crm'
 import { useLead } from '@/http/use-lead'
@@ -14,8 +22,10 @@ import { useCompany } from '@/http/use-company'
 import { NewTaskModal } from '../Modals/new-task'
 import { useTasks } from '@/http/use-tasks'
 import { formatBRLCompact } from '@/lib/currency'
+import { useUser } from '@/http/use-user'
 
 export function Pipeline() {
+ const { user } = useUser()
  const {
   getLeadsByStatus,
   getColumnSummary,
@@ -35,6 +45,8 @@ export function Pipeline() {
  const [selectedLead, setSelectedLead] = useState<LeadRequest | null>(null)
  const [isLeadDetailsModalOpen, setIsLeadDetailsModalOpen] = useState(false)
  const [isAgendarTarefaOpen, setIsAgendarTarefaOpen] = useState(false)
+ const [isEmailConfigModalOpen, setIsEmailConfigModalOpen] = useState(false)
+ const [isWhatsAppConfigModalOpen, setIsWhatsAppConfigModalOpen] = useState(false)
 
  const CRM_STATUSES = [
   { id: 'lead', title: 'Lead / Contato', deadline: 7 },
@@ -142,6 +154,20 @@ export function Pipeline() {
            {column.deadline} dias
           </span>
          )}
+
+         {column.id === 'contato-automatico' && (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button className="w-6 h-6 flex items-center justify-center text-gray-400 hover:text-blue-600" aria-label="Opções">
+                <EllipsisVertical size={14} />
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+                <DropdownMenuItem onSelect={() => setIsEmailConfigModalOpen(true)}>Configurar Email</DropdownMenuItem>
+                <DropdownMenuItem onSelect={() => setIsWhatsAppConfigModalOpen(true)}>Configurar Whatsapp</DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        )}
         </div>
         <div className="flex justify-between items-center text-sm">
          <span className="bg-background/80 rounded-full px-2 py-1 font-medium text-muted-foreground border border-border">
@@ -172,6 +198,18 @@ export function Pipeline() {
      )
     })}
    </div>
+
+   <EmailConfigModal
+   isOpen={isEmailConfigModalOpen}
+   onClose={() => setIsEmailConfigModalOpen(false)}
+   user={user}
+  />
+
+   <WhatsAppConfigModal
+    isOpen={isWhatsAppConfigModalOpen}
+    onClose={() => setIsWhatsAppConfigModalOpen(false)}
+    user={user}
+   />
 
    <NewLeadModal
     isOpen={isNewLeadModalOpen}
