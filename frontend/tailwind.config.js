@@ -2,6 +2,7 @@
 export default {
  darkMode: ['class'],
  content: [
+  './index.html',
   './pages/**/*.{ts,tsx}',
   './components/**/*.{ts,tsx}',
   './src/**/*.{js,ts,jsx,tsx}',
@@ -30,7 +31,7 @@ export default {
     border: 'hsl(var(--border))',
     input: 'hsl(var(--input))',
     ring: 'hsl(var(--ring))',
-    'red-1000': 'var(--border-red-1000)',
+    'red-1000': 'hsl(var(--border-red-1000))',
     background: 'hsl(var(--background))',
     foreground: 'hsl(var(--foreground))',
     primary: {
@@ -70,6 +71,13 @@ export default {
      'accent-foreground': 'hsl(var(--sidebar-accent-foreground))',
      border: 'hsl(var(--sidebar-border))',
      ring: 'hsl(var(--sidebar-ring))'
+    },
+    brand: {
+     blue: 'hsl(var(--brand-blue))',
+     red: 'hsl(var(--brand-red))',
+     yellow: 'hsl(var(--brand-yellow))',
+     gray: 'hsl(var(--brand-gray))',
+     success: 'hsl(var(--brand-success))'
     }
    },
    borderRadius: {

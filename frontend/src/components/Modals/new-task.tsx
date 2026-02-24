@@ -19,20 +19,24 @@ import { cn } from '@/lib/utils'
 import { format } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 import { toast } from 'sonner'
-import type { Task } from '@/http/types/calendar'
+import type { CreateTask } from '@/http/types/calendar'
 
 interface NewTaskModalProps {
- open: boolean
+ isOpen: boolean
  onOpenChange: (open: boolean) => void
- onSave: (task: Task) => void
+ onSave: (task: CreateTask) => void
  defaultDate?: Date
+ task?: any | null
+ leadId?: number
 }
 
 export function NewTaskModal({
- open,
+ isOpen,
  onOpenChange,
  onSave,
- defaultDate
+ defaultDate,
+ task,
+ leadId
 }: NewTaskModalProps) {
  const [title, setTitle] = useState('')
  const [description, setDescription] = useState('')
@@ -56,34 +60,56 @@ export function NewTaskModal({
    return
   }
 
+  const formattedHour = hour.length === 8 ? hour.slice(0, 5) : hour
+
   onSave({
    title,
    description,
    date,
-   hour,
-   priority
+   hour: formattedHour,
+   priority,
+   lead_id: leadId
   })
 
   // reset
-  setTitle('')
-  setDescription('')
-  setHour('09:00')
-  setPriority('media')
+  if (!task) {
+   setTitle('')
+   setDescription('')
+   setHour('09:00')
+   setPriority('media')
+  }
 
   onOpenChange(false)
  }
 
  useEffect(() => {
-  if (open) {
-   setDate(defaultDate || new Date())
-  }
- }, [defaultDate, open])
+  if (!isOpen) return
 
+  if (task) {
+   // Modo edição
+   setTitle(task.title)
+   setDescription(task.description ?? '')
+   setDate(new Date(task.date))
+   setHour(
+    task.hour?.length === 8 ? task.hour.slice(0, 5) : (task.hour ?? '09:00')
+   )
+   setPriority(task.priority ?? 'media')
+  } else {
+   // Modo nova tarefa (reset total)
+   setTitle('')
+   setDescription('')
+   setDate(defaultDate || new Date())
+   setHour('09:00')
+   setPriority('media')
+  }
+ }, [task, isOpen, defaultDate])
  return (
-  <Dialog open={open} onOpenChange={onOpenChange}>
+  <Dialog open={isOpen} onOpenChange={onOpenChange}>
    <DialogContent className="sm:max-w-[480px]">
     <DialogHeader>
-     <DialogTitle className="text-blue-600">Agendar Nova Tarefa</DialogTitle>
+     <DialogTitle className="text-primary">
+      {task ? 'Editar Tarefa' : 'Agendar Nova Tarefa'}
+     </DialogTitle>
      <DialogDescription className="sr-only">
       Formulário para criar uma nova tarefa no calendário
      </DialogDescription>
@@ -170,9 +196,9 @@ export function NewTaskModal({
      </Button>
      <Button
       onClick={handleSaveTask}
-      className="bg-blue-600 hover:bg-blue-700 text-white"
+      className="bg-primary hover:bg-primary/90 text-primary-foreground transition-colors"
      >
-      Agendar Tarefa
+      {task ? 'Salvar Alterações' : 'Agendar Tarefa'}
      </Button>
     </DialogFooter>
    </DialogContent>

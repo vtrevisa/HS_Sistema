@@ -6,11 +6,7 @@ import type { DateRange } from 'react-day-picker'
 import { useUser } from '@/http/use-user'
 import { useAlvaras } from '@/http/use-alvaras'
 
-import {
- buildSearchPayload,
- handleQuantityChange,
- exportConsumedAlvaras
-} from '@/services/alvaras'
+import { buildSearchPayload, handleQuantityChange } from '@/services/alvaras'
 
 import { Alert, AlertDescription } from '../ui/alert'
 import { Button } from '../ui/button'
@@ -19,7 +15,6 @@ import { AlvarasFilters } from './alvaras-filters'
 import { AlvarasCounter } from './alvaras-counter'
 import { AlvarasSubscriptionBox } from './alvaras-subscription-box'
 import { PaymentDetails } from '../Modals/payment-details'
-import { AlvarasTable } from './alvaras-table'
 import { ProfileUpdatePlan } from '../Modals/profile-updateplan'
 import { MyAlvaras } from './my-alvaras'
 
@@ -44,6 +39,7 @@ export function Alvaras() {
   name: '',
   monthly_credits: 0,
   monthly_used: 0,
+  credits: 0,
   plan_renews_at: new Date()
  }
 
@@ -54,6 +50,7 @@ export function Alvaras() {
   planName: safePlan.name,
   monthlyLimit,
   used: usedMonthly,
+  credits: safePlan.credits,
   resetDate: safePlan.plan_renews_at
    ? new Date(safePlan.plan_renews_at)
    : new Date()
@@ -64,7 +61,8 @@ export function Alvaras() {
   isActive,
 
   consumedAlvaras,
-  releasedAlvaras,
+  exportAlvaras,
+
   searchResults,
 
   searchAlvaras,
@@ -112,12 +110,35 @@ export function Alvaras() {
   }
  }
 
+ function handleNewQuery() {
+  startNewQuery()
+  setCity('')
+  setDateRange(undefined)
+  setSelectedTypeFilter('Todos')
+  setQuantity(0)
+ }
+
  function handleCancelSearch() {
   cancelNewQuery()
   setCity('')
   setDateRange(undefined)
   setSelectedTypeFilter('Todos')
   setQuantity(0)
+ }
+
+ function handleExportAlvaras() {
+  const alvaraIds = consumedAlvaras
+   .filter(alvara => !alvara.exported_at)
+   .map(alvara => alvara.id)
+
+  if (alvaraIds.length === 0) {
+   toast.warning('Nenhum alvará disponível para exportação')
+   return
+  }
+
+  exportAlvaras.mutate({
+   alvara_ids: alvaraIds
+  })
  }
 
  if (loadingUser) return <p>Carregando...</p>
@@ -127,11 +148,12 @@ export function Alvaras() {
  if (!user.plan) {
   return (
    <div className="p-4 lg:p-6 space-y-6">
-    <h1 className="text-2xl lg:text-3xl font-bold text-blue-600 dark:text-white">
-     Captação de Alvarás
-    </h1>
+    <h1 className="text-3xl font-bold text-foreground">Captação de Alvarás</h1>
 
-    <Alert variant="destructive">
+    <Alert
+     variant="destructive"
+     className="border-primary dark:border-primary text-primary [&>svg]:text-primary"
+    >
      <AlertCircle className="h-4 w-4" />
      <AlertDescription>
       <div className="space-y-3">
@@ -154,11 +176,9 @@ export function Alvaras() {
  return (
   <div className="p-4 lg:p-6 space-y-6">
    <div className="flex items-center justify-between">
-    <h1 className="text-2xl lg:text-3xl font-bold text-blue-600 dark:text-white">
-     Captação de Alvarás
-    </h1>
+    <h1 className="text-3xl font-bold text-foreground">Captação de Alvarás</h1>
     {flowState === 'alvaras-released' && (
-     <Button onClick={startNewQuery} variant="outline">
+     <Button onClick={handleNewQuery} variant="outline">
       Nova Consulta
      </Button>
     )}
@@ -170,6 +190,7 @@ export function Alvaras() {
     planName={subscriptionData.planName}
     monthlyLimit={subscriptionData.monthlyLimit}
     used={subscriptionData.used}
+    available={subscriptionData.credits}
     resetDate={subscriptionData.resetDate}
     flowState={flowState}
    />
@@ -179,8 +200,8 @@ export function Alvaras() {
    {flowState === 'my-alvaras' && (
     <MyAlvaras
      alvaras={consumedAlvaras}
-     onNewQuery={startNewQuery}
-     onExport={() => exportConsumedAlvaras(consumedAlvaras)}
+     onNewQuery={handleNewQuery}
+     onExport={() => handleExportAlvaras()}
     />
    )}
 
@@ -246,11 +267,6 @@ export function Alvaras() {
       })
      }
     />
-   )}
-
-   {/* Tabela de Alvarás Liberados */}
-   {flowState === 'alvaras-released' && releasedAlvaras.length > 0 && (
-    <AlvarasTable alvarasData={releasedAlvaras} />
    )}
   </div>
  )

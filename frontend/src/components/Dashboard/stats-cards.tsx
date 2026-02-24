@@ -3,9 +3,9 @@ import {
  Users,
  DollarSign,
  Target,
- Trello,
  Search,
- Megaphone
+ TrendingUp,
+ Filter
 } from 'lucide-react'
 
 interface StatsCardsProps {
@@ -61,7 +61,7 @@ export function StatsCards({
    value: totalLeads,
    change: `${isPositiveLead ? '+' : ''}${changeLeadValue}%`,
    icon: Users,
-   color: totalLeads === 0 ? 'bg-gray-300 dark:bg-gray-400' : 'bg-blue-400',
+   color: 'bg-primary',
    zeroMessage: 'Ainda não há leads cadastrados neste mês'
   },
   {
@@ -69,15 +69,15 @@ export function StatsCards({
    value: totalAlvaras,
    change: `${isPositiveAlvarasVencer ? '+' : ''}${changeAlvarasVencerValue}%`,
    icon: Target,
-   color: totalAlvaras === 0 ? 'bg-gray-300 dark:bg-gray-500' : 'bg-blue-500',
+   color: 'bg-primary',
    zeroMessage: 'Nenhum alvará a vencer'
   },
   {
    title: 'Pipeline Ativo',
    value: totalPipeline,
    change: `${isPositivePipeline ? '+' : ''}${changePipelineValue}%`,
-   icon: Trello,
-   color: totalPipeline === 0 ? 'bg-gray-300 dark:bg-gray-600' : 'bg-blue-600',
+   icon: DollarSign,
+   color: 'bg-primary',
    zeroMessage: 'Pipeline vazio'
   },
   {
@@ -85,25 +85,23 @@ export function StatsCards({
    value: totalAprimoramentos,
    change: `${isPositiveAprimoramentos ? '+' : ''}${changeAprimoramentosValue}%`,
    icon: Search,
-   color:
-    totalAprimoramentos === 0 ? 'bg-gray-300 dark:bg-gray-700' : 'bg-blue-700',
+   color: 'bg-primary',
    zeroMessage: 'Nenhum aprimoramento pendente'
   },
   {
    title: 'Propostas Enviadas',
    value: totalPropostas,
    change: `${isPositivePropostas ? '+' : ''}${changePropostasValue}%`,
-   icon: DollarSign,
-   color: totalPropostas === 0 ? 'bg-gray-300 dark:bg-gray-800' : 'bg-blue-800',
+   icon: TrendingUp,
+   color: 'bg-primary',
    zeroMessage: 'Nenhuma proposta enviada'
   },
   {
    title: 'Taxa de Conversão',
    value: totalTaxaConversao,
    change: `${isPositiveTaxaConversao ? '+' : ''}${changeTaxaConversaoValue}%`,
-   icon: Megaphone,
-   color:
-    totalTaxaConversao === 0 ? 'bg-gray-300 dark:bg-gray-900' : 'bg-blue-900',
+   icon: Filter,
+   color: 'bg-primary',
    zeroMessage: 'Ainda não foi possível calcular a taxa de conversão'
   }
  ]
@@ -116,21 +114,21 @@ export function StatsCards({
     return (
      <div
       key={stat.title}
-      className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-4 lg:p-6 hover:shadow-xl transition-shadow duration-300"
+      className="bg-card rounded-xl shadow-lg p-4 lg:p-6 hover:shadow-xl transition-shadow duration-300 border border-border"
      >
       <div className="flex items-center justify-between">
        <div>
-        <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
+        <p className="text-sm font-medium text-muted-foreground">
          {stat.title}
         </p>
 
         {isZero ? (
-         <p className="text-sm mt-2 text-gray-500 dark:text-gray-400 italic">
+         <p className="text-sm mt-2 text-muted-foreground italic">
           {stat.zeroMessage}
          </p>
         ) : (
          <>
-          <p className="text-2xl lg:text-3xl font-bold text-gray-800 dark:text-white mt-2">
+          <p className="text-2xl lg:text-3xl font-bold text-card-foreground mt-2">
            {stat.value === totalPipeline
             ? `${formatBRL.format(stat.value)}`
             : stat.value === totalTaxaConversao
@@ -140,7 +138,9 @@ export function StatsCards({
 
           <p
            className={`text-sm mt-1 ${
-            stat.change.includes('!') ? 'text-red-600' : 'text-green-600'
+            stat.change.includes('!')
+             ? 'text-destructive'
+             : 'text-brand-success'
            }`}
           >
            {stat.change.includes('!') ? 'Atenção!' : stat.change + ' este mês'}
@@ -148,7 +148,9 @@ export function StatsCards({
          </>
         )}
        </div>
-       <div className={`${stat.color} p-3 rounded-full text-white`}>
+       <div
+        className={`${stat.color} p-3 rounded-full text-primary-foreground`}
+       >
         <Icon size={20} className="lg:w-6 lg:h-6" />
        </div>
       </div>

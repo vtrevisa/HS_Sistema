@@ -55,7 +55,7 @@ export function CalendarDashboard() {
  }
 
  return (
-  <Card className="border-l-4 border-primary">
+  <Card className="border-l-4 border-primary max-h-[440px]">
    <CardHeader className="pb-2">
     <CardTitle className="text-lg flex items-center gap-2 text-foreground">
      <CalendarIcon className="h-5 w-5" />

@@ -11,7 +11,7 @@ interface MyAlvarasProps {
 
 export function MyAlvaras({ alvaras, onNewQuery, onExport }: MyAlvarasProps) {
  return (
-  <Card className="p-6">
+  <Card className="p-6 bg-secondary">
    <MyAlvarasActions onNewQuery={onNewQuery} onExport={onExport} />
 
    {alvaras.length === 0 ? (

@@ -3,7 +3,6 @@ import {
  BadgeInfo,
  CalendarRange,
  FileText,
- Target,
  Filter,
  MapPin
 } from 'lucide-react'
@@ -44,7 +43,7 @@ export function ArchivedProposalsFilters({
     </CardTitle>
    </CardHeader>
    <CardContent>
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-4 gap-4">
      {/* Filtro de Cidade */}
      <div className="space-y-2">
       <Label htmlFor="city" className="flex items-center gap-1">
@@ -106,59 +105,11 @@ export function ArchivedProposalsFilters({
       </select>
      </div>
 
-     {/* Filtro de Data de Vencimento Alvará */}
-     <div className="space-y-2">
-      <Label
-       htmlFor="expiration-alvara-filter"
-       className="flex items-center gap-1"
-      >
-       <Target size={14} />
-       Vencimento do alvará
-      </Label>
-      <select
-       value={filters.expiration}
-       onChange={e =>
-        setFilters({
-         ...filters,
-         expiration: e.target.value as Filters['expiration']
-        })
-       }
-       className="w-full h-[40px] border border-gray-300 bg-background rounded-lg px-4 py-2 focus:ring-2 focus:ring-ring focus:border-transparent outline-none text-sm"
-      >
-       <option value="">Selecione o período</option>
-       <option value="vencido">Vencidos</option>
-       <option value="30">Vencem em até 30 dias</option>
-       <option value="60">Vencem em até 60 dias</option>
-      </select>
-     </div>
-
-     {/* Filtro de Data de Cadastro Lead */}
-     <div className="space-y-2">
-      <Label htmlFor="add-lead-filter" className="flex items-center gap-1">
-       <CalendarRange size={14} />
-       Lead criado em
-      </Label>
-      <select
-       value={filters.leadCreatedAt}
-       onChange={e =>
-        setFilters({
-         ...filters,
-         leadCreatedAt: e.target.value as Filters['leadCreatedAt']
-        })
-       }
-       className="w-full h-[40px] border border-gray-300 bg-background rounded-lg px-4 py-2 focus:ring-2 focus:ring-ring focus:border-transparent outline-none text-sm"
-      >
-       <option value="">Selecione o período</option>
-       <option value="7">Últimos 7 dias</option>
-       <option value="30">Últimos 30 dias</option>
-      </select>
-     </div>
-
-     {/* Filtro de arquivamento da proposta */}
+     {/* Filtros de vencimentos */}
      <div className="space-y-2">
       <Label htmlFor="expirationPeriod" className="flex items-center gap-1">
        <CalendarRange size={14} />
-       Período de arquivamento
+       Período de vencimento
       </Label>
       <DatePickerWithRange date={dateRange} onDateChange={onDateRangeChange} />
      </div>

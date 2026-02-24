@@ -15,6 +15,7 @@ import {
  AlertTriangle,
  Building,
  Calendar,
+ CalendarPlus,
  Clock,
  DollarSign,
  Edit,
@@ -30,34 +31,37 @@ import {
 import { getCompleteAddress, getStatusColor } from '@/services/leads'
 import { ProposalsActions } from './proposals-actions'
 import { Label } from '../ui/label'
-import { LeadTasksModal } from './lead-tasks'
-
-type Attachment = { id?: number; name: string; url: string }
+import { Tasks } from '../Tasks'
+import { useTasks } from '@/http/use-tasks'
 
 type LeadWithExtras = LeadRequest & {
  daysInStage?: number
  isOverdue?: boolean
- attachments?: Attachment[]
 }
 
 interface LeadDetailsModalProps {
  isOpen: boolean
  onClose: () => void
+ onOpenTask: () => void
  lead: LeadRequest | null
 }
 
 export function LeadDetailsModal({
  isOpen,
  onClose,
+ onOpenTask,
  lead
 }: LeadDetailsModalProps) {
  const [isEditing, setIsEditing] = useState(false)
  const [editedLead, setEditedLead] = useState<LeadWithExtras | null>(null)
  const [isFileUploading, setIsFileUploading] = useState(false)
+
  const { updateLead, deleteLeadAttachment } = useLead()
  const { saveProposal } = useProposals({})
- const [isTaskEmpty, setIsTaskEmpty] = useState<boolean>(true)
- 
+ const { tasks } = useTasks()
+
+ const hasTasksForLead = tasks.some(task => task.lead_id === lead?.id)
+
  useEffect(() => {
   if (lead) setEditedLead({ ...lead })
  }, [lead])
@@ -230,20 +234,30 @@ export function LeadDetailsModal({
     </DialogHeader>
     
     {/* Proposals Actions */}
-    <div className="flex gap-4 items-start min-h-0">
-      <div className="flex-none w-full sm:w-[600px] min-w-0">
-        <ProposalsActions
-        isEditing={isEditing}
-        currentLead={{
-          ...currentLead,
-          company: currentLead.company || '',
-          status: currentLead.status || 'Lead'
-        }}
-        handleGanho={handleGanho}
-        handlePerdido={handlePerdido}
-        /* openTasks={() => setActiveSection('open')} */
-        />
-      
+    <ProposalsActions
+     isEditing={isEditing}
+     currentLead={{
+      ...currentLead,
+      company: currentLead.company || '',
+      status: currentLead.status || 'Lead'
+     }}
+     handleGanho={handleGanho}
+     handlePerdido={handlePerdido}
+    />
+
+    {/* Agendar Tarefa */}
+    {!isEditing && (
+     <Button
+      className="w-full bg-primary hover:bg-primary/90 text-primary-foreground transition-colors"
+      onClick={onOpenTask}
+     >
+      <CalendarPlus size={16} className="mr-2" />
+      Agendar Tarefa
+     </Button>
+    )}
+
+    {/* Histórico de Tarefas Agendadas */}
+    {hasTasksForLead && <Tasks leadId={lead.id} />}
 
       <div className="space-y-4 sm:space-y-6">
       {/* Status e Serviço */}
@@ -267,53 +281,53 @@ export function LeadDetailsModal({
 
       {/* Informações do Serviço */}
 
-      <div className="bg-card border border-border dark:border-white p-3 sm:p-4 rounded-lg">
-        <h3 className="font-semibold text-gray-800 dark:text-white mb-3 flex items-center gap-2 text-sm sm:text-base">
-        <FileText size={16} />
-        Informações do Serviço
-        </h3>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 text-sm">
-        <EditableField
-          label="Tipo de serviço"
-          field="service"
-          value={currentLead.service}
-          isEditing={isEditing}
-          onChange={updateField}
-        />
-        <EditableField
-          label="Número da licença"
-          field="license"
-          value={currentLead.license}
-          displayValue={`${currentLead.service}-${currentLead.license}`}
-          isEditing={isEditing}
-          onChange={updateField}
-        />
-        <EditableField
-          label="Validade da licença"
-          field="validity"
-          value={currentLead.validity}
-          type="date"
-          isEditing={isEditing}
-          onChange={updateField}
-          icon={<Calendar size={12} />}
-        />
-        <EditableField
-          label="Valor do Serviço"
-          field="service_value"
-          value={currentLead.service_value}
-          isEditing={isEditing}
-          onChange={updateField}
-          icon={<DollarSign size={14} />}
-        />
-        <EditableField
-          label="Ocupação"
-          field="occupation"
-          value={currentLead.occupation}
-          isEditing={isEditing}
-          onChange={updateField}
-        />
-        </div>
+     <div className="bg-card border border-border dark:border-white p-3 sm:p-4 rounded-lg">
+      <h3 className="font-semibold text-gray-800 dark:text-white mb-3 flex items-center gap-2 text-sm sm:text-base">
+       <FileText size={16} />
+       Informações do Serviço
+      </h3>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 text-sm">
+       <EditableField
+        label="Tipo de serviço"
+        field="service"
+        value={currentLead.service}
+        isEditing={isEditing}
+        onChange={updateField}
+       />
+       <EditableField
+        label="Nº CLCB/AVCB"
+        field="license"
+        value={currentLead.license}
+        displayValue={`${currentLead.service}-${currentLead.license}`}
+        isEditing={isEditing}
+        onChange={updateField}
+       />
+       <EditableField
+        label="Validade da licença"
+        field="validity"
+        value={currentLead.validity}
+        type="date"
+        isEditing={isEditing}
+        onChange={updateField}
+        icon={<Calendar size={12} />}
+       />
+       <EditableField
+        label="Valor do Serviço"
+        field="service_value"
+        value={currentLead.service_value}
+        isEditing={isEditing}
+        onChange={updateField}
+        icon={<DollarSign size={14} />}
+       />
+       <EditableField
+        label="Ocupação"
+        field="occupation"
+        value={currentLead.occupation}
+        isEditing={isEditing}
+        onChange={updateField}
+       />
       </div>
+     </div>
 
       {/* Informações da Empresa */}
 
@@ -397,69 +411,71 @@ export function LeadDetailsModal({
 
       {/* Informações de Contato */}
 
-      <div className="bg-card border border-border dark:border-white p-3 sm:p-4 rounded-lg">
-        <h3 className="font-semibold text-gray-800 dark:text-white mb-3 flex items-center gap-2 text-sm sm:text-base">
-        <User size={16} />
-        Informações de Contato
-        </h3>
-        <div className="space-y-4 text-sm">
-        <EditableField
-          label="Nome do Contato"
-          field="contact"
-          value={currentLead.contact}
+     <div className="bg-card border border-border dark:border-white p-3 sm:p-4 rounded-lg">
+      <h3 className="font-semibold text-gray-800 dark:text-white mb-3 flex items-center gap-2 text-sm sm:text-base">
+       <User size={16} />
+       Informações de Contato
+      </h3>
+      <div className="space-y-4 text-sm">
+       <EditableField
+        label="Nome do Contato"
+        field="contact"
+        value={currentLead.contact}
+        isEditing={isEditing}
+        onChange={updateField}
+       />
+       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div>
+         <EditableField
+          label="Telefone / WhatsApp"
+          field="phone"
+          value={currentLead.phone}
+          type="tel"
           isEditing={isEditing}
           onChange={updateField}
-        />
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div>
-          <EditableField
-            label="Telefone / WhatsApp"
-            field="phone"
-            value={currentLead.phone}
-            type="tel"
-            isEditing={isEditing}
-            onChange={updateField}
-            icon={<Phone size={14} />}
-          />
-          {!isEditing && currentLead.phone && (
-            <Button
-            variant="outline"
-            size="sm"
-            className="mt-2 w-full"
-            onClick={() =>
-              window.open(`https://wa.me/55${formatedPhone}`, '_blank')
-            }
-            >
-            <Phone size={14} className="mr-2" />
-            Abrir WhatsApp
-            </Button>
-          )}
-          </div>
-          <div>
-          <EditableField
-            label="Email"
-            field="email"
-            value={currentLead.email}
-            type="email"
-            isEditing={isEditing}
-            onChange={updateField}
-            icon={<Mail size={14} />}
-          />
-          {!isEditing && currentLead.email && (
-            <Button
-            variant="outline"
-            size="sm"
-            className="mt-2 w-full"
-            onClick={() => window.open(`mailto:${currentLead.email}`, '_blank')}
-            >
-            <Mail size={14} className="mr-2" />
-            Enviar E-mail
-            </Button>
-          )}
-          </div>
+          icon={<Phone size={14} />}
+         />
+         {!isEditing && currentLead.phone && (
+          <Button
+           variant="outline"
+           size="sm"
+           className="mt-2 w-full"
+           title={`${currentLead.phone ? `Enviar mensagem para ${currentLead.phone}` : ''}`}
+           onClick={() =>
+            window.open(`https://wa.me/55${formatedPhone}`, '_blank')
+           }
+          >
+           <Phone size={14} className="mr-2" />
+           Abrir WhatsApp
+          </Button>
+         )}
         </div>
+        <div>
+         <EditableField
+          label="Email"
+          field="email"
+          value={currentLead.email}
+          type="email"
+          isEditing={isEditing}
+          onChange={updateField}
+          icon={<Mail size={14} />}
+         />
+         {!isEditing && currentLead.email && (
+          <Button
+           variant="outline"
+           size="sm"
+           className="mt-2 w-full"
+           title={`${currentLead.email ? `Enviar email para ${currentLead.email}` : ''}`}
+           onClick={() => window.open(`mailto:${currentLead.email}`, '_blank')}
+          >
+           <Mail size={14} className="mr-2" />
+           Enviar E-mail
+          </Button>
+         )}
         </div>
+       </div>
       </div>
+     </div>
 
       {/* Informações de anexo */}
 

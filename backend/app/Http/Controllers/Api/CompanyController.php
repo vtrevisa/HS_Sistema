@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\CompanyRequest;
 use App\Models\Company;
+use App\Models\Lead;
 use Exception;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -15,6 +16,11 @@ use Symfony\Component\HttpKernel\Exception\UnauthorizedHttpException;
 
 class CompanyController extends Controller
 {
+
+    private function valueOrEmpty($value): string
+    {
+        return $value === null ? '' : $value;
+    }
 
     private function getAuthenticatedUser(Request $request)
     {
@@ -162,8 +168,6 @@ class CompanyController extends Controller
                         'cnpj'          => $dados['cnpj'] ?? null,
                         'razao_social'  => $dados['nome'] ?? null,
                         'nome_fantasia' => $dados['fantasia'] ?? null,
-                        'email'         => $dados['email'] ?? null,
-                        'telefone'      => $dados['telefone'] ?? null,
                         'qsa_nomes'     => array_map(fn($q) => $q['nome'], $dados['qsa'] ?? [])
                     ];
                 }
@@ -211,8 +215,6 @@ class CompanyController extends Controller
                 'cnpj'          => $dados['cnpj'] ?? null,
                 'razao_social'  => $dados['nome'] ?? null,
                 'nome_fantasia' => $dados['fantasia'] ?? null,
-                'email'         => $dados['email'] ?? null,
-                'telefone'      => $dados['telefone'] ?? null,
                 'atividade_principal' => $dados['atividade_principal'][0]['text'] ?? null,
                 'qsa_nomes'     => array_map(fn($q) => $q['nome'], $dados['qsa'] ?? []),
             ];
@@ -343,23 +345,22 @@ class CompanyController extends Controller
             $company->update([
                 'status' => $request->input('status', ''),
                 'company' => ucwords(strtolower($request->input('company', ''))),
-                'cep' => $request->input('cep', ''),
+                'cep' => $this->valueOrEmpty($request->input('cep')),
                 'address' => ucwords(strtolower($request->input('address', ''))),
-                'number' => $request->input('number', ''),
-                'complement' => ucwords(strtolower($request->input('complement', ''))),
-                'state' => strtoupper($request->input('state', '')),
-                'city' => ucwords(strtolower($request->input('city', ''))),
-                'district' => ucwords(strtolower($request->input('district', ''))),
-                'complement' => $request->input('complement', ''),
-                'service' => strtoupper($request->input('service', '')),
-                'license' => $request->input('license', ''),
-                'occupation' => $request->input('occupation', ''),
-                'validity' => $request->input('validity', ''),
-                'website' => $request->input('website', ''),
-                'contact' => $request->input('contact', ''),
-                'phone' => $request->input('phone', ''),
-                'cnpj' => $request->input('cnpj', ''),
-                'email' => strtolower($request->input('email', '')),
+                'number' => $this->valueOrEmpty($request->input('number')),
+                'complement' => ucwords(strtolower($this->valueOrEmpty($request->input('complement')))),
+                'state' => strtoupper(strtolower($this->valueOrEmpty($request->input('state')))),
+                'city' => ucwords(strtolower($this->valueOrEmpty($request->input('city')))),
+                'district' => ucwords(strtolower($this->valueOrEmpty($request->input('district')))),
+                'service' => strtoupper($this->valueOrEmpty($request->input('service'))),
+                'license'    => $this->valueOrEmpty($request->input('license')),
+                'occupation' => $this->valueOrEmpty($request->input('occupation')),
+                'validity'   => $this->valueOrEmpty($request->input('validity')),
+                'website'    => $this->valueOrEmpty($request->input('website')),
+                'contact'    => $this->valueOrEmpty($request->input('contact')),
+                'phone'      => $this->valueOrEmpty($request->input('phone')),
+                'cnpj'       => $this->valueOrEmpty($request->input('cnpj')),
+                'email' => strtolower($this->valueOrEmpty($request->input('email'))),
             ]);
 
             // Success Operation
@@ -398,13 +399,18 @@ class CompanyController extends Controller
 
         try {
 
-            // Delete company on DB
+            Lead::where('user_id', $user->id)
+                ->whereRaw('UPPER(company) = ?', [strtoupper($company->company)])
+                ->delete();
+
             $company->delete();
+
+            DB::commit();
 
             return response()->json([
                 'status' => true,
                 'company' => $company,
-                'message' => "Empresa deletada com sucesso!",
+                'message' => 'Empresa e lead associados deletados com sucesso!',
             ], 200);
         } catch (Exception $e) {
             return response()->json([

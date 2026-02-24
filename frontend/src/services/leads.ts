@@ -3,6 +3,15 @@ import * as XLSX from "xlsx";
 import { saveAs } from "file-saver";
 import { toast } from "sonner";
 
+export function toDateOnly(value?: string | null) {
+ if (!value) return null
+
+ const date = new Date(value)
+ return isNaN(date.getTime())
+  ? null
+  : date.toISOString().split('T')[0]
+}
+
 export function extractSheetId(url: string): string | null {
   const match = url.match(/\/spreadsheets\/d\/([a-zA-Z0-9-_]+)/);
   return match ? match[1] : null;
@@ -326,22 +335,21 @@ export async function exportLeadsToExcel(leads: LeadRequest[]) {
 
 export function getStatusColor(status: string) {
  switch (status) {
-  case 'Lead':
-    return 'bg-gray-200 hover:bg-gray-200 text-gray-800 dark:bg-gray-600 dark:text-white'
+   case 'Lead':
+    return 'border border-blue-200 bg-blue-50 text-blue-700 dark:border-blue-900 dark:bg-blue-950/30 dark:text-blue-300 hover:bg-blue-50'
    case 'Primeiro contato':
-    return 'bg-blue-100 hover:bg-blue-200 text-blue-800 dark:bg-blue-600/30 dark:text-white'
+    return 'border border-indigo-200 bg-indigo-50 text-indigo-700 dark:border-indigo-900 dark:bg-indigo-950/30 dark:text-indigo-300 hover:bg-indigo-50'
    case 'Follow-up':
-    return 'bg-yellow-100 hover:bg-yellow-200 text-yellow-800 dark:bg-yellow-600/30 dark:text-white'
+    return 'border border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-900 dark:bg-amber-950/30 dark:text-amber-300 hover:bg-amber-50'
    case 'Proposta enviada':
-    return 'bg-orange-100 hover:bg-orange-200 text-orange-800 dark:bg-orange-600/30 dark:text-white'
+    return 'border border-red-200 bg-red-50 text-red-700 dark:border-red-900 dark:bg-red-950/30 dark:text-red-300 hover:bg-red-50'
    case 'Cliente fechado':
-    return 'bg-green-100 hover:bg-green-200 text-green-800 dark:bg-green-600/30 dark:text-white'
-   case 'Arquivado':
-    return 'bg-red-100 hover:bg-red-200 text-red-800 dark:bg-red-600/30 dark:text-white'
+    return 'border border-green-200 bg-green-50 text-green-700 dark:border-green-900 dark:bg-green-950/30 dark:text-green-300 hover:bg-green-50'
    default:
-    return 'bg-gray-200 hover:bg-gray-200 text-gray-800 dark:bg-gray-600 dark:text-white'
- }
+    return 'border border-border bg-muted text-muted-foreground'
+  }
 }
+
 
 
 export function isVencimentoProximo(vencimento?: string) {

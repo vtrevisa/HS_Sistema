@@ -51,11 +51,13 @@ export function AlvarasCounter({
     </div>
     <div className="p-4 rounded-lg bg-muted">
      <p className="text-sm text-muted-foreground">Disponíveis no Plano</p>
-     <p className="text-2xl font-bold text-green-600">{safeCreditsAvailable}</p>
+     <p className="text-2xl font-bold text-brand-success">
+      {safeCreditsAvailable}
+     </p>
     </div>
     <div className="p-4 rounded-lg bg-muted">
      <p className="text-sm text-muted-foreground">Já Utilizados</p>
-     <p className="text-2xl font-bold text-orange-600">{used}</p>
+     <p className="text-2xl font-bold text-destructive">{used}</p>
     </div>
    </div>
 
@@ -81,7 +83,7 @@ export function AlvarasCounter({
 
     {needsPayment && (
      <div className="space-y-3">
-      <div className="flex items-center gap-2 text-orange-600">
+      <div className="flex items-center gap-2 text-destructive">
        <AlertTriangle className="h-5 w-5" />
        <span className="font-medium">
         Sua solicitação excede os alvarás disponíveis no seu plano
@@ -95,13 +97,13 @@ export function AlvarasCounter({
        </div>
        <div>
         <p className="text-xs text-muted-foreground">Disponíveis</p>
-        <p className="text-xl font-bold text-green-600">
+        <p className="text-xl font-bold text-brand-success">
          {safeCreditsAvailable}
         </p>
        </div>
        <div>
         <p className="text-xs text-muted-foreground">Excedente</p>
-        <p className="text-xl font-bold text-orange-600">{extraNeeded}</p>
+        <p className="text-xl font-bold text-destructive">{extraNeeded}</p>
        </div>
        <div>
         <p className="text-xs text-muted-foreground">
@@ -159,14 +161,11 @@ export function AlvarasCounter({
        {creditPackages.find(pkg => pkg.credits === selectedPackage.credits)
         ?.price === 0 ? (
         <a
-         href="https://wa.me/5599999999999?text=Olá! Gostaria de informações sobre o pacote de créditos acima de 250."
+         href="https://wa.me/5599999999999?text=Olá! Gostaria de informações sobre os pacotes de créditos."
          target="_blank"
          rel="noopener noreferrer"
         >
-         <Button
-          size="lg"
-          className="bg-green-600 hover:bg-green-700 text-white"
-         >
+         <Button size="lg" className="bg-brand-success text-white">
           Contate o consultor pelo WhatsApp
          </Button>
         </a>
@@ -176,7 +175,17 @@ export function AlvarasCounter({
          onClick={() => onPayment && onPayment(selectedPackage)}
          size="lg"
         >
-         Pagar Alvarás Extras
+         {isLoading ? (
+          <>
+           <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+           Comprando Alvarás Extras...
+          </>
+         ) : (
+          <>
+           <CheckCircle className="mr-2 h-4 w-4" />
+           Pagar Alvarás Extras
+          </>
+         )}
         </Button>
        )}
       </>

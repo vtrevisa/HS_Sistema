@@ -83,6 +83,7 @@ Route::post('/alvaras/search', [AlvaraController::class, 'search']); //POST
 Route::post('/alvaras/release', [AlvaraController::class, 'release']); //POST
 Route::get('/alvaras/consumed', [AlvaraPurchaseController::class, 'index']); //GET
 Route::post('/alvaras/consumed', [AlvaraPurchaseController::class, 'store']); //POST
+Route::post('/alvaras/export', [AlvaraPurchaseController::class, 'export']); //POST
 
 Route::get('/alvaras/logs', [AlvaraLogController::class, 'index']); //GET
 Route::get('/calendar/alvaras', [CalendarController::class, 'alvaras']); //GET
@@ -90,6 +91,8 @@ Route::get('/calendar/alvaras', [CalendarController::class, 'alvaras']); //GET
 // Tasks
 Route::get('/tasks', [TaskController::class, 'index']); //GET
 Route::post('/tasks', [TaskController::class, 'store']); //POST
+Route::put('/tasks/{id}/completed', [TaskController::class, 'completed']); //PATCH
+Route::put('/tasks/{id}', [TaskController::class, 'update']); //PUT
 
 // Leads
 Route::get('/leads', [LeadController::class, 'index']); //GET
@@ -108,6 +111,7 @@ Route::put('/companies/{company}', [CompanyController::class, 'update']); //PUT
 Route::delete('/companies/{company}', [CompanyController::class, 'destroy']); //DELETE
 Route::post('/companies/search/address', [CompanyController::class, 'searchCompanyByAddress']); //POST
 Route::post('/companies/search/cnpj', [CompanyController::class, 'searchCompanyByCnpj']); //POST
+
 
 // Proposals
 Route::get('/archived-proposals', [ArchivedProposalController::class, 'index']); //GET

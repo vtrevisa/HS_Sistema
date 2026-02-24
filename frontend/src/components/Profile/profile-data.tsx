@@ -1,7 +1,8 @@
-import { useEffect, useState, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import {
  Building,
  Calendar,
+ Camera,
  CreditCard,
  Edit,
  Mail,
@@ -9,7 +10,6 @@ import {
  Phone,
  Save,
  User,
- Camera,
  X
 } from 'lucide-react'
 import {
@@ -31,13 +31,24 @@ interface ProfileDataProps {
  user: UserRequest
 }
 
+const BASE_URL = 'http://localhost:8000'
+
 export function ProfileData({ user }: ProfileDataProps) {
  const fileInputRef = useRef<HTMLInputElement>(null)
  const [selectedFile, setSelectedFile] = useState<File | null>(null)
- const [previewUrl, setPreviewUrl] = useState<string | null>(user.avatar_url ?? null)
+ const [previewUrl, setPreviewUrl] = useState<string | null>(
+  user.avatar_url ?? null
+ )
  const [isUploading, setIsUploading] = useState(false)
+
  const [isEditing, setIsEditing] = useState(false)
- const [userData, setUserData] = useState(() => ({ ...(user as any), avatar_url: (user as any)?.avatar_url ?? null }))
+
+ const [userData, setUserData] = useState(() => ({
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  ...(user as any),
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  avatar_url: (user as any)?.avatar_url ?? null
+ }))
  const [cepData, setCepData] = useState({
   street: '',
   district: '',
@@ -51,11 +62,27 @@ export function ProfileData({ user }: ProfileDataProps) {
  const originalCnpj = user?.cnpj ?? null
 
  useEffect(() => {
+  if (selectedFile) return // mantém preview de upload
+  if (userData.avatar_url) {
+   setPreviewUrl(`${BASE_URL}${userData.avatar_url}`)
+  } else {
+   setPreviewUrl(null)
+  }
+ }, [userData.avatar_url, selectedFile])
+
+ useEffect(() => {
   if (isEditing) return
 
-  setUserData(prev => ({ ...prev, ...(user as any), avatar_url: (user as any)?.avatar_url ?? prev.avatar_url ?? null }))
+  setUserData(prev => ({
+   ...prev,
+   // eslint-disable-next-line @typescript-eslint/no-explicit-any
+   ...(user as any),
+   // eslint-disable-next-line @typescript-eslint/no-explicit-any
+   avatar_url: (user as any)?.avatar_url ?? prev.avatar_url ?? null
+  }))
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   if (!previewUrl) setPreviewUrl((user as any)?.avatar_url ?? null)
-}, [user, isEditing])
+ }, [user, isEditing])
 
  useEffect(() => {
   if (!isEditing) return
@@ -174,8 +201,8 @@ export function ProfileData({ user }: ProfileDataProps) {
    return
   }
 
-  if (previewUrl && previewUrl.startsWith('blob:')){
-    URL.revokeObjectURL(previewUrl);
+  if (previewUrl && previewUrl.startsWith('blob:')) {
+   URL.revokeObjectURL(previewUrl)
   }
 
   setSelectedFile(file)
@@ -188,10 +215,10 @@ export function ProfileData({ user }: ProfileDataProps) {
 
  function handleCancelAvatar() {
   if (previewUrl && previewUrl.startsWith('blob:')) {
-   URL.revokeObjectURL(previewUrl);
+   URL.revokeObjectURL(previewUrl)
   }
-   setSelectedFile(null)
-   setPreviewUrl(user.avatar_url ?? null)
+  setSelectedFile(null)
+  setPreviewUrl(user.avatar_url ?? null)
   if (fileInputRef.current) {
    fileInputRef.current.value = ''
   }
@@ -202,28 +229,30 @@ export function ProfileData({ user }: ProfileDataProps) {
   setIsUploading(true)
 
   try {
-  const form = new FormData()
-  form.append('avatar', selectedFile)
-  const { data } = await api.post('user/avatar', form)
+   const form = new FormData()
+   form.append('avatar', selectedFile)
+   const { data } = await api.post('user/avatar', form)
 
-  if (!data.status) throw new Error(data.message || 'Erro desconhecido ao enviar imagem')
+   if (!data.status)
+    throw new Error(data.message || 'Erro desconhecido ao enviar imagem')
 
-  const newAvatar = data.avatar_url ?? null
+   const newAvatar = data.avatar_url ?? null
 
-  setUserData(prev => {
+   setUserData(prev => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const updated = { ...(prev as any), avatar_url: newAvatar }
     console.log('Updated userData:', updated)
     return updated
-  })
+   })
 
-  setSelectedFile(null)
-  setPreviewUrl(newAvatar)
+   setSelectedFile(null)
+   setPreviewUrl(newAvatar)
 
-  if (fileInputRef.current) fileInputRef.current.value = ''
-} catch (err) {
-  console.error(err)
-  alert('Erro ao enviar imagem')
-} finally {
+   if (fileInputRef.current) fileInputRef.current.value = ''
+  } catch (err) {
+   console.error(err)
+   alert('Erro ao enviar imagem')
+  } finally {
    console.log('Data: ', userData)
    setIsUploading(false)
   }
@@ -235,21 +264,28 @@ export function ProfileData({ user }: ProfileDataProps) {
     <div className="flex flex-col-reverse items-start gap-6 lg:flex-row lg:items-center justify-between">
      <div className="flex items-center gap-3">
       <div className="relative">
-       <img
-        src={previewUrl ?? user.avatar_url ?? userData.avatar_url ?? 'favicon.ico'}
-        alt='avatar'
-        className="h-12 w-12 rounded-full object-cover bg-primary/10"
-       />
+       {previewUrl ? (
+        <img
+         src={previewUrl}
+         alt="Avatar"
+         className="h-12 w-12 rounded-full object-cover bg-primary/10"
+         onError={e => {
+          e.currentTarget.style.display = 'none'
+         }}
+        />
+       ) : (
+        <User className="h-12 w-12 rounded-full text-primary bg-primary/10 p-2" />
+       )}
        <button
         type="button"
         className="absolute -right-1 -bottom-1 rounded-full bg-white p-1 shadow"
-        aria-label='Trocar Foto'
+        aria-label="Trocar Foto"
         onClick={() => fileInputRef.current?.click()}
        >
         <Camera className="h-4 w-4" />
        </button>
 
-       <input 
+       <input
         ref={fileInputRef}
         type="file"
         accept="image/*"
@@ -262,21 +298,21 @@ export function ProfileData({ user }: ProfileDataProps) {
        <CardDescription>Suas informações de cadastro</CardDescription>
       </div>
      </div>
-    {selectedFile && (
-    <div className="flex gap-2 self-end lg:self-start">
-     <Button
-     size="sm"
-     variant="ghost"
-     onClick={handleCancelAvatar}
-     disabled={isUploading}
-     >
-     <X size={14} className="mr-1" /> Cancelar Foto
-     </Button>
-     <Button size="sm" onClick={handleUploadAvatar} disabled={isUploading}>
-     {isUploading ? 'Enviando...' : 'Salvar Foto'}
-     </Button>
-    </div>
-    )}
+     {selectedFile && (
+      <div className="flex gap-2 self-end lg:self-start">
+       <Button
+        size="sm"
+        variant="ghost"
+        onClick={handleCancelAvatar}
+        disabled={isUploading}
+       >
+        <X size={14} className="mr-1" /> Cancelar Foto
+       </Button>
+       <Button size="sm" onClick={handleUploadAvatar} disabled={isUploading}>
+        {isUploading ? 'Enviando...' : 'Salvar Foto'}
+       </Button>
+      </div>
+     )}
      {isEditing ? (
       <div className="flex gap-2 self-end lg:self-start">
        <Button

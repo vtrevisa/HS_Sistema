@@ -1,5 +1,4 @@
-import { CardTitle } from '../ui/card'
-import { Download, FileText, Search } from 'lucide-react'
+import { Download, Search } from 'lucide-react'
 import { Button } from '../ui/button'
 
 interface MyAlvarasActionsProps {
@@ -13,15 +12,12 @@ export function MyAlvarasActions({
 }: MyAlvarasActionsProps) {
  return (
   <div className="flex items-center justify-between mb-4">
-   <CardTitle className="flex items-center gap-2">
-    <FileText className="h-5 w-5" />
-    Meus Alvarás
-   </CardTitle>
+   <h2 className="text-xl font-semibold text-foreground">Meus Alvarás</h2>
 
    <div className="flex gap-2">
     <Button onClick={onExport} variant="outline">
      <Download className="mr-2 h-4 w-4" />
-     Exportar
+     Exportar alvarás para busca de dados
     </Button>
     <Button onClick={onNewQuery}>
      <Search className="mr-2 h-4 w-4" />

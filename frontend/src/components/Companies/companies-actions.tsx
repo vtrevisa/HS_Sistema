@@ -8,16 +8,14 @@ interface CompaniesActionsProps {
 }
 
 export function CompaniesActions({
+ generateAllLeads,
  onImportClick,
  generateAllLeads,
  onNewCompanyClick
 }: CompaniesActionsProps) {
  return (
   <div className="flex gap-2 flex-col sm:flex-row">
-   <Button
-    onClick={onImportClick}
-    className="bg-green-600 hover:bg-green-700 dark:text-white"
-   >
+   <Button onClick={onImportClick}>
     <Upload className="h-4 w-4 mr-2" />
     Importar Planilha
    </Button>
@@ -32,7 +30,8 @@ export function CompaniesActions({
 
    <Button
     onClick={onNewCompanyClick}
-    className="bg-background hover:bg-accent hover:text-accent-foreground dark:hover:bg-red-600 text-primary border border-input px-4 py-2 rounded-lg flex items-center gap-2 transition-colors"
+    variant="outline"
+    className="bg-secondary text-secondary-foreground"
    >
     <Plus size={20} />
     Cadastro Manual

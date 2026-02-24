@@ -44,20 +44,21 @@ function isAlvara(event: CalendarEvent): event is Alvara & { eventType: 'alvara'
 
 export function useCalendar() {
 
-  const { tasks, alvaras } = useTasks()
+  const { tasks, alvaras, taskCompleted } = useTasks()
 
   
   const [viewMode, setViewMode] = useState<ViewMode>('mensal')
   const [currentDate, setCurrentDate] = useState(new Date())
   const [selectedDate, setSelectedDate] = useState<Date | null>(new Date())
+  const [taskToEdit, setTaskToEdit] = useState<Task | null>(null)
 
   const [modalOpen, setModalOpen] = useState(false)
   const [modalDefaultDate, setModalDefaultDate] = useState<Date | undefined>()
 
   const prioridadeCores = {
-    baixa: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400',
-    media: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400',
-    alta: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',
+    baixa: 'bg-brand-success/20 text-brand-success',
+    media: 'bg-accent text-amber-700',
+    alta: 'bg-destructive/10 text-destructive',
   };
 
 
@@ -156,12 +157,25 @@ export function useCalendar() {
 
   // Actions
 
+  function handleToggleCompleted(id: string, e?: React.MouseEvent) {
+    e?.stopPropagation()
+    taskCompleted({ id })
+  }
+
   function handleDayClick (day: Date) {
     setSelectedDate(day)
   }
 
   function handleScheduleFromDay (day: Date) {
+    setTaskToEdit(null)
     setModalDefaultDate(day)
+    setModalOpen(true)
+  }
+
+  function handleEditTask(event: CalendarEvent) {
+    if (event.eventType !== 'tarefa') return
+    setTaskToEdit(event)
+    setModalDefaultDate(new Date(event.date))
     setModalOpen(true)
   }
 
@@ -179,6 +193,10 @@ export function useCalendar() {
     selectedDayEvents,
     events: allEvents,
 
+    // Edit
+    taskToEdit,
+    setTaskToEdit,
+
     // navigation
     goNext,
     goPrev,
@@ -191,8 +209,10 @@ export function useCalendar() {
     setModalDefaultDate,
 
     // actions
+    handleToggleCompleted,
     handleDayClick,
     handleScheduleFromDay,
+    handleEditTask,
     prioridadeCores
   }
 

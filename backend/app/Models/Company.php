@@ -25,12 +25,23 @@ class Company extends Model
         'contact',
         'phone',
         'cnpj',
-        'email'
+        'email',
+        'origin',
+        'origin_id',
     ];
 
+
+    protected $casts = [
+        'validity' => 'date',
+    ];
 
     public function user()
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function lead()
+    {
+        return $this->hasOne(Lead::class);
     }
 }

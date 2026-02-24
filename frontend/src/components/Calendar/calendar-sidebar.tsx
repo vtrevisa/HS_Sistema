@@ -1,4 +1,10 @@
-import { ClipboardList, Clock, AlertTriangle } from 'lucide-react'
+import {
+ Clock,
+ AlertTriangle,
+ CheckCircle2,
+ Pencil,
+ RotateCcw
+} from 'lucide-react'
 import { format, startOfDay } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card'
@@ -13,6 +19,8 @@ interface CalendarSidebarProps {
  dayEvents: CalendarEvent[]
  prioridadeCores: Record<string, string>
  onSchedule: (day: Date) => void
+ onEditTask: (task: CalendarEvent) => void
+ onToggleCompleted: (id: string, e?: React.MouseEvent) => void
 }
 
 export function CalendarSidebar({
@@ -20,7 +28,9 @@ export function CalendarSidebar({
  allEvents,
  dayEvents,
  prioridadeCores,
- onSchedule
+ onSchedule,
+ onEditTask,
+ onToggleCompleted
 }: CalendarSidebarProps) {
  const today = startOfDay(new Date())
 
@@ -70,13 +80,50 @@ export function CalendarSidebar({
         return (
          <div
           key={event.id}
-          className="p-2 rounded-lg border border-blue-200 bg-blue-50/50 dark:border-blue-800 dark:bg-blue-950/20 space-y-1"
+          className={cn(
+           'p-2 rounded-lg border space-y-1 transition-colors',
+           event.completed
+            ? 'border-brand-success/30 bg-brand-success/10'
+            : 'border-primary/20 bg-primary/5'
+          )}
          >
-          <div className="flex items-center gap-2">
-           <ClipboardList className="h-3.5 w-3.5 text-blue-600" />
-           <span className="text-xs font-medium text-foreground capitalize">
+          <div className="flex items-start justify-between gap-2">
+           <span
+            className={cn(
+             'text-xs font-medium',
+             event.completed && 'line-through opacity-70'
+            )}
+           >
             {event.title}
            </span>
+           <div className="flex items-center gap-2">
+            <button
+             type="button"
+             onClick={() => onToggleCompleted(event.id)}
+             title={
+              event.completed
+               ? 'Desmarcar como concluída'
+               : 'Marcar como concluída'
+             }
+            >
+             {event.completed ? (
+              <RotateCcw className="h-3 w-3 cursor-pointer hover:opacity-70 transition-opacity" />
+             ) : (
+              <CheckCircle2 className="h-4 w-4 cursor-pointer hover:opacity-70 transition-opacity" />
+             )}
+            </button>
+
+            <button
+             type="button"
+             onClick={e => {
+              e.stopPropagation()
+              onEditTask(event)
+             }}
+             title="Editar tarefa"
+            >
+             <Pencil className="h-4 w-4 cursor-pointer hover:opacity-70 transition-opacity" />
+            </button>
+           </div>
           </div>
 
           <div className="flex items-center gap-2">
@@ -89,10 +136,12 @@ export function CalendarSidebar({
             variant="outline"
             className={cn(
              'text-[10px] px-1.5 py-0',
-             prioridadeCores[event.priority]
+             event.completed
+              ? 'bg-brand-success/20 text-brand-success'
+              : prioridadeCores[event.priority]
             )}
            >
-            {event.priority}
+            {event.completed ? 'concluída' : event.priority}
            </Badge>
           </div>
 
@@ -108,10 +157,10 @@ export function CalendarSidebar({
        return (
         <div
          key={event.id}
-         className="p-2 rounded-lg border border-red-200 bg-red-50/50 dark:border-red-800 dark:bg-red-950/20 space-y-1"
+         className="p-2 rounded-lg border border-destructive/20 bg-destructive/5 space-y-1"
         >
          <div className="flex items-center gap-2">
-          <AlertTriangle className="h-3.5 w-3.5 text-red-600" />
+          <AlertTriangle className="h-3.5 w-3.5 text-destructive" />
           <span className="text-xs font-medium text-foreground">
            {event.company}
           </span>
@@ -147,11 +196,11 @@ export function CalendarSidebar({
        <span
         className={cn(
          'w-2 h-2 rounded-full shrink-0',
-         event.eventType === 'tarefa' ? 'bg-blue-500' : 'bg-red-500'
+         event.eventType === 'tarefa' ? 'bg-primary' : 'bg-destructive'
         )}
        />
 
-       <span className="truncate text-foreground capitalize">
+       <span className="truncate text-foreground">
         {event.eventType === 'tarefa' ? event.title : `⚠ ${event.company}`}
        </span>
 

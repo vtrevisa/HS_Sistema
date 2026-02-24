@@ -28,6 +28,8 @@ interface CalendarGridProps {
  goToday: () => void
 
  onDayClick: (day: Date) => void
+ onEditTask: (task: CalendarEvent) => void
+ onToggleCompleted: (id: string, e?: React.MouseEvent) => void
 }
 
 export function CalendarGrid({
@@ -44,11 +46,13 @@ export function CalendarGrid({
  goNext,
  goPrev,
  goToday,
- onDayClick
+ onDayClick,
+ onEditTask,
+ onToggleCompleted
 }: CalendarGridProps) {
  return (
   <div className="grid grid-cols-1 xl:grid-cols-4 gap-4">
-   <Card className="xl:col-span-3 border-l-4 border-l-blue-500">
+   <Card className="xl:col-span-3 border-l-4 border-l-primary">
     <CardHeader className="pb-3">
      <div className="flex items-center justify-between">
       {/* Navegação */}
@@ -91,6 +95,8 @@ export function CalendarGrid({
      weekDays={weekDays}
      calendarDays={calendarDays}
      onDayClick={onDayClick}
+     onEditTask={onEditTask}
+     onToggleCompleted={onToggleCompleted}
     />
    </Card>
    <CalendarSidebar
@@ -99,6 +105,8 @@ export function CalendarGrid({
     allEvents={allEvents}
     prioridadeCores={prioridadeCores}
     onSchedule={onSchedule}
+    onToggleCompleted={onToggleCompleted}
+    onEditTask={onEditTask}
    />
   </div>
  )

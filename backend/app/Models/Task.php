@@ -15,6 +15,7 @@ class Task extends Model
         'date',
         'hour',
         'priority',
+        'completed',
         'user_id',
         'lead_id',
         'google_event_id',
@@ -22,6 +23,7 @@ class Task extends Model
     ];
 
     protected $casts = [
+        'completed' => 'boolean',
         'date' => 'date',
     ];
 

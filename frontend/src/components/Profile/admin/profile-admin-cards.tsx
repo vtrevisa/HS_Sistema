@@ -32,7 +32,7 @@ export function ProfileAdminCards({
     <CardHeader className="pb-2">
      <CardDescription>Usuários Ativos</CardDescription>
      <CardTitle className="text-3xl flex items-center gap-2">
-      <User className="h-6 w-6 text-green-500" />
+      <User className="h-6 w-6 text-brand-success" />
       {activeUsers}
      </CardTitle>
     </CardHeader>
@@ -41,7 +41,7 @@ export function ProfileAdminCards({
     <CardHeader className="pb-2">
      <CardDescription>Alvarás Consumidos (Total)</CardDescription>
      <CardTitle className="text-3xl flex items-center gap-2">
-      <Target className="h-6 w-6 text-orange-500" />
+      <Target className="h-6 w-6 text-destructive" />
       {totalAlvarasUsed}
      </CardTitle>
     </CardHeader>

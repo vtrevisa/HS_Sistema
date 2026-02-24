@@ -17,8 +17,9 @@ import { PipelineLeadCard } from './pipeline-lead-card'
 
 import type { LeadRequest } from '@/http/types/leads'
 import { useCompany } from '@/http/use-company'
-import { EmailConfigModal, WhatsAppConfigModal } from '../Modals/lead-options'
-import { useUser } from '@/http/use-user'
+import { NewTaskModal } from '../Modals/new-task'
+import { useTasks } from '@/http/use-tasks'
+import { formatBRLCompact } from '@/lib/currency'
 
 export function Pipeline() {
  const { user } = useUser()
@@ -35,11 +36,12 @@ export function Pipeline() {
 
  const { searchByCnpj } = useCompany()
 
+ const { saveTasks } = useTasks()
+
  const [isNewLeadModalOpen, setIsNewLeadModalOpen] = useState(false)
  const [selectedLead, setSelectedLead] = useState<LeadRequest | null>(null)
  const [isLeadDetailsModalOpen, setIsLeadDetailsModalOpen] = useState(false)
- const [isEmailConfigModalOpen, setIsEmailConfigModalOpen] = useState(false)
- const [isWhatsAppConfigModalOpen, setIsWhatsAppConfigModalOpen] = useState(false)
+ const [isAgendarTarefaOpen, setIsAgendarTarefaOpen] = useState(false)
 
  const CRM_STATUSES = [
   { id: 'lead', title: 'Lead / Contato', deadline: 7 },
@@ -51,7 +53,6 @@ export function Pipeline() {
 
  function handleNewLead(leadData: Omit<LeadRequest, 'id'>) {
   saveLeads.mutate([leadData])
-  console.log('Novo lead criado:', leadData)
  }
 
  function handleLeadClick(lead: LeadRequest) {
@@ -61,8 +62,8 @@ export function Pipeline() {
 
  return (
   <div className="p-4 lg:p-6 space-y-6">
-   <div className="flex sm:items-center justify-between flex-col sm:flex-row gap-2">
-    <h1 className="text-2xl lg:text-3xl font-bold text-blue-600 dark:text-white">
+   <div className="flex flex-col sm:flex-row  justify-between items-start sm:items-center gap-2">
+    <h1 className="text-2xl md:text-3xl font-bold text-foreground">
      CRM - Funil de Vendas
     </h1>
     <PipelineActions onNewLeadClick={() => setIsNewLeadModalOpen(true)} />
@@ -80,7 +81,7 @@ export function Pipeline() {
         key={column.id}
         className={`${getColumnColor(
          column.id
-        )} rounded-lg p-4 min-h-[400px] min-w-[280px] flex-shrink-0`}
+        )} rounded-lg p-4 min-h-[400px] min-w-[280px] flex-shrink-0 border`}
         onDragOver={handleDragOver}
         onDrop={() => handleDrop(column.id)}
        >
@@ -98,11 +99,7 @@ export function Pipeline() {
            {summary.count} cards
           </span>
           <span className="font-semibold text-foreground">
-           {new Intl.NumberFormat('pt-BR', {
-            style: 'currency',
-            currency: 'BRL',
-            notation: 'compact'
-           }).format(summary.totalValue)}
+           {formatBRLCompact(summary.totalValue)}
           </span>
          </div>
         </div>
@@ -120,7 +117,7 @@ export function Pipeline() {
 
         <button
          onClick={() => setIsNewLeadModalOpen(true)}
-         className="w-full mt-3 border-2 border-dashed border-border dark:border-white dark:text-white rounded-lg p-3 text-muted-foreground hover:border-muted-foreground hover:text-foreground transition-colors flex items-center justify-center gap-2 text-sm"
+         className="w-full mt-3 border-2 border-dashed border-border rounded-lg p-3 text-muted-foreground hover:border-muted-foreground hover:text-foreground transition-colors flex items-center justify-center gap-2 text-sm"
         >
          <Plus size={14} />
          Adicionar lead
@@ -140,7 +137,7 @@ export function Pipeline() {
      return (
       <div
        key={column.id}
-       className={`${getColumnColor(column.id)} rounded-lg p-4 min-h-[600px]`}
+       className={`${getColumnColor(column.id)} rounded-lg p-4 min-h-[600px] border`}
        onDragOver={handleDragOver}
        onDrop={() => handleDrop(column.id)}
       >
@@ -171,11 +168,7 @@ export function Pipeline() {
           {summary.count} cards
          </span>
          <span className="font-semibold text-foreground">
-          {new Intl.NumberFormat('pt-BR', {
-           style: 'currency',
-           currency: 'BRL',
-           notation: 'compact'
-          }).format(summary.totalValue)}
+          {formatBRLCompact(summary.totalValue)}
          </span>
         </div>
        </div>
@@ -190,7 +183,7 @@ export function Pipeline() {
 
        <button
         onClick={() => setIsNewLeadModalOpen(true)}
-        className="w-full mt-4 border-2 border-dashed border-border dark:border-white dark:text-white rounded-lg p-4 text-muted-foreground hover:border-muted-foreground hover:text-foreground transition-colors flex items-center justify-center gap-2"
+        className="w-full mt-4 border-2 border-dashed border-border rounded-lg p-4 text-muted-foreground hover:border-muted-foreground hover:text-foreground transition-colors flex items-center justify-center gap-2"
        >
         <Plus size={16} />
         Adicionar lead
@@ -221,7 +214,15 @@ export function Pipeline() {
    <LeadDetailsModal
     isOpen={isLeadDetailsModalOpen}
     onClose={() => setIsLeadDetailsModalOpen(false)}
+    onOpenTask={() => setIsAgendarTarefaOpen(true)}
     lead={selectedLead}
+   />
+
+   <NewTaskModal
+    isOpen={isAgendarTarefaOpen}
+    onOpenChange={() => setIsAgendarTarefaOpen(false)}
+    onSave={task => saveTasks.mutate(task)}
+    leadId={selectedLead?.id}
    />
   </div>
  )

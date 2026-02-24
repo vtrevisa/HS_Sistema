@@ -10,6 +10,7 @@ interface AlvarasSubscriptionBoxProps {
  planName: string
  monthlyLimit: number
  used: number
+ available: number
  resetDate: Date
  flowState: FlowState
 }
@@ -19,6 +20,7 @@ export function AlvarasSubscriptionBox({
  planName,
  monthlyLimit,
  used,
+ available,
  resetDate,
  flowState
 }: AlvarasSubscriptionBoxProps) {
@@ -26,7 +28,7 @@ export function AlvarasSubscriptionBox({
 
  const [pendingUsed, setPendingUsed] = useState(used)
 
- const displayedAvailable = Math.max(monthlyLimit - displayedUsed, 0)
+ const [displayedAvailable, setDisplayedAvailable] = useState(available)
 
  const displayedPercentage = useMemo(() => {
   return monthlyLimit > 0
@@ -40,6 +42,10 @@ export function AlvarasSubscriptionBox({
 
  const [animatedPercentage, setAnimatedPercentage] =
   useState(displayedPercentage)
+
+ useEffect(() => {
+  setDisplayedAvailable(available)
+ }, [available])
 
  useEffect(() => {
   if (displayedUsed !== used && flowState !== 'search-result') {
@@ -71,7 +77,7 @@ export function AlvarasSubscriptionBox({
     <div className="space-y-3 flex-1">
      <div className="flex items-center gap-2">
       {isActive ? (
-       <CheckCircle2 className="h-5 w-5 text-green-600" />
+       <CheckCircle2 className="h-5 w-5 text-brand-success" />
       ) : (
        <AlertCircle className="h-5 w-5 text-destructive" />
       )}
@@ -91,13 +97,13 @@ export function AlvarasSubscriptionBox({
 
        <div className="space-y-1">
         <p className="text-sm text-muted-foreground">Já Utilizados</p>
-        <p className="text-2xl font-bold text-orange-600">{displayedUsed}</p>
+        <p className="text-2xl font-bold text-destructive">{displayedUsed}</p>
         <p className="text-xs text-muted-foreground">neste mês</p>
        </div>
 
        <div className="space-y-1">
         <p className="text-sm text-muted-foreground">Disponíveis</p>
-        <p className="text-2xl font-bold text-green-600">
+        <p className="text-2xl font-bold text-brand-success">
          {displayedAvailable}
         </p>
         <p className="text-xs text-muted-foreground">restantes</p>

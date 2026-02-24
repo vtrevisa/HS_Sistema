@@ -6,7 +6,7 @@ import { z } from 'zod'
 import { useAuth } from '@/http/use-auth'
 import { Loading } from './loading'
 
-import logo from '../../assets/logo.svg'
+import logo from '@/assets/avcb-logo-vertical.png'
 
 const loginSchema = z.object({
  login: z.string().min(1, 'Informe o usuário ou e-mail'),
@@ -69,7 +69,7 @@ export function LoginForm() {
 
  return (
   <form onSubmit={handleSubmit(handleLogin)}>
-   <img src={logo} alt="HS Logo" className="pb-12 w-full" />
+   <img src={logo} alt="AVCB CERTO Logo" className="pb-12 w-72" />
    <div className="flex flex-col gap-4">
     <div className="relative">
      <User className="absolute left-3 top-3 h-5 w-5 text-stone-900" />

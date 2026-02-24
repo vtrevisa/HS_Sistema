@@ -72,43 +72,37 @@ class ArchivedProposalController extends Controller
             $query->where('type', $request->type);
         }
 
-        // Filtrar por data de vencimento do alvará
-        if ($request->filled('expiration')) {
-            if ($request->expiration === 'vencido') {
-                $query->whereHas('lead', function ($q) {
-                    $q->whereDate('validity', '<', now());
+
+        // Filtrar por datas
+        if ($request->filled('dataInicio') || $request->filled('dataTermino')) {
+            $start = $request->dataInicio;
+            $end = $request->dataTermino;
+
+            $query->where(function ($q) use ($start, $end) {
+                // Filtrar archived_at na tabela principal
+                if ($start && $end) {
+                    $q->whereBetween('archived_at', [$start, $end]);
+                } elseif ($start) {
+                    $q->whereDate('archived_at', '>=', $start);
+                } elseif ($end) {
+                    $q->whereDate('archived_at', '<=', $end);
+                }
+
+                // Filtrar created_at e validity na tabela lead
+                $q->orWhereHas('lead', function ($qLead) use ($start, $end) {
+                    if ($start && $end) {
+                        $qLead->whereBetween('created_at', [$start, $end])
+                            ->orWhereBetween('validity', [$start, $end]);
+                    } elseif ($start) {
+                        $qLead->whereDate('created_at', '>=', $start)
+                            ->orWhereDate('validity', '>=', $start);
+                    } elseif ($end) {
+                        $qLead->whereDate('created_at', '<=', $end)
+                            ->orWhereDate('validity', '<=', $end);
+                    }
                 });
-            } else {
-                $days = (int) $request->expiration;
-
-                $query->whereHas('lead', function ($q) use ($days) {
-                    $q->whereBetween('validity', [
-                        now(),
-                        now()->addDays($days)
-                    ]);
-                });
-            }
-        }
-
-        // Filtrar por data de cadastro do lead
-
-        if ($request->filled('leadCreatedAt')) {
-            $days = (int) $request->leadCreatedAt;
-
-            $query->whereHas('lead', function ($q) use ($days) {
-                $q->whereDate('created_at', '>=', now()->subDays($days));
             });
         }
-
-        // Filtrar by date
-        if ($request->filled('dataInicio')) {
-            $query->whereDate('archived_at', '>=', $request->dataInicio);
-        }
-
-        if ($request->filled('dataTermino')) {
-            $query->whereDate('archived_at', '<=', $request->dataTermino);
-        }
-
 
 
 

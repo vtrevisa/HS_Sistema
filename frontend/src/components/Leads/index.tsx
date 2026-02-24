@@ -1,34 +1,34 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
+import type { DateRange } from 'react-day-picker'
+import { useQueryClient } from '@tanstack/react-query'
+
 import { LeadsActions } from './lead-actions'
 import { LeadsFilters } from './lead-filters'
 import { LeadsTable } from './leads-table'
+
 import { NewLeadModal } from '../Modals/new-leads'
 import { LeadDetailsModal } from '../Modals/lead-details'
-import type { LeadRequest } from '@/http/types/leads'
 import { DeleteLeadsModal } from '../Modals/delete-leads'
+
+import type { LeadRequest } from '@/http/types/leads'
 import { exportLeadsToExcel } from '@/services/leads'
 import { useLead } from '@/http/use-lead'
-
-import { useQueryClient } from '@tanstack/react-query'
-import { daysUntil } from '@/lib/days'
 import { useCompany } from '@/http/use-company'
+import { NewTaskModal } from '../Modals/new-task'
+import { useTasks } from '@/http/use-tasks'
 
 export function Leads() {
  const [searchTerm, setSearchTerm] = useState('')
  const [selectedFilter, setSelectedFilter] = useState('todos')
  const [selectedType, setSelectedType] = useState('todos')
-
- const [expirationFilter, setExpirationFilter] = useState('todos')
- const [createdAtFilter, setCreatedAtFilter] = useState('todos')
-
- const [selectedResult, setSelectedResult] = useState<
-  'todos' | 'Ganho' | 'Perdido'
- >('todos')
+ const [dateRange, setDateRange] = useState<DateRange | undefined>()
 
  const [isNewLeadModalOpen, setIsNewLeadModalOpen] = useState(false)
  const [isLeadDetailsModalOpen, setIsLeadDetailsModalOpen] = useState(false)
  const [isDeleteLeadModalOpen, setIsDeleteLeadModalOpen] = useState(false)
+ const [isAgendarTarefaOpen, setIsAgendarTarefaOpen] = useState(false)
+
  const [selectedLead, setSelectedLead] = useState<LeadRequest | null>(null)
 
  const queryClient = useQueryClient()
@@ -36,6 +36,8 @@ export function Leads() {
  const { leadsDB, saveLeads } = useLead()
 
  const { searchByCnpj } = useCompany()
+
+ const { saveTasks } = useTasks()
 
  const leads = useMemo(() => leadsDB.data ?? [], [leadsDB.data])
 
@@ -54,76 +56,50 @@ export function Leads() {
    const matchesSearch = company.includes(search) || contact.includes(search)
 
    // Status
-   const matchesStatus =
-    selectedFilter === 'todos' ? true : lead.status === selectedFilter
+   const matchesStatus = () => {
+    if (selectedFilter === 'todos') return true
+
+    // Ganho ou Perdido
+    if (selectedFilter === 'Ganho' || selectedFilter === 'Perdido') {
+     return lead.archived_proposal?.status === selectedFilter
+    }
+
+    return lead.status === selectedFilter
+   }
 
    // Tipo
    const matchesType =
     selectedType === 'todos' ? true : lead.service === selectedType
 
-   // Validade do alvará
-   let matchesExpiration = true
+   // Data
+   const matchesDate = () => {
+    if (!dateRange?.from || !dateRange?.to) return true
 
-   if (expirationFilter !== 'todos' && lead.validity) {
-    const days = daysUntil(lead.validity)
+    const from = new Date(dateRange.from)
+    from.setHours(0, 0, 0, 0)
 
-    if (expirationFilter === 'vencido') {
-     matchesExpiration = days < 0
+    const to = new Date(dateRange.to)
+    to.setHours(23, 59, 59, 999)
+
+    let matchesCreatedAt = false
+    let matchesExpirationDate = false
+
+    if (lead.created_at) {
+     const createdAt = new Date(lead.created_at)
+     matchesCreatedAt = createdAt >= from && createdAt <= to
     }
 
-    if (expirationFilter === '30') {
-     matchesExpiration = days >= 0 && days <= 30
+    if (lead.expiration_date) {
+     const expirationDate = new Date(lead.expiration_date)
+     matchesExpirationDate = expirationDate >= from && expirationDate <= to
     }
 
-    if (expirationFilter === '60') {
-     matchesExpiration = days >= 0 && days <= 60
-    }
+    return matchesCreatedAt || matchesExpirationDate
    }
 
-   // Data de cadastro
-   let matchesCreatedAt = true
-   if (createdAtFilter !== 'todos') {
-    if (!lead.created_at) return false
-
-    const createdAt = new Date(lead.created_at)
-    const now = new Date()
-
-    const diffDays = (now.getTime() - createdAt.getTime()) / 86400000
-
-    if (createdAtFilter === '7') {
-     matchesCreatedAt = diffDays <= 7
-    }
-
-    if (createdAtFilter === '30') {
-     matchesCreatedAt = diffDays <= 30
-    }
-   }
-
-   // Propostas
-
-   const matchesResult =
-    selectedResult === 'todos'
-     ? true
-     : lead.archived_proposal?.status === selectedResult
-
-   return (
-    matchesSearch &&
-    matchesType &&
-    matchesStatus &&
-    matchesExpiration &&
-    matchesCreatedAt &&
-    matchesResult
-   )
+   return matchesSearch && matchesType && matchesStatus() && matchesDate()
   })
- }, [
-  leads,
-  searchTerm,
-  selectedType,
-  selectedFilter,
-  expirationFilter,
-  createdAtFilter,
-  selectedResult
- ])
+ }, [leads, searchTerm, selectedType, selectedFilter, dateRange])
 
  function handleNewLead(leadData: Omit<LeadRequest, 'id'>) {
   const completeAddress = [
@@ -163,8 +139,8 @@ export function Leads() {
 
  return (
   <div className="p-4 lg:p-6 space-y-6">
-   <div className="flex sm:items-center justify-between flex-col sm:flex-row gap-2">
-    <h1 className="text-2xl lg:text-3xl font-bold text-blue-600 dark:text-white">
+   <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+    <h1 className="text-2xl sm:text-3xl font-bold text-foreground">
      Gerenciar Leads
     </h1>
 
@@ -182,12 +158,8 @@ export function Leads() {
      setSelectedType={setSelectedType}
      selectedStatus={selectedFilter}
      setSelectedStatus={setSelectedFilter}
-     expirationFilter={expirationFilter}
-     setExpirationFilter={setExpirationFilter}
-     createdAtFilter={createdAtFilter}
-     setCreatedAtFilter={setCreatedAtFilter}
-     selectedResult={selectedResult}
-     setSelectedResult={setSelectedResult}
+     dateRange={dateRange}
+     setDateRange={setDateRange}
     />
    </div>
 
@@ -212,6 +184,7 @@ export function Leads() {
 
    <LeadDetailsModal
     isOpen={isLeadDetailsModalOpen}
+    onOpenTask={() => setIsAgendarTarefaOpen(true)}
     onClose={closeLeadDetails}
     lead={selectedLead}
    />
@@ -220,6 +193,13 @@ export function Leads() {
     isOpen={isDeleteLeadModalOpen}
     onClose={() => setIsDeleteLeadModalOpen(false)}
     lead={selectedLead}
+   />
+
+   <NewTaskModal
+    isOpen={isAgendarTarefaOpen}
+    onOpenChange={() => setIsAgendarTarefaOpen(false)}
+    onSave={task => saveTasks.mutate(task)}
+    leadId={selectedLead?.id}
    />
   </div>
  )

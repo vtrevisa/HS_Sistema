@@ -46,7 +46,7 @@ export function MyAlvarasTable({ alvaras }: MyAlvarasTableProps) {
       id="itemsPerPage"
       value={itemsPerPage}
       onChange={handleItemsPerPageSelect}
-      className="border rounded px-2 py-1 dark:text-black"
+      className="border rounded px-2 py-1 bg-background dark:border-white"
      >
       {PAGE_SIZE_OPTIONS.map(option => (
        <option key={option} value={String(option)}>
@@ -56,7 +56,7 @@ export function MyAlvarasTable({ alvaras }: MyAlvarasTableProps) {
      </select>
     </div>
 
-    <div className="text-sm text-muted-foreground dark:text-white">
+    <div className="text-sm text-muted-foreground">
      Página {currentPage} de {totalPages} • Total: {totalItems}
     </div>
    </div>
@@ -66,13 +66,13 @@ export function MyAlvarasTable({ alvaras }: MyAlvarasTableProps) {
      <thead className="[&_tr]:border-b">
       <tr className="border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted">
        <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground [&:has([role=checkbox])]:pr-0">
-        Tipo de Serviço
+        Tipo
        </th>
        <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground [&:has([role=checkbox])]:pr-0">
-        Data de Vencimento
+        Vencimento
        </th>
        <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground [&:has([role=checkbox])]:pr-0">
-        Endereço Completo
+        Endereço
        </th>
        <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground [&:has([role=checkbox])]:pr-0">
         Ocupação

@@ -64,7 +64,7 @@ export function handleQuantityChange(value: string, totalFound?: number){
   return Math.max(0, numValue)
 };
 
-export async function exportConsumedAlvaras(consumedAlvaras: Alvaras[]) {
+export async function exportExcelAlvaras(consumedAlvaras: Alvaras[]) {
    if (!consumedAlvaras || consumedAlvaras.length === 0) {
     toast.warning("Nenhum dado para exportar", {
       description: "Você ainda não possui alvarás consumidos.",
@@ -130,3 +130,4 @@ export async function exportConsumedAlvaras(consumedAlvaras: Alvaras[]) {
     description: `Arquivo baixado com sucesso.`,
   });
 };
+

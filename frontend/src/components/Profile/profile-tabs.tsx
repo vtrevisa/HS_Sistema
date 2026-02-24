@@ -1,5 +1,11 @@
 import { useState } from 'react'
-import { CreditCard, Lock, Receipt, Shield, ChevronsLeftRightEllipsis } from 'lucide-react'
+import {
+ ChevronsLeftRightEllipsis,
+ CreditCard,
+ Lock,
+ Receipt,
+ Shield
+} from 'lucide-react'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/tabs'
 import { ProfilePlan } from './profile-plan'
 import { ProfilePaymentHistory } from './profile-paymenthistory'
@@ -7,6 +13,7 @@ import { ProfileSecurity } from './profile-security'
 import { ProfileCancelSubscription } from './profile-cancelsubscription'
 import { ProfileLinks } from './profile-links'
 import type { UserRequest } from '@/http/types/user'
+import { ProfileLinks } from './profile-links'
 
 const mockSubscription = {
  planId: 1,
@@ -63,9 +70,9 @@ export function ProfileTabs({ user }: ProfileTabsProps) {
      <ProfileSecurity />
     </div>
    </TabsContent>
-    <TabsContent value="vinculacoes" className="mt-6">
-     <ProfileLinks user={user} />
-    </TabsContent>
+   <TabsContent value="vinculacoes" className="mt-6">
+    <ProfileLinks user={user} />
+   </TabsContent>
    <TabsContent value="cancel" className="mt-6">
     <div className="max-w-md">
      <ProfileCancelSubscription
