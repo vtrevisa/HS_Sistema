@@ -4,7 +4,6 @@ import { Button } from '../ui/button'
 interface CompaniesActionsProps {
  onNewCompanyClick: () => void
  generateAllLeads?: () => Promise<void>
- //enhanceAllData: () => void
  onImportClick: () => void
 }
 

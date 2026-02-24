@@ -1,6 +1,7 @@
 import type { RecentTask } from '@/http/types/dashboard'
 import { formatUpcomingTasksDate } from '@/lib/date'
-import { Calendar, Clock } from 'lucide-react'
+import { Calendar, CircleAlert, Clock } from 'lucide-react'
+import { Card, CardContent } from '../ui/card'
 
 interface UpcomingTasksProps {
  tasks: RecentTask[]
@@ -12,6 +13,19 @@ export function UpcomingTasks({ tasks }: UpcomingTasksProps) {
   date: formatUpcomingTasksDate(task.date, task.hour),
   priority: task.priority
  }))
+
+ if (upcomingTasks.length === 0) {
+  return (
+   <Card className="h-[110px]">
+    <CardContent className="pt-6">
+     <div className="text-center text-foreground">
+      <CircleAlert className="h-8 w-8 mx-auto mb-2 opacity-50" />
+      <p className="text-sm">Nenhuma ação encontrada!</p>
+     </div>
+    </CardContent>
+   </Card>
+  )
+ }
 
  return (
   <div className="bg-card rounded-xl shadow-lg p-4 lg:p-6 border-l-4 border border-primary">
