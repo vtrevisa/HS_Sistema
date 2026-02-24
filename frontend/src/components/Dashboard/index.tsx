@@ -1,6 +1,7 @@
-import { ClipboardList, Target } from 'lucide-react'
+import { ClipboardList } from 'lucide-react'
 import { StatsCards } from './stats-cards'
 //import { ChecklistNotifications } from './checklist-notifications'
+import { CalendarDashboard } from './calendar-dashboard'
 import { RecentLeads } from './recent-leads'
 import { UpcomingTasks } from './upcoming-tasks'
 import { AlvarasAlert } from './alvaras-alert'
@@ -11,7 +12,7 @@ interface DashboardProps {
 }
 
 export function Dashboard({ sectionType = 'comercial' }: DashboardProps) {
- const { cards, recentLeads, alvaras, isLoading } = useDashboard()
+ const { cards, recentLeads, recentTasks, alvaras, isLoading } = useDashboard()
 
  if (isLoading) return null
 
@@ -20,19 +21,18 @@ export function Dashboard({ sectionType = 'comercial' }: DashboardProps) {
    <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
     <div className="flex items-center gap-3">
      {sectionType === 'comercial' ? (
-      <div className="flex items-center gap-2 text-blue-600 dark:text-white">
-       <Target className="h-6 w-6" />
-       <h1 className="text-2xl lg:text-3xl font-bold">Dashboard Comercial</h1>
-      </div>
+      <h1 className="text-2xl lg:text-3xl font-bold text-foreground">
+       Dashboard Comercial
+      </h1>
      ) : (
-      <div className="flex items-center gap-2 text-green-600">
+      <div className="flex items-center gap-2 text-primary">
        <ClipboardList className="h-6 w-6" />
        <h1 className="text-2xl lg:text-3xl font-bold">Dashboard Técnico</h1>
       </div>
      )}
     </div>
 
-    <div className="text-sm text-gray-600 dark:text-gray-400">
+    <div className="text-sm text-muted-foreground">
      Última atualização: {new Date().toLocaleDateString('pt-BR')}
     </div>
    </div>
@@ -57,11 +57,14 @@ export function Dashboard({ sectionType = 'comercial' }: DashboardProps) {
     taxaConversaoQuantity={cards?.taxa_conversao.growthPercentage ?? 0}
    />
 
-   <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+   <div className="grid grid-cols-1 xl:grid-cols-4 gap-6">
     {/* Checklist Notifications */}
     {/* <div className="xl:col-span-1">
      <ChecklistNotifications />
     </div> */}
+
+    {/* Calendário */}
+    <CalendarDashboard />
 
     {/* Alvaras */}
     <AlvarasAlert alvaras={alvaras ?? []} />
@@ -70,7 +73,7 @@ export function Dashboard({ sectionType = 'comercial' }: DashboardProps) {
     <RecentLeads leads={recentLeads ?? []} />
 
     {/* Upcoming Tasks */}
-    <UpcomingTasks />
+    <UpcomingTasks tasks={recentTasks ?? []} />
    </div>
   </div>
  )

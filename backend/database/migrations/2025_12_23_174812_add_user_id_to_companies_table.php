@@ -25,8 +25,26 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('companies', function (Blueprint $table) {
-            $table->dropColumn('user_id');
-        });
+        if (Schema::hasTable('companies')) {
+            try {
+                Schema::table('companies', function (Blueprint $table) {
+                    try {
+                        if (Schema::hasColumn('companies', 'user_id')) {
+                            // drop foreign if exists
+                            try {
+                                $table->dropForeign(['user_id']);
+                            } catch (\Exception $e) {
+                                // ignore if foreign doesn't exist
+                            }
+                            $table->dropColumn('user_id');
+                        }
+                    } catch (\Exception $e) {
+                        // ignore if column/constraint already removed
+                    }
+                });
+            } catch (\Exception $e) {
+                // ignore overall errors during rollback
+            }
+        }
     }
 };

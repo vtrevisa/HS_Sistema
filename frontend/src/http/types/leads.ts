@@ -30,7 +30,12 @@ export interface Lead {
  nomeComercial?: string
 }
 
-
+export interface ArchivedProposal {
+ id: number
+ lead_id: number
+ status: 'Ganho' | 'Perdido'
+ archived_at: string
+}
 
 export type LeadStatus =
   | "lead"
@@ -39,6 +44,12 @@ export type LeadStatus =
   | "proposta-enviada"
   | "cliente-fechado"
   | "arquivado"
+
+type Attachment = {
+   id?: number
+   name: string
+   url: string
+}
 
 export interface LeadRequest {
   id?: number;
@@ -61,7 +72,9 @@ export interface LeadRequest {
   cnpj?: string;
   phone?: string;
   email?: string;
+  attachments?: Attachment[]
   website?: string;
+  archived_proposal?: ArchivedProposal | null
   categoria?: string;
   created_at?: string
   updated_at?: string

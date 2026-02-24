@@ -1,29 +1,43 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
+import type { DateRange } from 'react-day-picker'
+import { useQueryClient } from '@tanstack/react-query'
+
 import { LeadsActions } from './lead-actions'
 import { LeadsFilters } from './lead-filters'
 import { LeadsTable } from './leads-table'
+
 import { NewLeadModal } from '../Modals/new-leads'
 import { LeadDetailsModal } from '../Modals/lead-details'
-import type { LeadRequest } from '@/http/types/leads'
 import { DeleteLeadsModal } from '../Modals/delete-leads'
+
+import type { LeadRequest } from '@/http/types/leads'
 import { exportLeadsToExcel } from '@/services/leads'
 import { useLead } from '@/http/use-lead'
-
-import { useQueryClient } from '@tanstack/react-query'
+import { useCompany } from '@/http/use-company'
+import { NewTaskModal } from '../Modals/new-task'
+import { useTasks } from '@/http/use-tasks'
 
 export function Leads() {
  const [searchTerm, setSearchTerm] = useState('')
  const [selectedFilter, setSelectedFilter] = useState('todos')
  const [selectedType, setSelectedType] = useState('todos')
+ const [dateRange, setDateRange] = useState<DateRange | undefined>()
+
  const [isNewLeadModalOpen, setIsNewLeadModalOpen] = useState(false)
  const [isLeadDetailsModalOpen, setIsLeadDetailsModalOpen] = useState(false)
  const [isDeleteLeadModalOpen, setIsDeleteLeadModalOpen] = useState(false)
+ const [isAgendarTarefaOpen, setIsAgendarTarefaOpen] = useState(false)
+
  const [selectedLead, setSelectedLead] = useState<LeadRequest | null>(null)
 
  const queryClient = useQueryClient()
 
  const { leadsDB, saveLeads } = useLead()
+
+ const { searchByCnpj } = useCompany()
+
+ const { saveTasks } = useTasks()
 
  const leads = useMemo(() => leadsDB.data ?? [], [leadsDB.data])
 
@@ -38,16 +52,54 @@ export function Leads() {
    const contact = lead.contact?.toLowerCase() ?? ''
    const search = searchTerm.toLowerCase()
 
+   // Busca
    const matchesSearch = company.includes(search) || contact.includes(search)
 
-   const matchesStatus =
-    selectedFilter === 'todos' ? true : lead.status === selectedFilter
+   // Status
+   const matchesStatus = () => {
+    if (selectedFilter === 'todos') return true
+
+    // Ganho ou Perdido
+    if (selectedFilter === 'Ganho' || selectedFilter === 'Perdido') {
+     return lead.archived_proposal?.status === selectedFilter
+    }
+
+    return lead.status === selectedFilter
+   }
+
+   // Tipo
    const matchesType =
     selectedType === 'todos' ? true : lead.service === selectedType
 
-   return matchesSearch && matchesStatus && matchesType
+   // Data
+   const matchesDate = () => {
+    if (!dateRange?.from || !dateRange?.to) return true
+
+    const from = new Date(dateRange.from)
+    from.setHours(0, 0, 0, 0)
+
+    const to = new Date(dateRange.to)
+    to.setHours(23, 59, 59, 999)
+
+    let matchesCreatedAt = false
+    let matchesExpirationDate = false
+
+    if (lead.created_at) {
+     const createdAt = new Date(lead.created_at)
+     matchesCreatedAt = createdAt >= from && createdAt <= to
+    }
+
+    if (lead.expiration_date) {
+     const expirationDate = new Date(lead.expiration_date)
+     matchesExpirationDate = expirationDate >= from && expirationDate <= to
+    }
+
+    return matchesCreatedAt || matchesExpirationDate
+   }
+
+   return matchesSearch && matchesType && matchesStatus() && matchesDate()
   })
- }, [leads, searchTerm, selectedFilter, selectedType])
+ }, [leads, searchTerm, selectedType, selectedFilter, dateRange])
 
  function handleNewLead(leadData: Omit<LeadRequest, 'id'>) {
   const completeAddress = [
@@ -87,8 +139,8 @@ export function Leads() {
 
  return (
   <div className="p-4 lg:p-6 space-y-6">
-   <div className="flex sm:items-center justify-between flex-col sm:flex-row gap-2">
-    <h1 className="text-2xl lg:text-3xl font-bold text-blue-600 dark:text-white">
+   <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+    <h1 className="text-2xl sm:text-3xl font-bold text-foreground">
      Gerenciar Leads
     </h1>
 
@@ -102,10 +154,12 @@ export function Leads() {
     <LeadsFilters
      searchTerm={searchTerm}
      setSearchTerm={setSearchTerm}
-     selectedStatus={selectedFilter}
-     setSelectedStatus={setSelectedFilter}
      selectedType={selectedType}
      setSelectedType={setSelectedType}
+     selectedStatus={selectedFilter}
+     setSelectedStatus={setSelectedFilter}
+     dateRange={dateRange}
+     setDateRange={setDateRange}
     />
    </div>
 
@@ -125,10 +179,12 @@ export function Leads() {
     isOpen={isNewLeadModalOpen}
     onClose={() => setIsNewLeadModalOpen(false)}
     onLeadCreate={handleNewLead}
+    onSearchCnpj={searchByCnpj}
    />
 
    <LeadDetailsModal
     isOpen={isLeadDetailsModalOpen}
+    onOpenTask={() => setIsAgendarTarefaOpen(true)}
     onClose={closeLeadDetails}
     lead={selectedLead}
    />
@@ -137,6 +193,13 @@ export function Leads() {
     isOpen={isDeleteLeadModalOpen}
     onClose={() => setIsDeleteLeadModalOpen(false)}
     lead={selectedLead}
+   />
+
+   <NewTaskModal
+    isOpen={isAgendarTarefaOpen}
+    onOpenChange={() => setIsAgendarTarefaOpen(false)}
+    onSave={task => saveTasks.mutate(task)}
+    leadId={selectedLead?.id}
    />
   </div>
  )

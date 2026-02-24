@@ -1,52 +1,61 @@
 import { useState } from 'react'
 import { Loader2 } from 'lucide-react'
+import type { DateRange } from 'react-day-picker'
 
 import { ArchivedProposalsFilters } from './archivedproposals-filters'
 import { useProposals } from '@/http/use-proposals'
 import { ArchivedProposalsInfo } from './achivedproposals-info'
 import { ArchivedProposalsSummaryCard } from './achivedproposals-summary-card'
-import { ArchivedProposalsCard } from './achivedproposals-card'
+import { ArchivedProposalsTable } from './achivedproposals-table'
 
 export interface Filters {
+ city: string
+ type: string
  status: 'todas' | 'Ganho' | 'Perdido'
- cidade: string
- tipoServico: string
- dataInicio: string
- dataTermino: string
+ expiration: string
+ leadCreatedAt: string
+ dateRange?: DateRange | undefined
 }
 
 export function ArchivedProposals() {
- const [filters, setFilters] = useState<Filters>({
-  status: 'todas',
-  cidade: '',
-  tipoServico: '',
-  dataInicio: '',
-  dataTermino: ''
- })
+ const [dateRange, setDateRange] = useState<DateRange | undefined>()
 
- const isFilterApplied =
-  filters.status !== 'todas' ||
-  filters.cidade !== '' ||
-  filters.tipoServico !== '' ||
-  filters.dataInicio !== '' ||
-  filters.dataTermino !== ''
+ const [filters, setFilters] = useState<Filters>({
+  city: '',
+  type: '',
+  status: 'todas',
+  expiration: '',
+  leadCreatedAt: '',
+  dateRange: undefined
+ })
 
  const { proposalsDB, isLoading } = useProposals(filters)
 
  function removeFilters() {
   setFilters({
+   city: '',
+   type: '',
    status: 'todas',
-   cidade: '',
-   tipoServico: '',
-   dataInicio: '',
-   dataTermino: ''
+   expiration: '',
+   leadCreatedAt: '',
+   dateRange: undefined
   })
  }
+
+ function handleDateRangeChange(range: DateRange | undefined) {
+  setDateRange(range)
+  setFilters(prev => ({
+   ...prev,
+   dateRange: range
+  }))
+ }
+
+ const hasProposals = proposalsDB.data && proposalsDB.data.length > 0
 
  return (
   <div className="p-4 lg:p-6 space-y-6">
    <div className="flex items-center justify-between">
-    <h1 className="text-2xl lg:text-3xl font-bold text-blue-600 dark:text-white">
+    <h1 className="text-2xl sm:text-3xl font-bold text-foreground">
      Propostas Arquivadas
     </h1>
    </div>
@@ -55,33 +64,30 @@ export function ArchivedProposals() {
    <ArchivedProposalsFilters
     filters={filters}
     setFilters={setFilters}
+    dateRange={dateRange}
+    onDateRangeChange={handleDateRangeChange}
     proposals={proposalsDB.data ?? []}
     removeFilters={removeFilters}
    />
 
-   {isFilterApplied && (
-    <>
-     {isLoading ? (
-      <div className="flex justify-center">
-       <Loader2 className="animate-spin text-blue-600 w-8 h-8" />
-      </div>
-     ) : (
-      <>
-       {/* Summary Cards */}
-       <ArchivedProposalsSummaryCard proposals={proposalsDB.data} />
+   <ArchivedProposalsSummaryCard proposals={proposalsDB.data} />
 
-       {/* Proposals Grid */}
-       <ArchivedProposalsCard proposals={proposalsDB.data} />
-      </>
-     )}
-    </>
+   {/* Loading */}
+   {isLoading && (
+    <div className="flex justify-center">
+     <Loader2 className="animate-spin text-blue-600 w-8 h-8" />
+    </div>
+   )}
+
+   {/* Conteúdo */}
+
+   {!isLoading && hasProposals && (
+    <ArchivedProposalsTable proposals={proposalsDB.data} />
    )}
 
    {/* Informações */}
 
-   {(!proposalsDB.data || proposalsDB.data?.length === 0) && (
-    <ArchivedProposalsInfo filters={filters} />
-   )}
+   {!isLoading && !hasProposals && <ArchivedProposalsInfo filters={filters} />}
   </div>
  )
 }

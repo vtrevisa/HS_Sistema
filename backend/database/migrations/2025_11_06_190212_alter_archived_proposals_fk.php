@@ -30,15 +30,33 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('archived_proposals', function (Blueprint $table) {
-            $table->dropForeign(['lead_id']);
+        if (Schema::hasTable('archived_proposals')) {
+            try {
+                Schema::table('archived_proposals', function (Blueprint $table) {
+                    try {
+                        $table->dropForeign(['lead_id']);
+                    } catch (\Exception $e) {
+                        // ignore if foreign doesn't exist
+                    }
 
-            $table->unsignedBigInteger('lead_id')->nullable(false)->change();
+                    try {
+                        $table->unsignedBigInteger('lead_id')->nullable(false)->change();
+                    } catch (\Exception $e) {
+                        // ignore if column change fails
+                    }
 
-            $table->foreign('lead_id')
-                ->references('id')
-                ->on('leads')
-                ->onDelete('cascade');
-        });
+                    try {
+                        $table->foreign('lead_id')
+                            ->references('id')
+                            ->on('leads')
+                            ->onDelete('cascade');
+                    } catch (\Exception $e) {
+                        // ignore if foreign can't be created
+                    }
+                });
+            } catch (\Exception $e) {
+                // ignore overall table alteration errors during rollback
+            }
+        }
     }
 };

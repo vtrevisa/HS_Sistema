@@ -46,10 +46,12 @@ export interface ReleasePayload {
   period_end: string
 }
 
-export interface AlvarasFake {
+export interface Alvaras {
   id: number;
   service: string;
-  endDate: Date;
+  validity: Date;
   address: string;
   occupation: string;
+  city?: string;
+  exported_at?: Date
 }

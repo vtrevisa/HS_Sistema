@@ -1,292 +1,217 @@
-import { useState, useEffect } from 'react';
-import { toast } from 'sonner';
-import { useLead } from '@/http/use-lead';
-import { useCLCB } from '@/contexts/CLCBContext';
+import { useEffect, useRef, useState } from 'react'
+import { toast } from 'sonner'
+import { startOfDay } from 'date-fns'
+import { useTasks } from '@/http/use-tasks'
+
+
+export type NotificationType =
+  | 'task_due'
+  | 'task_overdue'
+  | 'avcb_clcb_expiring'
+  | 'admin_notice'
 
 interface Notification {
-  id: string;
-  type: 'license_expiring' | 'follow_up_due' | 'service_update' | 'process_due' | 'checklist_pending' | 'document_expiring' | 'budget_status' | 'automatic_reminder';
-  title: string;
-  message: string;
-  leadId?: number;
-  processoId?: number;
-  budgetId?: number;
-  dueDate: string;
-  priority: 'high' | 'medium' | 'low';
-  category: 'document' | 'budget' | 'follow_up' | 'process' | 'reminder';
-  actionUrl?: string;
-  isRead: boolean;
-  createdAt: string;
+  id: string
+  type: NotificationType
+  title: string
+  message: string
+  priority: 'high' | 'medium' | 'low'
+  actionUrl?: string
+  isRead: boolean
+  createdAt: string
 }
 
-interface NotificationSettings {
-  documentExpiry: boolean;
-  budgetStatus: boolean;
-  followUpReminders: boolean;
-  processAlerts: boolean;
-  emailNotifications: boolean;
-  pushNotifications: boolean;
+type NotificationSettings = {
+  pushNotifications: boolean
+  tasks: boolean
+  alvaras: boolean
 }
+
+const SETTINGS_KEY = 'notification_settings'
+const READ_KEY = 'read_notifications'
 
 export const useNotifications = () => {
-  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const { tasks, alvaras } = useTasks()
+
+  const [notifications, setNotifications] = useState<Notification[]>([])
+
+  const [readIds, setReadIds] = useState<Set<string>>(() => {
+    const stored = localStorage.getItem(READ_KEY)
+    return new Set(stored ? JSON.parse(stored) : [])
+  })
+
   const [settings, setSettings] = useState<NotificationSettings>(() => {
-    const stored = localStorage.getItem('notificationSettings');
+    const stored = localStorage.getItem(SETTINGS_KEY)
     return stored
       ? JSON.parse(stored)
-      : {
-          documentExpiry: true,
-          budgetStatus: true,
-          followUpReminders: true,
-          processAlerts: true,
-          emailNotifications: false,
-          pushNotifications: true,
-        };
-  });
+      : { pushNotifications: true, tasks: true, alvaras: true }
+  })
 
-  const { leadsDB } = useLead();
-  const { processos } = useCLCB();
+  const processedIdsRef = useRef<Set<string>>(new Set())
 
-  const leads = leadsDB.data ?? [];
 
-  // Mock budgets data - in real app this would come from a context
-  const budgets = [
-    { id: 1, status: 'pendente', company: 'Empresa A', valor: 15000, createdAt: '2024-06-20', updatedAt: '2024-06-28' },
-    { id: 2, status: 'aprovado', company: 'Empresa B', valor: 8500, createdAt: '2024-06-25', updatedAt: '2024-06-29' },
-    { id: 3, status: 'rejeitado', company: 'Empresa C', valor: 12000, createdAt: '2024-06-15', updatedAt: '2024-06-27' },
-  ];
+  function persistReadIds(ids: Set<string>) {
+    localStorage.setItem(READ_KEY, JSON.stringify(Array.from(ids)))
+  }
 
-  const checkDocumentExpiryNotifications = () => {
-    if (!settings.documentExpiry) return [];
-    
-    const today = new Date();
-    const sevenDaysFromNow = new Date(today.getTime() + 7 * 24 * 60 * 60 * 1000);
-    //const thirtyDaysFromNow = new Date(today.getTime() + 30 * 24 * 60 * 60 * 1000);
-    const newNotifications: Notification[] = [];
 
-    leads.forEach(lead => {
-      const vencimentoDate = new Date(lead.expiration_date);
-      
-      if (vencimentoDate <= sevenDaysFromNow && vencimentoDate >= today) {
-        const daysUntilExpiry = Math.ceil((vencimentoDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
-        
-        newNotifications.push({
-          id: `doc_expiry_${lead.id}_${Date.now()}`,
-          type: 'document_expiring',
-          title: 'Documento Vencendo',
-          message: `${lead.service} de ${lead.company} vence em ${daysUntilExpiry} dias`,
-          leadId: lead.id,
-          dueDate: lead.expiration_date,
-          priority: daysUntilExpiry <= 3 ? 'high' : 'medium',
-          category: 'document',
-          actionUrl: `/dashboard/gestao-leads?lead=${lead.id}`,
-          isRead: false,
-          createdAt: new Date().toISOString()
-        });
+  function checkTaskNotifications(): Notification[] {
+     const today = startOfDay(new Date())
+
+    return tasks.flatMap<Notification>(task => {
+      if (task.completed) return []
+
+      const taskDate = startOfDay(new Date(task.date))
+
+      const base: Pick<
+        Notification,
+        'isRead' | 'actionUrl' | 'createdAt'
+      > = {
+        isRead: false,
+        actionUrl: '/dashboard/calendario',
+        createdAt: new Date().toISOString()
       }
-    });
 
-    return newNotifications;
-  };
-
-  const checkBudgetStatusNotifications = () => {
-    if (!settings.budgetStatus) return [];
-    
-    const newNotifications: Notification[] = [];
-    
-    budgets.forEach(budget => {
-      const updatedDate = new Date(budget.updatedAt);
-      const today = new Date();
-      const daysSinceUpdate = Math.ceil((today.getTime() - updatedDate.getTime()) / (1000 * 60 * 60 * 24));
-      
-      // Notificar sobre orçamentos pendentes há mais de 5 dias
-      if (budget.status === 'pendente' && daysSinceUpdate > 5) {
-        newNotifications.push({
-          id: `budget_pending_${budget.id}_${Date.now()}`,
-          type: 'budget_status',
-          title: 'Orçamento Pendente',
-          message: `Orçamento para ${budget.company} pendente há ${daysSinceUpdate} dias`,
-          budgetId: budget.id,
-          dueDate: budget.updatedAt,
-          priority: daysSinceUpdate > 10 ? 'high' : 'medium',
-          category: 'budget',
-          actionUrl: `/orcamentos/${budget.id}`,
-          isRead: false,
-          createdAt: new Date().toISOString()
-        });
-      }
-      
-      // Notificar sobre orçamentos aprovados recentemente
-      if (budget.status === 'aprovado' && daysSinceUpdate <= 1) {
-        newNotifications.push({
-          id: `budget_approved_${budget.id}_${Date.now()}`,
-          type: 'budget_status',
-          title: 'Orçamento Aprovado',
-          message: `Orçamento de R$ ${budget.valor.toLocaleString('pt-BR')} para ${budget.company} foi aprovado`,
-          budgetId: budget.id,
-          dueDate: budget.updatedAt,
-          priority: 'medium',
-          category: 'budget',
-          actionUrl: `/orcamentos/${budget.id}`,
-          isRead: false,
-          createdAt: new Date().toISOString()
-        });
-      }
-    });
-
-    return newNotifications;
-  };
-
-  const checkAutomaticReminders = () => {
-    if (!settings.followUpReminders) return [];
-    
-    const today = new Date();
-    const newNotifications: Notification[] = [];
-
-    leads.forEach(lead => {
-      const nextActionDate = new Date(lead.next_action);
-      
-      if (nextActionDate <= today) {
-        newNotifications.push({
-          id: `reminder_${lead.id}_${Date.now()}`,
-          type: 'automatic_reminder',
-          title: 'Lembrete de Follow-up',
-          message: `É hora de fazer follow-up com ${lead.company}`,
-          leadId: lead.id,
-          dueDate: lead.next_action,
+      // 🔥 VENCIDA
+      if (taskDate < today) {
+        return [{
+          id: `task_overdue_${task.id}`,
+          type: 'task_overdue',
+          title: 'Tarefa vencida',
+          message: task.title,
           priority: 'high',
-          category: 'reminder',
-          actionUrl: `/dashboard/gestao-leads?lead=${lead.id}`,
-          isRead: false,
-          createdAt: new Date().toISOString()
-        });
+          ...base
+        }]
       }
-    });
 
-    return newNotifications;
-  };
-
-  const checkProcessNotifications = () => {
-    if (!settings.processAlerts) return [];
-    
-    const today = new Date();
-    const sevenDaysFromNow = new Date(today.getTime() + 7 * 24 * 60 * 60 * 1000);
-    const newNotifications: Notification[] = [];
-
-    processos.forEach(processo => {
-      const vencimentoDate = new Date(processo.vencimento);
-      
-      if (vencimentoDate <= sevenDaysFromNow && vencimentoDate >= today) {
-        const daysUntilExpiry = Math.ceil((vencimentoDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
-        
-        newNotifications.push({
-          id: `process_due_${processo.id}_${Date.now()}`,
-          type: 'process_due',
-          title: 'Processo Vencendo',
-          message: `${processo.tipoServico} vence em ${daysUntilExpiry} dias`,
-          processoId: processo.id,
-          dueDate: processo.vencimento,
-          priority: daysUntilExpiry <= 3 ? 'high' : 'medium',
-          category: 'process',
-          actionUrl: `/clcb/${processo.id}`,
-          isRead: false,
-          createdAt: new Date().toISOString()
-        });
+      // ✅ HOJE
+      if (taskDate.getTime() === today.getTime()) {
+        return [{
+          id: `task_today_${task.id}`,
+          type: 'task_due',
+          title: 'Tarefa de hoje',
+          message: task.title,
+          priority: 'medium',
+          ...base
+        }]
       }
-    });
 
-    return newNotifications;
-  };
+      return []
+    })
+  }
 
-  const checkAllNotifications = () => {
-    const documentNotifications = checkDocumentExpiryNotifications();
-    const budgetNotifications = checkBudgetStatusNotifications();
-    const reminderNotifications = checkAutomaticReminders();
-    const processNotifications = checkProcessNotifications();
-    
-    const allNotifications = [
-      ...documentNotifications,
-      ...budgetNotifications,
-      ...reminderNotifications,
-      ...processNotifications
-    ];
-    
-    setNotifications(prev => {
-      // Merge with existing notifications, avoiding duplicates
-      const existingIds = prev.map(n => n.id);
-      const newUniqueNotifications = allNotifications.filter(n => !existingIds.includes(n.id));
-      return [...prev, ...newUniqueNotifications].slice(-50); // Keep only last 50 notifications
-    });
-    
-    // Show toast for high priority notifications
-    allNotifications
-      .filter(n => n.priority === 'high')
-      .forEach((notification, index) => {
-        setTimeout(() => {
-          if (settings.pushNotifications) {
-            if (notification.category === 'document' || notification.category === 'process') {
-              toast.error(notification.title, { description: notification.message });
-            } else {
-              toast.info(notification.title, { description: notification.message });
-            }
-          }
-        }, index * 2000);
-      });
-  };
+
+  function checkAlvaraNotifications(): Notification[] {
+    const today = startOfDay(new Date())
+
+    return alvaras.flatMap(alvara => {
+
+      const diff =
+        Math.ceil(
+          (alvara.validity.getTime() - today.getTime()) /
+          (1000 * 60 * 60 * 24)
+        )
+
+      if (diff <= 0 || diff > 30) return []
+
+      return [{
+        id: `alvara_${alvara.id}`,
+        type: 'avcb_clcb_expiring',
+        title: 'AVCB / CLCB próximo do vencimento',
+        message: `${alvara.company} vence em ${diff} dias`,
+        priority: diff <= 7 ? 'high' : 'medium',
+        actionUrl: `/dashboard/gestao-leads?lead=${alvara.id}`,
+        isRead: false,
+        createdAt: new Date().toISOString()
+      }]
+    })
+  }
+
+
+  function checkAllNotifications() {
+    const newNotifications = [
+      ...checkTaskNotifications(),
+      ...checkAlvaraNotifications(),
+    ]
+
+    const newOnes = newNotifications.filter(n => {
+      if (readIds.has(n.id)) return false
+      if (processedIdsRef.current.has(n.id)) return false
+
+      processedIdsRef.current.add(n.id)
+      return true
+    })
+
+    if (newOnes.length === 0) return
+
+    setNotifications(prev => [...prev, ...newOnes].slice(-50))
+
+    if (settings.pushNotifications) {
+      newOnes
+        .filter(n => n.priority === 'high')
+        .forEach(n => {
+          toast.error(n.title, { description: n.message })
+        })
+    }
+  }
 
   useEffect(() => {
-    checkAllNotifications();
+    if (!tasks.length && !alvaras.length) return
+    checkAllNotifications()
     
-    // Check notifications every 30 minutes
-    const interval = setInterval(checkAllNotifications, 30 * 60 * 1000);
-    
-    return () => clearInterval(interval);
-  }, [leads, processos, settings]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tasks, alvaras])
 
-  const markAsRead = (notificationId: string) => {
-    setNotifications(prev => 
-      prev.map(n => n.id === notificationId ? { ...n, isRead: true } : n)
-    );
-  };
-
-  const markAllAsRead = () => {
-    setNotifications(prev => prev.map(n => ({ ...n, isRead: true })));
-  };
-
-  const dismissNotification = (notificationId: string) => {
-    setNotifications(prev => prev.filter(n => n.id !== notificationId));
-  };
-
-  const getNotificationsByCategory = (category: string) => {
-    return notifications.filter(n => n.category === category);
-  };
-
-  const getNotificationsByPriority = (priority: 'high' | 'medium' | 'low') => {
-    return notifications.filter(n => n.priority === priority);
-  };
-
-  const getUnreadCount = () => {
-    return notifications.filter(n => !n.isRead).length;
-  };
-
-  const updateSettings = (newSettings: Partial<NotificationSettings>) => {
+  function updateSettings(newSettings: Partial<NotificationSettings>) {
     setSettings(prev => {
-      const updated = { ...prev, ...newSettings };
-      localStorage.setItem('notificationSettings', JSON.stringify(updated));
-      return updated;
-    });
-  };
+      const updated = { ...prev, ...newSettings }
+      localStorage.setItem(SETTINGS_KEY, JSON.stringify(updated))
+      return updated
+    })
+  }
+
+  const unreadCount = notifications.filter(n => !n.isRead).length
+
+  function markAsRead(id: string) {
+    // setNotifications(prev =>
+    //   prev.map(n =>
+    //     n.id === id ? { ...n, isRead: true } : n
+    //   )
+    // )
+
+    setNotifications(prev => prev.filter(notification => notification.id !== id))
+
+    setReadIds(prev => {
+      const next = new Set(prev)
+      next.add(id)
+      persistReadIds(next)
+      return next
+    })
+  }
+
+  function markAllAsRead() {
+    // setNotifications(prev =>
+    //   prev.map(n => ({ ...n, isRead: true }))
+    // )
+
+    setNotifications(prev => {
+      setReadIds(current => {
+        const next = new Set(current)
+        prev.forEach(n => next.add(n.id))
+        persistReadIds(next)
+        return next
+      })
+
+      return []
+    })
+  }
 
   return {
     notifications,
-    settings,
-    unreadCount: getUnreadCount(),
+    unreadCount,
     markAsRead,
-    markAllAsRead,
-    dismissNotification,
-    getNotificationsByCategory,
-    getNotificationsByPriority,
+    settings,
     updateSettings,
-    checkAllNotifications
-  };
+    markAllAsRead
+  }
 };

@@ -11,10 +11,9 @@ export function ArchivedProposalsInfo({ filters }: ArchivedProposalsInfoProps) {
    <CardContent className="text-center py-8">
     <p className="text-muted-foreground">
      {filters.status === 'todas' &&
-     !filters.cidade &&
-     !filters.tipoServico &&
-     !filters.dataInicio &&
-     !filters.dataTermino
+     !filters.city &&
+     !filters.type &&
+     !filters.dateRange
       ? 'Nenhuma proposta arquivada encontrada.'
       : 'Nenhuma proposta encontrada com os filtros aplicados.'}
     </p>

@@ -42,7 +42,20 @@ class LeadController extends Controller
     {
         $user = $this->getAuthenticatedUser($request);
 
+        $result = $request->query('result');
+
         $leads = Lead::where('user_id', $user->id)
+            ->with('archivedProposal')
+            ->when($result === 'Ganho', function ($query) {
+                $query->whereHas('archivedProposal', function ($q) {
+                    $q->where('result', 'Ganho');
+                });
+            })
+            ->when($result === 'Perdido', function ($query) {
+                $query->whereHas('archivedProposal', function ($q) {
+                    $q->where('result', 'Perdido');
+                });
+            })
             ->orderBy('id', 'DESC')
             ->get();
 
@@ -138,6 +151,19 @@ class LeadController extends Controller
 
         $user = $this->getAuthenticatedUser($request);
 
+        $companyName = strtoupper(trim($request->input('company')));
+
+        $leadExists = Lead::where('user_id', $user->id)
+            ->where('company', $companyName)
+            ->exists();
+
+        if ($leadExists) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Lead já foi gerado para esta empresa.'
+            ], 422);
+        }
+
         // Init transaction on DB
         DB::beginTransaction();
 
@@ -147,7 +173,7 @@ class LeadController extends Controller
 
             $lead = Lead::create([
                 'user_id' => $user->id,
-                'company' => strtoupper($request->input('company', '')),
+                'company' => $companyName,
                 'service' => strtoupper($request->input('service', '')),
                 'license' => $request->input('license', ''),
                 'validity' => $request->input('validity', ''),
@@ -167,7 +193,6 @@ class LeadController extends Controller
                 'contact' => $request->input('contact', ''),
                 'phone' => $request->input('phone', ''),
                 'email' => $request->input('email', ''),
-
             ]);
 
             // Success Operation

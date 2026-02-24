@@ -1,5 +1,5 @@
 import type { Alvaras } from '@/http/types/dashboard'
-import { CircleAlert, Target } from 'lucide-react'
+import { AlertTriangle, CircleAlert } from 'lucide-react'
 import { Card, CardContent } from '../ui/card'
 
 interface AlvarasAlertProps {
@@ -7,11 +7,37 @@ interface AlvarasAlertProps {
 }
 
 export function AlvarasAlert({ alvaras }: AlvarasAlertProps) {
+ const getStatusStyle = (status: string) => {
+  switch (status) {
+   case 'vencendo-hoje':
+    return 'bg-brand-success/20 text-brand-success'
+   case 'vencido':
+    return 'bg-destructive/10 text-destructive'
+   case 'ate-60-dias':
+    return 'bg-accent text-amber-700'
+   default:
+    return 'bg-muted text-muted-foreground'
+  }
+ }
+
+ const getStatusLabel = (status: string) => {
+  switch (status) {
+   case 'vencendo-hoje':
+    return 'Vencendo Hoje'
+   case 'vencido':
+    return 'Vencido'
+   case 'ate-60-dias':
+    return 'Próximo do Vencimento'
+   default:
+    return status
+  }
+ }
+
  if (alvaras.length === 0) {
   return (
    <Card className="h-[110px]">
     <CardContent className="pt-6">
-     <div className="text-center text-gray-500">
+     <div className="text-center text-foreground">
       <CircleAlert className="h-8 w-8 mx-auto mb-2 opacity-50" />
       <p className="text-sm">Nenhum alvará encontrado!</p>
      </div>
@@ -21,80 +47,38 @@ export function AlvarasAlert({ alvaras }: AlvarasAlertProps) {
  }
 
  return (
-  <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-4 lg:p-6 border-l-4 border-blue-500 self-start">
-   <h2 className="text-lg lg:text-xl font-bold text-blue-600 mb-4 flex items-center gap-2">
-    <Target size={20} />
-    Alvarás a Vencer
+  <div className="bg-card rounded-xl shadow-lg p-4 lg:p-6 border-l-4 border border-primary">
+   <h2 className="text-lg lg:text-xl font-bold mb-4 flex items-center gap-2 text-foreground">
+    <AlertTriangle size={20} />
+    Lista de Alvarás Vencendo
    </h2>
    <div className="space-y-4">
     {alvaras.map((alvara, index) => {
-     const isExpired = alvara.status === 'Vencido'
-
      return (
       <div
        key={index}
-       className="flex flex-col sm:flex-row sm:items-center sm:justify-between p-3 lg:p-4 bg-gray-50 dark:bg-gray-700 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors gap-2 sm:gap-0"
+       className="flex flex-col sm:flex-row sm:items-center sm:justify-between p-3 lg:p-4 bg-secondary rounded-lg hover:bg-secondary/80 transition-colors gap-2 sm:gap-0"
       >
        <div>
-        <p className="font-semibold text-gray-800 dark:text-white text-sm lg:text-base uppercase">
+        <p className="font-semibold text-card-foreground text-sm lg:text-base">
          {alvara.company}
         </p>
-
-        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-         Validade: {new Date(alvara.validity).toLocaleDateString('pt-BR')}
-        </p>
+        <p className="text-sm text-muted-foreground">{alvara.type}</p>
        </div>
 
        <div className="text-left sm:text-right">
         <span
-         className={`px-2 lg:px-3 py-1 rounded-full text-xs font-medium ${
-          isExpired
-           ? 'bg-red-100 text-red-800 dark:bg-red-600/30 dark:text-white'
-           : 'bg-yellow-100 text-yellow-800 dark:bg-yellow-600/30 dark:text-white'
-         }`}
+         className={`px-2 lg:px-3 py-1 rounded-full text-xs font-medium ${getStatusStyle(alvara.status)}`}
         >
-         {alvara.status}
+         {getStatusLabel(alvara.status)}
         </span>
+        <p className="text-xs text-muted-foreground mt-1">
+         Vence: {new Date(alvara.validity).toLocaleDateString('pt-BR')}
+        </p>
        </div>
       </div>
      )
     })}
-
-    {/* <div
-    //   key={index}
-    //   className="flex flex-col sm:flex-row sm:items-center sm:justify-between p-3 lg:p-4 bg-gray-50 dark:bg-gray-700 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors gap-2 sm:gap-0"
-    //  >
-    //   <div>
-    //    <p className="font-semibold text-gray-800 dark:text-white text-sm lg:text-base">
-    //     {lead.company}
-    //    </p>
-    //    <p className="text-sm text-gray-600 dark:text-gray-400">
-    //     {lead.service}
-    //    </p>
-    //   </div>
-    //   <div className="text-left sm:text-right">
-    //    <span
-    //     className={`px-2 lg:px-3 py-1 rounded-full text-xs font-medium ${
-    //      lead.status === 'Lead'
-    //       ? 'bg-gray-200 text-gray-800 dark:bg-gray-600 dark:text-white'
-    //       : lead.status === 'Primeiro contato'
-    //         ? 'bg-blue-100 text-blue-800 dark:bg-blue-600/30 dark:text-white'
-    //         : lead.status === 'Follow-up'
-    //           ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-600/30 dark:text-white'
-    //           : lead.status === 'Proposta enviada'
-    //             ? 'bg-orange-100 text-orange-800 dark:bg-orange-600/30 dark:text-white'
-    //             : lead.status === 'Cliente fechado'
-    //               ? 'bg-green-100 text-green-800 dark:bg-green-600/30 dark:text-white'
-    //               : 'bg-red-100 text-red-800 dark:bg-red-600/30 dark:text-white'
-    //     }`}
-    //    >
-    //     {lead.status}
-    //    </span>
-    //    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-    //     Vence: {new Date(lead.expiration_date).toLocaleDateString('pt-BR')}
-    //    </p>
-    //   </div>
-    //  </div> */}
    </div>
   </div>
  )

@@ -7,6 +7,7 @@ export interface UserPlan {
 
 export interface UserRequest {
   id: number
+  avatar_url?: string | null
   role?: string
   status?: 'active' | 'inactive' | 'pending' | 'blocked'
   name: string
@@ -21,6 +22,9 @@ export interface UserRequest {
   last_login_at: string
   created_at: string
   plan: UserPlan | null
+  email_subject?: string | null
+  email_body?: string | null
+  whatsapp_message?: string | null
 }
 
 export interface UpdateUserPasswordRequest {

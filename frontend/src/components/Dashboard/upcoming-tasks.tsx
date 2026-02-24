@@ -1,28 +1,35 @@
-import { Calendar, Clock } from 'lucide-react'
+import type { RecentTask } from '@/http/types/dashboard'
+import { formatUpcomingTasksDate } from '@/lib/date'
+import { Calendar, CircleAlert, Clock } from 'lucide-react'
+import { Card, CardContent } from '../ui/card'
 
-export function UpcomingTasks() {
- const upcomingTasks = [
-  {
-   task: 'Ligar para Shopping Center Plaza',
-   date: 'Hoje, 14:00',
-   priority: 'alta'
-  },
-  {
-   task: 'Enviar proposta - Hotel Business Inn',
-   date: 'Amanhã, 09:00',
-   priority: 'média'
-  },
-  { task: 'Follow-up Edifício Solar', date: '28/05, 10:00', priority: 'baixa' },
-  {
-   task: 'Renovação AVCB - Condomínio Norte',
-   date: '30/05, 15:00',
-   priority: 'alta'
-  }
- ]
+interface UpcomingTasksProps {
+ tasks: RecentTask[]
+}
+
+export function UpcomingTasks({ tasks }: UpcomingTasksProps) {
+ const upcomingTasks = tasks.map(task => ({
+  title: task.title,
+  date: formatUpcomingTasksDate(task.date, task.hour),
+  priority: task.priority
+ }))
+
+ if (upcomingTasks.length === 0) {
+  return (
+   <Card className="h-[110px]">
+    <CardContent className="pt-6">
+     <div className="text-center text-foreground">
+      <CircleAlert className="h-8 w-8 mx-auto mb-2 opacity-50" />
+      <p className="text-sm">Nenhuma ação encontrada!</p>
+     </div>
+    </CardContent>
+   </Card>
+  )
+ }
 
  return (
-  <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-4 lg:p-6 border-l-4 border-blue-500">
-   <h2 className="text-lg lg:text-xl font-bold text-blue-600 mb-4 flex items-center gap-2">
+  <div className="bg-card rounded-xl shadow-lg p-4 lg:p-6 border-l-4 border border-primary">
+   <h2 className="text-lg lg:text-xl font-bold mb-4 flex items-center gap-2 text-foreground">
     <Calendar size={20} />
     Ações Comerciais
    </h2>
@@ -30,22 +37,22 @@ export function UpcomingTasks() {
     {upcomingTasks.map((task, index) => (
      <div
       key={index}
-      className="flex items-center gap-3 lg:gap-4 p-3 lg:p-4 bg-gray-50 dark:bg-gray-700 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors"
+      className="flex items-center gap-3 lg:gap-4 p-3 lg:p-4 bg-secondary rounded-lg hover:bg-secondary/80 transition-colors"
      >
       <div
        className={`w-3 h-3 rounded-full flex-shrink-0 ${
         task.priority === 'alta'
-         ? 'bg-red-500'
-         : task.priority === 'média'
-         ? 'bg-yellow-500'
-         : 'bg-green-500'
+         ? 'bg-destructive'
+         : task.priority === 'media'
+           ? 'bg-yellow-500'
+           : 'bg-brand-success'
        }`}
       ></div>
       <div className="flex-1 min-w-0">
-       <p className="font-medium text-gray-800 dark:text-white text-sm lg:text-base truncate">
-        {task.task}
+       <p className="font-medium text-card-foreground text-sm lg:text-base truncate">
+        {task.title}
        </p>
-       <p className="text-xs lg:text-sm text-gray-600 dark:text-gray-400 flex items-center gap-1">
+       <p className="text-xs lg:text-sm text-muted-foreground flex items-center gap-1">
         <Clock size={12} />
         {task.date}
        </p>

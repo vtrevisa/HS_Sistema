@@ -8,6 +8,7 @@ import { AdminRoute } from './components/AdminRoute'
 import { AppLayout } from './pages/_layouts/app'
 import { Login } from './pages/app/login'
 import { Home } from './pages/app/home'
+import { Calendario } from './pages/app/calendario-comerical'
 import { Alvaras } from './pages/app/captacao-alvaras'
 import { Companies } from './pages/app/busca-dados'
 import { Leads } from './pages/app/gestao-leads'
@@ -30,6 +31,7 @@ export function App() {
       <Route element={<ProtectedRoute />}>
        <Route element={<AppLayout />}>
         <Route path="/dashboard" element={<Home />} />
+        <Route path="/dashboard/calendario" element={<Calendario />} />
         <Route path="/dashboard/captacao-alvaras" element={<Alvaras />} />
         <Route path="/dashboard/busca-empresa" element={<Companies />} />
         <Route path="/dashboard/gestao-leads" element={<Leads />} />

@@ -1,21 +1,28 @@
 /* eslint-disable react-hooks/exhaustive-deps */
+import type { UseMutationResult } from '@tanstack/react-query'
 import { useForm, Controller } from 'react-hook-form'
+import { cnpj as cnpjValidator } from 'cpf-cnpj-validator'
+import type { CnpjResponse } from '@/http/types/companies'
 import type { LeadRequest } from '@/http/types/leads'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../ui/dialog'
 import { Button } from '../ui/button'
 import { Calendar } from 'lucide-react'
 import { IMaskInput } from 'react-imask'
 import { useEffect } from 'react'
+import { toast } from 'sonner'
+import type { AxiosError } from 'axios'
 
 interface NewLeadModalProps {
  isOpen: boolean
  onClose: () => void
  onLeadCreate: (lead: Omit<LeadRequest, 'id'>) => void
+ onSearchCnpj: UseMutationResult<CnpjResponse, AxiosError, string>
 }
 
 export function NewLeadModal({
  isOpen,
  onClose,
+ onSearchCnpj,
  onLeadCreate
 }: NewLeadModalProps) {
  const {
@@ -49,6 +56,56 @@ export function NewLeadModal({
   }
  })
 
+/* const { searchByCnpj } = useCompany()
+const cnpj = watch('cnpj')
+const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+const lastSearchedCnpj = useRef<string | null>(null)
+
+useEffect(() => {
+  const inputCnpj = String(cnpj || '').replace(/\D/g, '')
+  if (timeoutRef.current) {
+    clearTimeout(timeoutRef.current)
+    timeoutRef.current = null
+  }
+
+  if (inputCnpj.length !== 14) return
+  if (lastSearchedCnpj.current === inputCnpj) return
+
+  let cancelled = false
+
+  timeoutRef.current = setTimeout(async () => {
+    if (cancelled) return
+    try {
+      const data = await searchByCnpj.mutateAsync(inputCnpj)
+      if (cancelled || !data) return
+
+      const company = (data as any).company || (data as any).place || data
+      if (!company) return
+
+      setValue('company', company.company || company.fantasia || company.razao_social || '')
+      setValue('address', company.address || company.logradouro || '')
+      setValue('number', company.number || company.numero || '')
+      setValue('district', company.district || company.bairro || '')
+      setValue('city', company.city || company.municipio || company.localidade || '')
+      setValue('phone', company.phone || company.telefone || '')
+      setValue('email', company.email || company.email_contato || '')
+      setValue('cnpj', company.cnpj || inputCnpj)
+
+      lastSearchedCnpj.current = inputCnpj
+    } catch (err) {
+      if (!cancelled) console.error('Erro ao buscar CNPJ', err)
+    }
+  }, 500)
+
+  return () => {
+    cancelled = true
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current)
+      timeoutRef.current = null
+    }
+  }
+}, [cnpj, searchByCnpj, setValue]) */
+ 
  async function searchCEP(cep: string) {
   const inputCEP = cep.replace(/\D/g, '')
   if (inputCEP.length !== 8) return
@@ -69,6 +126,7 @@ export function NewLeadModal({
 
  const vencimento = watch('expiration_date')
  const cep = watch('cep')
+ const cnpj = watch('cnpj')
 
  async function handleSaveLead(data: Omit<LeadRequest, 'id'>) {
   onLeadCreate(data)
@@ -90,6 +148,28 @@ export function NewLeadModal({
   }
  }, [cep])
 
+ useEffect(() => {
+  const cleanCnpj = cnpj?.replace(/\D/g, '') || ''
+
+  if (cleanCnpj.length === 14 && cnpjValidator.isValid(cleanCnpj)) {
+   onSearchCnpj.mutate(cleanCnpj, {
+    onSuccess: data => {
+     // eslint-disable-next-line @typescript-eslint/no-explicit-any
+     if ((data as any)?.erro) {
+      toast.error('CNPJ não encontrado')
+      return
+     }
+     setValue('company', data.nome_fantasia || data.razao_social || '')
+     setValue('email', data.email || '')
+     setValue('phone', data.telefone || '')
+    },
+    onError: () => {
+     toast.error('Erro ao consultar CNPJ')
+    }
+   })
+  }
+ }, [cnpj, setValue])
+
  return (
   <Dialog open={isOpen} onOpenChange={onClose}>
    <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
@@ -99,22 +179,6 @@ export function NewLeadModal({
 
     <form onSubmit={handleSubmit(handleSaveLead)} className="space-y-4">
      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-      <div>
-       <label className="block text-sm font-medium text-foreground mb-1">
-        Empresa *
-       </label>
-       <input
-        type="text"
-        {...register('company', { required: 'Empresa é obrigatório' })}
-        className={`w-full border bg-background text-foreground placeholder:text-foreground rounded-lg px-3 py-2 focus:ring-blue-500 focus:outline-none focus:ring-2 outline-none ${
-         errors.company ? 'border-red-500' : 'border-gray-300'
-        }`}
-       />
-       {errors.company && (
-        <span className="text-red-500 text-sm">{errors.company.message}</span>
-       )}
-      </div>
-
       <div>
        <label className="block text-sm font-medium text-foreground mb-1">
         CNPJ
@@ -136,6 +200,22 @@ export function NewLeadModal({
 
       <div>
        <label className="block text-sm font-medium text-foreground mb-1">
+        Empresa *
+       </label>
+       <input
+        type="text"
+        {...register('company', { required: 'Empresa é obrigatório' })}
+        className={`w-full border bg-background text-foreground placeholder:text-foreground rounded-lg px-3 py-2 focus:ring-blue-500 focus:outline-none focus:ring-2 outline-none ${
+         errors.company ? 'border-red-500' : 'border-gray-300'
+        }`}
+       />
+       {errors.company && (
+        <span className="text-red-500 text-sm">{errors.company.message}</span>
+       )}
+      </div>
+
+      <div>
+       <label className="block text-sm font-medium text-foreground mb-1">
         Tipo
        </label>
        <select
@@ -150,7 +230,7 @@ export function NewLeadModal({
 
       <div>
        <label className="block text-sm font-medium text-foreground mb-1">
-        Licença
+        Nº CLCB/AVCB
        </label>
        <input
         type="text"
@@ -250,7 +330,7 @@ export function NewLeadModal({
        <input {...register('city')} placeholder="Município" />
       </div>
 
-      <div>
+      <div className="md:col-span-2">
        <label className="block text-sm font-medium text-foreground mb-1">
         Endereço
        </label>
@@ -268,6 +348,17 @@ export function NewLeadModal({
        <input
         type="tel"
         {...register('number')}
+        className="w-full border border-gray-300 bg-background text-foreground rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 outline-none"
+       />
+      </div>
+
+      <div>
+       <label className="block text-sm font-medium text-foreground mb-1">
+        Complemento
+       </label>
+       <input
+        type="text"
+        {...register('complement')}
         className="w-full border border-gray-300 bg-background text-foreground rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 outline-none"
        />
       </div>

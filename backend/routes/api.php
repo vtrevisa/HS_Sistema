@@ -2,9 +2,13 @@
 
 use App\Http\Controllers\Api\AlvaraController;
 use App\Http\Controllers\Api\AlvaraLogController;
+use App\Http\Controllers\Api\AlvaraPurchaseController;
 use App\Http\Controllers\Api\ArchivedProposalController;
 use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\EmailController;
 use App\Http\Controllers\Api\AutomationController;
+use App\Http\Controllers\Api\CalendarController;
+use App\Http\Controllers\Api\GoogleCalendarController;
 use App\Http\Controllers\Api\LeadController;
 use App\Http\Controllers\Api\CompanyController;
 use App\Http\Controllers\Api\GoogleSheetsController;
@@ -14,18 +18,47 @@ use App\Http\Controllers\Api\SubscriptionController;
 use App\Http\Controllers\Api\CreditPurchaseController;
 use App\Http\Controllers\Api\DashboardController;
 use App\Http\Controllers\Api\InvoiceController;
+use App\Http\Controllers\Api\TaskController;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Api\IntegrationController;
 
 // Auth
 Route::post('/auth', [AuthController::class, 'login']); //POST
 
-//Dashboard
+// 
+// Dashboard
 Route::get('/dashboard', [DashboardController::class, 'index']); //GET 
 
 
 // Profile 
 Route::get('/auth/me', [AuthController::class, 'me']); //GET 
 Route::put('/auth/me/password/update', [AuthController::class, 'changePassword']); //PUT 
+Route::post('/user/avatar', [UserController::class, 'uploadAvatar']); //POST
+
+// OAuth start/callback for providers (gmail, microsoft, calendar)
+Route::get('/auth/{provider}/start', [IntegrationController::class, 'start']);
+Route::get('/auth/{provider}/callback', [IntegrationController::class, 'callback']);
+Route::prefix('calendar')->group(function () {
+    Route::get('status', [IntegrationController::class, 'calendarStatus']);
+    Route::delete('disconnect', [IntegrationController::class, 'disconnectCalendar']);
+    Route::get('calendars', [GoogleCalendarController::class, 'listCalendars']);
+    Route::post('sync', [GoogleCalendarController::class, 'sync']);
+    Route::get('events', [GoogleCalendarController::class, 'listEvents']);
+    Route::post('events', [GoogleCalendarController::class, 'createEvent']);
+    Route::put('events/{eventId}', [GoogleCalendarController::class, 'updateEvent']);
+    Route::delete('events/{eventId}', [GoogleCalendarController::class, 'deleteEvent']);
+});
+
+
+// Email status, config & disconnect
+// Note: generic provider routes above handle gmail, microsoft and calendar
+Route::get('/email/status', [IntegrationController::class, 'emailStatus']); //GET - returns connected status per provider
+Route::delete('/email/disconnect/{provider}', [IntegrationController::class, 'disconnectEmail']); //DELETE - disconnect provider for user
+Route::post('/send-email', [EmailController::class, 'send']); //POST - send email using connected provider
+Route::put('/users/{user}/email-config', [EmailController::class, 'setEmailConfig']); //PUT - update email config like subject and body templates
+
+//Templates
+Route::get('/email/templates', [EmailController::class, 'getTemplates']); //GET
 
 // Plans
 Route::get('/plans', [PlanController::class, 'index']); //GET 
@@ -42,13 +75,24 @@ Route::post('/subscription/start', [SubscriptionController::class, 'start']); //
 Route::post('/credits/purchase', [CreditPurchaseController::class, 'store']); //POST
 
 // Logout
-Route::post('/auth/logout', [AuthController::class, 'logout']); //POST
+Route::post('/auth/logout', [AuthController::class, 'logout']); //PindexOST
 
 // Alvaras
 Route::get('/alvaras', [AlvaraController::class, 'index']); //GET
 Route::post('/alvaras/search', [AlvaraController::class, 'search']); //POST
 Route::post('/alvaras/release', [AlvaraController::class, 'release']); //POST
+Route::get('/alvaras/consumed', [AlvaraPurchaseController::class, 'index']); //GET
+Route::post('/alvaras/consumed', [AlvaraPurchaseController::class, 'store']); //POST
+Route::post('/alvaras/export', [AlvaraPurchaseController::class, 'export']); //POST
+
 Route::get('/alvaras/logs', [AlvaraLogController::class, 'index']); //GET
+Route::get('/calendar/alvaras', [CalendarController::class, 'alvaras']); //GET
+
+// Tasks
+Route::get('/tasks', [TaskController::class, 'index']); //GET
+Route::post('/tasks', [TaskController::class, 'store']); //POST
+Route::put('/tasks/{id}/completed', [TaskController::class, 'completed']); //PATCH
+Route::put('/tasks/{id}', [TaskController::class, 'update']); //PUT
 
 // Leads
 Route::get('/leads', [LeadController::class, 'index']); //GET
@@ -67,6 +111,7 @@ Route::put('/companies/{company}', [CompanyController::class, 'update']); //PUT
 Route::delete('/companies/{company}', [CompanyController::class, 'destroy']); //DELETE
 Route::post('/companies/search/address', [CompanyController::class, 'searchCompanyByAddress']); //POST
 Route::post('/companies/search/cnpj', [CompanyController::class, 'searchCompanyByCnpj']); //POST
+
 
 // Proposals
 Route::get('/archived-proposals', [ArchivedProposalController::class, 'index']); //GET

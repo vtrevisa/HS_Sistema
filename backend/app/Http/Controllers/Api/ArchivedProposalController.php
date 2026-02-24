@@ -37,45 +37,84 @@ class ArchivedProposalController extends Controller
 
         $user = $this->getAuthenticatedUser($request);
 
-        $query = ArchivedProposal::where('user_id', $user->id);
+        $query = ArchivedProposal::query()
+            ->where('user_id', $user->id)
+            ->with([
+                'lead' => function ($q) use ($user) {
+                    $q->select(
+                        'id',
+                        'user_id',
+                        'company',
+                        'city',
+                        'service_value',
+                        'created_at',
+                        'validity'
+                    )->where('user_id', $user->id);
+                }
+            ]);
+
 
         // Filtrer by status
-        if ($request->filled('status')) {
+        if ($request->filled('status') && $request->status !== 'todas') {
             $query->where('status', $request->status);
         }
 
         // Filtrer by city
-        if ($request->filled('cidade')) {
+        if ($request->filled('city')) {
             $query->whereHas('lead', function ($q) use ($request, $user) {
                 $q->where('user_id', $user->id)
-                    ->whereRaw('LOWER(city) LIKE ?', ['%' . strtolower($request->cidade) . '%']);
+                    ->where('city', $request->city);
             });
         }
 
         // Filtrar by service
-        if ($request->filled('tipoServico')) {
-            $query->where('type', $request->tipoServico);
+        if ($request->filled('type')) {
+            $query->where('type', $request->type);
         }
 
-        // Filtrar by date
-        if ($request->filled('dataInicio')) {
-            $query->whereDate('archived_at', '>=', $request->dataInicio);
+
+        // Filtrar por datas
+        if ($request->filled('dataInicio') || $request->filled('dataTermino')) {
+            $start = $request->dataInicio;
+            $end = $request->dataTermino;
+
+            $query->where(function ($q) use ($start, $end) {
+                // Filtrar archived_at na tabela principal
+                if ($start && $end) {
+                    $q->whereBetween('archived_at', [$start, $end]);
+                } elseif ($start) {
+                    $q->whereDate('archived_at', '>=', $start);
+                } elseif ($end) {
+                    $q->whereDate('archived_at', '<=', $end);
+                }
+
+                // Filtrar created_at e validity na tabela lead
+                $q->orWhereHas('lead', function ($qLead) use ($start, $end) {
+                    if ($start && $end) {
+                        $qLead->whereBetween('created_at', [$start, $end])
+                            ->orWhereBetween('validity', [$start, $end]);
+                    } elseif ($start) {
+                        $qLead->whereDate('created_at', '>=', $start)
+                            ->orWhereDate('validity', '>=', $start);
+                    } elseif ($end) {
+                        $qLead->whereDate('created_at', '<=', $end)
+                            ->orWhereDate('validity', '<=', $end);
+                    }
+                });
+            });
         }
 
-        if ($request->filled('dataTermino')) {
-            $query->whereDate('archived_at', '<=', $request->dataTermino);
-        }
 
-        // Return lead 
+
+
         $proposals = $query
-            ->with(['lead' => function ($q) use ($user) {
-                $q->where('user_id', $user->id);
-            }])
             ->orderBy('archived_at', 'desc')
             ->get();
 
+
         return response()->json([
             'status' => true,
+            'total' => $proposals->count(),
             'proposals' => $proposals
         ]);
     }
@@ -102,8 +141,10 @@ class ArchivedProposalController extends Controller
         $proposal = ArchivedProposal::create([
             'user_id'     => $user->id,
             'lead_id'     => $lead->id,
-            'status'      => $data['status'],
+            'company'     => $lead->company,
             'type'        => $data['type'] ?? null,
+            'value'       => $lead->service_value,
+            'status'      => $data['status'],
             'reason'      => $data['reason'] ?? null,
             'archived_at' => now(),
         ]);

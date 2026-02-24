@@ -7,6 +7,7 @@ use App\Models\ArchivedProposal;
 use App\Traits\AuthenticatesWithToken;
 use App\Models\Lead;
 use App\Models\Company;
+use App\Models\Task;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 
@@ -59,6 +60,7 @@ class DashboardController extends Controller
         // Alvarás a vencer (próximos 30 dias)
 
         $today = Carbon::today();
+        $next30Days = Carbon::today()->addDays(30);
         $next60Days = Carbon::today()->addDays(60);
 
         // Mês atual
@@ -232,25 +234,99 @@ class DashboardController extends Controller
 
         // Leads Recentes (últimos 5)
 
-        $recentLeads = Lead::where('user_id', $user->id)->latest()->take(5)->select('id', 'company', 'service', 'expiration_date', 'status')->get();
+        $recentLeads = Lead::where('user_id', $user->id)->latest()->take(6)->select('id', 'company', 'service', 'expiration_date', 'status')->get();
+
+
+
+        $tasks = Task::where('user_id', $user->id)
+            ->where(function ($query) use ($today) {
+                $query
+                    ->whereDate('date', $today)
+                    ->orWhere(function ($q) use ($today) {
+                        $q->whereDate('date', '<', $today)
+                            ->where('completed', false);
+                    });
+            })
+            ->orderBy('date')
+            ->limit(5)
+            ->get()
+            ->map(fn($task) => [
+                'id' => $task->id,
+                'title' => $task->title,
+                'description' => $task->description,
+                'date' => Carbon::parse($task->date)->toDateString(),
+                'hour' => $task->hour,
+                'priority' => $task->priority,
+                'completed' => (bool) $task->completed,
+            ]);
 
         // Alvarás
 
-        $alvarasList = Company::where('user_id', $user->id)
+        $alvarasList = Lead::where('user_id', $user->id)
+            ->whereNotNull('validity')
             ->where(function ($query) use ($today, $next60Days) {
-                $query->whereDate('validity', '<', $today)
-                    ->orWhereBetween('validity', [$today, $next60Days]);
+                $query->whereDate('validity', '<=', $today)
+                    ->orWhereBetween('validity', [
+                        Carbon::parse($today)->addDay()->toDateString(),
+                        $next60Days
+                    ]);
             })
-            ->orderByRaw("validity < '{$today}' DESC")
+            ->orderByRaw("validity < '{$today}' ASC")
             ->orderBy('validity')
             ->limit(5)
             ->get()
-            ->map(fn($company) => [
-                'id' => $company->id,
-                'company' => $company->company,
-                'validity' => $company->validity,
-                'status' => $company->validity < $today ? 'Vencido' : 'A vencer',
-            ]);
+            ->map(function ($lead) use ($today) {
+                $validity = Carbon::parse($lead->validity)->startOfDay();
+
+                if ($validity->lt($today)) {
+                    $status = 'vencido';
+                } elseif ($validity->eq($today)) {
+                    $status = 'vencendo-hoje';
+                } else {
+                    $status = 'ate-60-dias';
+                }
+
+                return [
+                    'id' => $lead->id,
+                    'company' => $lead->company,
+                    'type' => $lead->service,
+                    'validity' => $validity->toDateString(),
+                    'status' => $status,
+                ];
+            });
+
+        // Tasks
+
+        $tasksList = Task::where('user_id', $user->id)
+            ->where(function ($query) use ($today, $next30Days) {
+                $query
+                    ->whereDate('date', '<=', $today)
+                    ->orWhereBetween('date', [
+                        $today->copy()->addDay()->toDateString(),
+                        $next30Days->toDateString()
+                    ]);
+            })
+            ->orderByRaw("date < '{$today}' DESC")
+            ->orderBy('date')
+            ->get()
+            ->map(function ($task) use ($today) {
+                $taskDate = Carbon::parse($task->date)->startOfDay();
+
+                if ($taskDate->lt($today)) {
+                    $status = 'Atrasada';
+                } elseif ($taskDate->eq($today)) {
+                    $status = 'Vence hoje';
+                } else {
+                    $status = 'Agendada';
+                }
+
+                return [
+                    'id' => $task->id,
+                    'title' => $task->title,
+                    'date' => $taskDate->toDateString(),
+                    'status' => $status,
+                ];
+            });
 
 
         return response()->json([
@@ -289,7 +365,9 @@ class DashboardController extends Controller
                     ],
                 ],
                 'recentLeads' => $recentLeads,
+                'recentTasks' => $tasks,
                 'alvaras' => $alvarasList,
+                'tasks' => $tasksList,
 
             ]
         ]);

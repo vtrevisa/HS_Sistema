@@ -1,3 +1,5 @@
+import type { TaskResponse } from "./calendar"
+
 export interface LeadsCard {
   totalLeads: number
   leadsThisMonth: number
@@ -40,11 +42,21 @@ export interface RecentLead {
   status: string
 }
 
+export interface RecentTask {
+  id: number
+  title: string
+  description: string
+  date: string
+  hour: string
+  priority: string
+}
+
 export interface Alvaras {
- id: string
+ id: number
  company: string
+ type: string
  validity: string
- status: 'Vencido' | 'A vencer'
+ status: string
 }
 
 export interface DashboardCards {
@@ -62,7 +74,9 @@ export interface DashboardResponse {
   data: {
     cards: DashboardCards,
     recentLeads: RecentLead[]
+    recentTasks: RecentTask[]
     alvaras: Alvaras[]
+    tasks: TaskResponse[]
   }
 }
 

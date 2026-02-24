@@ -59,11 +59,11 @@ class AuthController extends Controller
                 $token,
                 60 * 24,       // 1 day
                 '/',           // path
-                'localhost',   //domain
-                false,         // secure=false in localhost, true in prod with HTTPS
+                env('SESSION_DOMAIN', null),   // domain
+                env('SESSION_SECURE_COOKIE', false),
                 true,          // httpOnly
                 false,
-                'Lax'
+                env('SESSION_SAME_SITE', 'lax')
             );
 
             return response()->json([
@@ -101,11 +101,11 @@ class AuthController extends Controller
                 '',
                 -1,
                 '/',
-                'localhost',
-                false,
+                env('SESSION_DOMAIN', null),
+                env('SESSION_SECURE_COOKIE', false),
                 true,
                 false,
-                'Lax'
+                env('SESSION_SAME_SITE', 'lax')
             );
 
             return response()->json([
@@ -147,10 +147,13 @@ class AuthController extends Controller
                     'role' => $user->role,
                     'name' => $user->name,
                     'email' => $user->email,
+                    'email_subject' => $user->email_subject,
+                    'email_body' => $user->email_body,
                     'cnpj' => $user->cnpj,
                     'company' => $user->company,
                     'phone' => $user->phone,
                     'address' => $user->address,
+                    'avatar_url' => $user->avatar_url ?? null,
                     'last_login_at' => $user->last_login_at,
                     'created_at' => $user->created_at,
                     'plan_active' => $user->isPlanActive(),
@@ -159,6 +162,7 @@ class AuthController extends Controller
                         'name' => $user->plan->name,
                         'monthly_credits' => $user->plan->monthly_credits,
                         'monthly_used' => $user->monthly_used,
+                        'credits' => $user->credits,
                         'price' => $user->plan->price,
                         'plan_renews_at' => $user->plan_renews_at,
                         'last_renewal_at' => $user->last_renewal_at,

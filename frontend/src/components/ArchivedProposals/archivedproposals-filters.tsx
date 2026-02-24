@@ -8,14 +8,18 @@ import {
 } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card'
 import { Label } from '../ui/label'
-import { Input } from '../ui/input'
 import { ArchivedProposalsActions } from './archivedproposals-actions'
 import type { Filters } from '.'
+import { DatePickerWithRange } from '../ui/date-picker'
 import type { ArchivedProposal } from '@/http/types/crm'
+import { useCities } from '@/http/use-cities'
+import type { DateRange } from 'react-day-picker'
 
 interface ArchivedProposalsFiltersProps {
  filters: Filters
  setFilters: Dispatch<SetStateAction<Filters>>
+ dateRange: DateRange | undefined
+ onDateRangeChange: (range: DateRange | undefined) => void
  proposals: ArchivedProposal[]
  removeFilters: () => void
 }
@@ -23,9 +27,13 @@ interface ArchivedProposalsFiltersProps {
 export function ArchivedProposalsFilters({
  filters,
  setFilters,
+ dateRange,
+ onDateRangeChange,
  proposals,
  removeFilters
 }: ArchivedProposalsFiltersProps) {
+ const { data: cities, isLoading: isCitiesLoading } = useCities()
+
  return (
   <Card>
    <CardHeader>
@@ -35,7 +43,49 @@ export function ArchivedProposalsFilters({
     </CardTitle>
    </CardHeader>
    <CardContent>
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-4 gap-4">
+     {/* Filtro de Cidade */}
+     <div className="space-y-2">
+      <Label htmlFor="city" className="flex items-center gap-1">
+       <MapPin size={14} />
+       Cidade
+      </Label>
+      <select
+       id="city"
+       value={filters.city}
+       onChange={e => setFilters({ ...filters, city: e.target.value })}
+       disabled={isCitiesLoading}
+       className="w-full h-[40px] border border-gray-300 bg-background rounded-lg px-4 py-2 focus:ring-2 focus:ring-ring focus:border-transparent outline-none text-sm"
+      >
+       <option value="">
+        {isCitiesLoading ? 'Carregando cidades...' : 'Selecione a cidade'}
+       </option>
+       {cities?.map(city => (
+        <option key={city.id} value={city.nome}>
+         {city.nome}
+        </option>
+       ))}
+      </select>
+     </div>
+
+     {/* Filtro de Tipo de Serviço */}
+     <div className="space-y-2">
+      <Label htmlFor="type" className="flex items-center gap-1">
+       <FileText size={14} />
+       Tipo de Serviço
+      </Label>
+      <select
+       id="type"
+       value={filters.type}
+       onChange={e => setFilters({ ...filters, type: e.target.value })}
+       className="w-full h-[40px] border border-gray-300 bg-background rounded-lg px-4 py-2 focus:ring-2 focus:ring-ring focus:border-transparent outline-none text-sm"
+      >
+       <option value="">Selecione o tipo</option>
+       <option value="AVCB">AVCB</option>
+       <option value="CLCB">CLCB</option>
+      </select>
+     </div>
+
      {/* Filtro de Status */}
      <div className="space-y-2">
       <Label htmlFor="status-filter" className="flex items-center gap-1">
@@ -55,67 +105,13 @@ export function ArchivedProposalsFilters({
       </select>
      </div>
 
-     {/* Filtro de Cidade */}
+     {/* Filtros de vencimentos */}
      <div className="space-y-2">
-      <Label htmlFor="city" className="flex items-center gap-1">
-       <MapPin size={14} />
-       Cidade
-      </Label>
-      <Input
-       id="city"
-       value={filters.cidade}
-       onChange={e => setFilters({ ...filters, cidade: e.target.value })}
-       placeholder="Digite a cidade..."
-       className="text-foreground placeholder:text-foreground border-gray-300"
-      />
-     </div>
-
-     {/* Filtro de Tipo de Serviço */}
-     <div className="space-y-2">
-      <Label htmlFor="service" className="flex items-center gap-1">
-       <FileText size={14} />
-       Tipo de Serviço
-      </Label>
-      <select
-       id="service"
-       value={filters.tipoServico}
-       onChange={e => setFilters({ ...filters, tipoServico: e.target.value })}
-       className="w-full h-[40px] border border-gray-300 bg-background rounded-lg px-4 py-2 focus:ring-2 focus:ring-ring focus:border-transparent outline-none text-sm"
-      >
-       <option value="">Selecione o tipo</option>
-       <option value="AVCB">AVCB</option>
-       <option value="CLCB">CLCB</option>
-      </select>
-     </div>
-
-     {/* Data Inicial */}
-     <div className="space-y-2">
-      <Label htmlFor="initDate" className="flex items-center gap-1">
+      <Label htmlFor="expirationPeriod" className="flex items-center gap-1">
        <CalendarRange size={14} />
-       Data Inicial
+       Período de vencimento
       </Label>
-      <Input
-       id="initDate"
-       value={filters.dataInicio}
-       onChange={e => setFilters({ ...filters, dataInicio: e.target.value })}
-       type="date"
-       className="text-foreground placeholder:text-foreground border-gray-300"
-      />
-     </div>
-
-     {/* Data Final */}
-     <div className="space-y-2">
-      <Label htmlFor="endDate" className="flex items-center gap-1">
-       <CalendarRange size={14} />
-       Data Final
-      </Label>
-      <Input
-       id="endDate"
-       value={filters.dataTermino}
-       onChange={e => setFilters({ ...filters, dataTermino: e.target.value })}
-       type="date"
-       className="text-foreground placeholder:text-foreground border-gray-300"
-      />
+      <DatePickerWithRange date={dateRange} onDateChange={onDateRangeChange} />
      </div>
     </div>
 

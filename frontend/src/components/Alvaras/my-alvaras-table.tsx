@@ -1,79 +1,42 @@
 import { useMemo, useState } from 'react'
-import { Button } from '../ui/button'
-import { Card } from '../ui/card'
 import { Badge } from '../ui/badge'
-import {
- getPaginatedData,
- getTotalPages,
- handleItemsPerPageChange,
- handlePageChange
-} from '@/services/alvaras'
-// import type { CompanyRequest } from '@/http/types/companies'
-// import { useCompany } from '@/http/use-company'
+import type { Alvaras } from '@/http/types/alvaras'
+import { getPaginatedData, getTotalPages } from '@/services/alvaras'
+import { Button } from '../ui/button'
 
-interface AlvarasTableProps {
- alvarasData: {
-  id: number
-  service: string
-  endDate: Date
-  address: string
-  occupation: string
- }[]
+interface MyAlvarasTableProps {
+ alvaras: Alvaras[]
 }
 
 const PAGE_SIZE_OPTIONS = [25, 50, 100, 250, 500]
 
-export function AlvarasTable({ alvarasData }: AlvarasTableProps) {
+export function MyAlvarasTable({ alvaras }: MyAlvarasTableProps) {
  const [currentPage, setCurrentPage] = useState(1)
  const [itemsPerPage, setItemsPerPage] = useState(25)
 
- //const { exportCompanies } = useCompany()
-
- const totalItems = alvarasData.length
+ const totalItems = alvaras.length
  const totalPages = getTotalPages(totalItems, itemsPerPage)
 
  const paginatedData = useMemo(() => {
-  return getPaginatedData({ data: alvarasData, currentPage, itemsPerPage })
- }, [alvarasData, currentPage, itemsPerPage])
+  return getPaginatedData({ data: alvaras, currentPage, itemsPerPage })
+ }, [alvaras, currentPage, itemsPerPage])
 
  const handlePrev = () => {
-  setCurrentPage(prev => handlePageChange(prev - 1, totalPages))
+  setCurrentPage(prev => Math.max(prev - 1, 1))
  }
 
  const handleNext = () => {
-  setCurrentPage(prev => handlePageChange(prev + 1, totalPages))
+  setCurrentPage(prev => Math.min(prev + 1, totalPages))
  }
 
  const handleItemsPerPageSelect = (e: React.ChangeEvent<HTMLSelectElement>) => {
-  const value = handleItemsPerPageChange(e.target.value, setCurrentPage)
+  const value = Number(e.target.value)
   setItemsPerPage(value)
- }
-
- function handleExportAlvaras() {
-  //if (alvarasData.length === 0) return
-
-  //   const companiesToSave: Omit<CompanyRequest, 'id'>[] = alvarasData.map(
-  //    alvara => ({
-  //     name: alvara.address,
-  //     service: alvara.service,
-  //     expiration_date: alvara.endDate.toISOString(),
-  //     address: alvara.address,
-  //     occupation: alvara.occupation
-  //    })
-  //   )
-
-  //   exportCompanies.mutate(companiesToSave)
-
-  console.log('Exportar alvarás:', alvarasData)
+  setCurrentPage(1)
  }
 
  return (
-  <Card className="p-6">
-   <div className="flex flex-row items-center justify-between mb-4">
-    <h2 className="text-xl font-semibold">Alvarás Liberados</h2>
-    <Button onClick={handleExportAlvaras}>Exportar Alvarás</Button>
-   </div>
-
+  <>
    <div className="flex flex-row items-center justify-between gap-4 mb-4">
     <div className="flex items-center gap-2 text-sm">
      <label htmlFor="itemsPerPage" className="mr-2">
@@ -83,7 +46,7 @@ export function AlvarasTable({ alvarasData }: AlvarasTableProps) {
       id="itemsPerPage"
       value={itemsPerPage}
       onChange={handleItemsPerPageSelect}
-      className="border rounded px-2 py-1 dark:text-black"
+      className="border rounded px-2 py-1 bg-background dark:border-white"
      >
       {PAGE_SIZE_OPTIONS.map(option => (
        <option key={option} value={String(option)}>
@@ -93,7 +56,7 @@ export function AlvarasTable({ alvarasData }: AlvarasTableProps) {
      </select>
     </div>
 
-    <div className="text-sm text-muted-foreground dark:text-white">
+    <div className="text-sm text-muted-foreground">
      Página {currentPage} de {totalPages} • Total: {totalItems}
     </div>
    </div>
@@ -103,16 +66,19 @@ export function AlvarasTable({ alvarasData }: AlvarasTableProps) {
      <thead className="[&_tr]:border-b">
       <tr className="border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted">
        <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground [&:has([role=checkbox])]:pr-0">
-        Tipo de Serviço
+        Tipo
        </th>
        <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground [&:has([role=checkbox])]:pr-0">
-        Data de Vencimento
+        Vencimento
        </th>
        <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground [&:has([role=checkbox])]:pr-0">
-        Endereço Completo
+        Endereço
        </th>
        <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground [&:has([role=checkbox])]:pr-0">
         Ocupação
+       </th>
+       <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground [&:has([role=checkbox])]:pr-0">
+        Cidade
        </th>
       </tr>
      </thead>
@@ -128,13 +94,16 @@ export function AlvarasTable({ alvarasData }: AlvarasTableProps) {
          </Badge>
         </td>
         <td className="p-4 align-middle [&:has([role=checkbox])]:pr-0">
-         {new Date(alvara.endDate).toLocaleDateString('pt-BR')}
+         {new Date(alvara.validity).toLocaleDateString('pt-BR')}
         </td>
         <td className="p-4 align-middle [&:has([role=checkbox])]:pr-0">
          {alvara.address}
         </td>
         <td className="p-4 align-middle [&:has([role=checkbox])]:pr-0">
          {alvara.occupation}
+        </td>
+        <td className="p-4 align-middle [&:has([role=checkbox])]:pr-0">
+         {alvara.city}
         </td>
        </tr>
       ))}
@@ -155,8 +124,8 @@ export function AlvarasTable({ alvarasData }: AlvarasTableProps) {
     </Button>
    </div>
    <div className="mt-4 text-sm text-muted-foreground">
-    Total de alvarás exibidos: {alvarasData.length}
+    Total de alvarás: {alvaras.length}
    </div>
-  </Card>
+  </>
  )
 }

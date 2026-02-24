@@ -24,43 +24,7 @@ export function useCompany() {
   });
 
   // Mutation to save companies
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const exportMutation = useMutation<CompanyRequest[], AxiosError<any>, Omit<CompanyRequest, 'id'>[]>({
-     mutationFn: async (companies) => {
-      const responses = await Promise.all(
-        companies.map(company =>
-          api.post<CompanyRequest>("/companies", company).then(res => res.data)
-        )
-      )
-      return responses
-    },
-    onSuccess: (savedCompanies) => {
-
-      setTimeout(() => {
-        toast.success(
-          savedCompanies.length === 1
-          ? '1 alvará foi exportado com sucesso!'
-          : `${savedCompanies.length} alvarás foram exportados com sucesso!`
-        )
-      }, 3200)
-
-    },
-    onError: (error) => {
-      const messages =
-      error.response?.data?.erros
-        ? Object.values(error.response.data.erros).flat().join("\n")
-        : "Erro desconhecido."
-
-      setTimeout(() => {
-        toast.error('Erro ao exportar alvarás no sistema!', {
-          description: messages
-        })
-      }, 3200)
-    }
-  })
-
-
-    const saveMutation = useMutation<CompanyRequest[], AxiosError, Omit<CompanyRequest, 'id'>[]>({
+  const saveMutation = useMutation<CompanyRequest[], AxiosError, Omit<CompanyRequest, 'id'>[]>({
     mutationFn: async (companies) => {
       const responses = await Promise.all(
         companies.map(company =>
@@ -76,8 +40,6 @@ export function useCompany() {
       alert('Erro ao exportar alvarás: ' + error.message)
     }
   })
-
-  
 
   // Mutation to update companies
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -135,6 +97,29 @@ export function useCompany() {
     },
   });
 
+  //Mutation to delete company
+   
+  //Mutation to delete company
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const deleteMutation = useMutation<void, AxiosError<any>, number>({
+    mutationFn: async (id: number) => {
+      await api.delete(`/companies/${id}`)
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["companies"] })
+
+      setTimeout(() => {
+        toast.success("Empresa e lead associados deletados com sucesso!")
+      }, 1200)
+    },
+    onError: (error) => {
+      const messages = Object.values(error.response?.data.erros).flat().join("\n")
+      setTimeout(() => {
+        toast.error("Erro ao deletar empresa no sistema!", { description: messages })
+      }, 1200)
+    }
+  })
+
 
   // Function to enhance company data
   const enhanceData = async (company: CompanyRequest) => {
@@ -143,6 +128,7 @@ export function useCompany() {
     try {
       const data = await searchByAddressMutation.mutateAsync({
         address: `${company.address} ${company.number} ${company.district} ${company.city} ${company.state}`,
+        //address: `${company.address}, ${company.number}, ${company.district}, ${company.city}, SP, Brasil`,
       });
 
       if (!data.places || data.places.length === 0) {
@@ -212,6 +198,8 @@ export function useCompany() {
     }, pendingCompanies.length * 2000);
 
   };
+
+  
   
 
   return {
@@ -219,12 +207,13 @@ export function useCompany() {
     refetchCompanies: companiesDB.refetch,
     isLoading: companiesDB.isLoading,
     saveCompanies: saveMutation,
-    exportCompanies: exportMutation,
     updateCompany: updateMutation,
     searchByCnpj: searchCnpjMutation,
     searchByAddress: searchByAddressMutation,
+    deleteCompany: deleteMutation,
     enhanceData,
     enhanceAllData,
     processingEnrichment,
+    companiesDB,
   }
 }

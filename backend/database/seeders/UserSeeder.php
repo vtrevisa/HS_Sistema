@@ -28,5 +28,13 @@ class UserSeeder extends Seeder
                 'password' => Hash::make('123456', ['rounds' => 12]),
             ]);
         }
+
+        if (!User::where('email', 'vitor@test.com.br')->first()) {
+            User::create([
+                'name' => 'Vitor User',
+                'email' => 'vitor@test.com.br',
+                'password' => Hash::make('123456', ['rounds' => 12]),
+            ]);
+        }
     }
 }

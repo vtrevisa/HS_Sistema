@@ -111,6 +111,7 @@ export function NewCompanyModal({
     await searchCEP(cep)
    })()
   }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
  }, [cep])
 
  useEffect(() => {
@@ -132,6 +133,7 @@ export function NewCompanyModal({
     }
    })
   }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
  }, [cnpj, setValue])
 
  return (
@@ -156,7 +158,7 @@ export function NewCompanyModal({
            mask="00.000.000/0000-00"
            value={field.value ?? ''}
            placeholder="___.___.___/____-__"
-           className="w-full border border-gray-300 bg-background text-foreground placeholder:text-foreground rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+           className="w-full border border-gray-300 bg-background text-foreground placeholder:text-foreground rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary"
            onAccept={(value: string) => field.onChange(value)}
           />
           {onSearchCnpj.isPending && (
@@ -176,7 +178,7 @@ export function NewCompanyModal({
        <input
         type="text"
         {...register('company', { required: 'Empresa é obrigatório' })}
-        className={`w-full border bg-background text-foreground placeholder:text-foreground rounded-lg px-3 py-2 focus:ring-blue-500 focus:outline-none focus:ring-2 outline-none ${
+        className={`w-full border bg-background text-foreground placeholder:text-foreground rounded-lg px-3 py-2 focus:ring-primary focus:outline-none focus:ring-2 outline-none ${
          errors.company ? 'border-red-500' : 'border-gray-300'
         }`}
        />
@@ -185,7 +187,7 @@ export function NewCompanyModal({
        )}
       </div>
 
-      <div className="md:col-span-2">
+      <div className="md:col-span-1">
        <label className="block text-sm font-medium text-foreground mb-1">
         CEP
        </label>
@@ -199,20 +201,20 @@ export function NewCompanyModal({
           placeholder="_____-___"
           value={field.value ?? ''}
           onAccept={(value: string) => field.onChange(value)}
-          className="w-full border border-gray-300 bg-background text-foreground placeholder:text-foreground rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 outline-none"
+          className="w-full border border-gray-300 bg-background text-foreground placeholder:text-foreground rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary outline-none"
          />
         )}
        />
       </div>
 
-      <div>
+      <div className="md:col-span-2">
        <label className="block text-sm font-medium text-foreground mb-1">
         Endereço
        </label>
        <input
         type="text"
         {...register('address')}
-        className="w-full border bg-background text-foreground placeholder:text-foreground rounded-lg px-3 py-2 focus:ring-blue-500 focus:outline-none focus:ring-2 outline-none border-gray-300"
+        className="w-full border bg-background text-foreground placeholder:text-foreground rounded-lg px-3 py-2 focus:ring-primary focus:outline-none focus:ring-2 outline-none border-gray-300"
        />
       </div>
 
@@ -223,6 +225,28 @@ export function NewCompanyModal({
        <input
         type="tel"
         {...register('number')}
+        className="w-full border bg-background text-foreground placeholder:text-foreground rounded-lg px-3 py-2 focus:ring-primary focus:outline-none focus:ring-2 outline-none border-gray-300"
+       />
+      </div>
+
+      <div>
+       <label className="block text-sm font-medium text-foreground mb-1">
+        Complemento
+       </label>
+       <input
+        type="text"
+        {...register('complement')}
+        className="w-full border bg-background text-foreground placeholder:text-foreground rounded-lg px-3 py-2 focus:ring-primary focus:outline-none focus:ring-2 outline-none border-gray-300"
+       />
+      </div>
+
+      <div>
+       <label className="block text-sm font-medium text-foreground mb-1">
+        Complemento
+       </label>
+       <input
+        type="text"
+        {...register('complement')}
         className="w-full border bg-background text-foreground placeholder:text-foreground rounded-lg px-3 py-2 focus:ring-blue-500 focus:outline-none focus:ring-2 outline-none border-gray-300"
        />
       </div>
@@ -234,7 +258,7 @@ export function NewCompanyModal({
        <input
         type="text"
         {...register('city', { required: 'Cidade é obrigatório' })}
-        className={`w-full border bg-background text-foreground placeholder:text-foreground rounded-lg px-3 py-2 focus:ring-blue-500 focus:outline-none focus:ring-2 outline-none ${
+        className={`w-full border bg-background text-foreground placeholder:text-foreground rounded-lg px-3 py-2 focus:ring-primary focus:outline-none focus:ring-2 outline-none ${
          errors.city ? 'border-red-500' : 'border-gray-300'
         }`}
        />
@@ -248,7 +272,7 @@ export function NewCompanyModal({
        </label>
        <select
         {...register('state')}
-        className="w-full border border-gray-300 rounded-lg px-3 py-2 dark:text-white dark:bg-transparent focus:ring-2 focus:ring-blue-500 outline-none"
+        className="w-full border border-gray-300 rounded-lg px-3 py-2 dark:text-white dark:bg-transparent focus:ring-2 focus:ring-primary outline-none"
        >
         <option value="">Selecione</option>
         {[
@@ -292,7 +316,7 @@ export function NewCompanyModal({
        </label>
        <select
         {...register('service', { required: 'Selecione o tipo' })}
-        className={`w-full border bg-background text-foreground rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 outline-none text-sm h-10 ${
+        className={`w-full border bg-background text-foreground rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary outline-none text-sm h-10 ${
          errors.service ? 'border-red-500' : 'border-gray-300'
         }`}
        >
@@ -311,7 +335,7 @@ export function NewCompanyModal({
        <input
         type="date"
         {...register('validity')}
-        className="w-full border bg-background text-foreground placeholder:text-foreground rounded-lg px-3 py-2 focus:ring-blue-500 focus:outline-none focus:ring-2 outline-none border-gray-300 text-sm"
+        className="w-full border bg-background text-foreground placeholder:text-foreground rounded-lg px-3 py-2 focus:ring-primary focus:outline-none focus:ring-2 outline-none border-gray-300 text-sm"
        />
       </div>
       <div>
@@ -328,7 +352,7 @@ export function NewCompanyModal({
           placeholder="(__) _____-____"
           value={field.value ?? ''}
           onAccept={(value: string) => field.onChange(value)}
-          className="w-full border border-gray-300 bg-background text-foreground placeholder:text-foreground rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 outline-none"
+          className="w-full border border-gray-300 bg-background text-foreground placeholder:text-foreground rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary outline-none"
          />
         )}
        />
@@ -340,23 +364,18 @@ export function NewCompanyModal({
        <input
         type="email"
         {...register('email')}
-        className="w-full border bg-background text-foreground placeholder:text-foreground rounded-lg px-3 py-2 focus:ring-blue-500 focus:outline-none focus:ring-2 outline-none border-gray-300"
+        className="w-full border bg-background text-foreground placeholder:text-foreground rounded-lg px-3 py-2 focus:ring-primary focus:outline-none focus:ring-2 outline-none border-gray-300"
        />
       </div>
      </div>
      <div className="flex justify-end gap-2 mt-4">
-      <Button
-       type="button"
-       variant="outline"
-       className="dark:hover:bg-red-600 dark:hover:border-red-600"
-       onClick={onClose}
-      >
+      <Button type="button" variant="outline" onClick={onClose}>
        Cancelar
       </Button>
       <Button
        type="submit"
        disabled={isSubmitting}
-       className="bg-blue-600 hover:bg-blue-700 text-white"
+       className="bg-primary hover:bg-primary/90 text-primary-foreground"
       >
        {isSubmitting ? 'Cadastrando empresa...' : 'Cadastrar'}
       </Button>

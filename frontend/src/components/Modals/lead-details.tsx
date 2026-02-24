@@ -15,6 +15,7 @@ import {
  AlertTriangle,
  Building,
  Calendar,
+ CalendarPlus,
  Clock,
  DollarSign,
  Edit,
@@ -30,31 +31,36 @@ import {
 import { getCompleteAddress, getStatusColor } from '@/services/leads'
 import { ProposalsActions } from './proposals-actions'
 import { Label } from '../ui/label'
-
-type Attachment = { id?: number; name: string; url: string }
+import { Tasks } from '../Tasks'
+import { useTasks } from '@/http/use-tasks'
 
 type LeadWithExtras = LeadRequest & {
  daysInStage?: number
  isOverdue?: boolean
- attachments?: Attachment[]
 }
 
 interface LeadDetailsModalProps {
  isOpen: boolean
  onClose: () => void
+ onOpenTask: () => void
  lead: LeadRequest | null
 }
 
 export function LeadDetailsModal({
  isOpen,
  onClose,
+ onOpenTask,
  lead
 }: LeadDetailsModalProps) {
  const [isEditing, setIsEditing] = useState(false)
  const [editedLead, setEditedLead] = useState<LeadWithExtras | null>(null)
  const [isFileUploading, setIsFileUploading] = useState(false)
+
  const { updateLead, deleteLeadAttachment } = useLead()
  const { saveProposal } = useProposals({})
+ const { tasks } = useTasks()
+
+ const hasTasksForLead = tasks.some(task => task.lead_id === lead?.id)
 
  useEffect(() => {
   if (lead) setEditedLead({ ...lead })
@@ -238,6 +244,20 @@ export function LeadDetailsModal({
      handlePerdido={handlePerdido}
     />
 
+    {/* Agendar Tarefa */}
+    {!isEditing && (
+     <Button
+      className="w-full bg-primary hover:bg-primary/90 text-primary-foreground transition-colors"
+      onClick={onOpenTask}
+     >
+      <CalendarPlus size={16} className="mr-2" />
+      Agendar Tarefa
+     </Button>
+    )}
+
+    {/* Histórico de Tarefas Agendadas */}
+    {hasTasksForLead && <Tasks leadId={lead.id} />}
+
     <div className="space-y-4 sm:space-y-6">
      {/* Status e Serviço */}
      <div className="flex gap-2 sm:gap-3 flex-wrap">
@@ -274,7 +294,7 @@ export function LeadDetailsModal({
         onChange={updateField}
        />
        <EditableField
-        label="Número da licença"
+        label="Nº CLCB/AVCB"
         field="license"
         value={currentLead.license}
         displayValue={`${currentLead.service}-${currentLead.license}`}
@@ -324,6 +344,14 @@ export function LeadDetailsModal({
         isEditing={isEditing}
         onChange={updateField}
        />
+       <EditableField
+        label="Empresa"
+        field="company"
+        value={currentLead.company}
+        isEditing={isEditing}
+        onChange={updateField}
+       />
+
        <EditableField
         label="Website"
         field="website"
@@ -411,6 +439,7 @@ export function LeadDetailsModal({
            variant="outline"
            size="sm"
            className="mt-2 w-full"
+           title={`${currentLead.phone ? `Enviar mensagem para ${currentLead.phone}` : ''}`}
            onClick={() =>
             window.open(`https://wa.me/55${formatedPhone}`, '_blank')
            }
@@ -435,6 +464,7 @@ export function LeadDetailsModal({
            variant="outline"
            size="sm"
            className="mt-2 w-full"
+           title={`${currentLead.email ? `Enviar email para ${currentLead.email}` : ''}`}
            onClick={() => window.open(`mailto:${currentLead.email}`, '_blank')}
           >
            <Mail size={14} className="mr-2" />
@@ -522,29 +552,29 @@ export function LeadDetailsModal({
 
      {/* Histórico de atividades */}
      {/* {currentLead.activities && currentLead.activities.length > 0 && (
-      <div>
-       <h4 className="font-medium text-card-foreground mb-2">
-        Histórico de alterações:
-       </h4>
-       <div className="space-y-2 max-h-40 overflow-y-auto">
-        {currentLead.activities
-         .sort(
-          (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
-         )
-         .map(activity => (
-          <div key={activity.id} className="p-2 bg-muted/50 rounded text-sm">
-           <div className="flex justify-between items-start mb-1">
-            <span className="font-medium capitalize">{activity.type}</span>
-            <span className="text-xs text-muted-foreground">
-             {new Date(activity.date).toLocaleString('pt-BR')}
-            </span>
-           </div>
-           <p className="text-muted-foreground">{activity.description}</p>
-          </div>
-         ))}
-       </div>
-      </div>
-     )} */}
+        <div>
+        <h4 className="font-medium text-card-foreground mb-2">
+          Histórico de alterações:
+        </h4>
+        <div className="space-y-2 max-h-40 overflow-y-auto">
+          {currentLead.activities
+          .sort(
+            (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
+          )
+          .map(activity => (
+            <div key={activity.id} className="p-2 bg-muted/50 rounded text-sm">
+            <div className="flex justify-between items-start mb-1">
+              <span className="font-medium capitalize">{activity.type}</span>
+              <span className="text-xs text-muted-foreground">
+              {new Date(activity.date).toLocaleString('pt-BR')}
+              </span>
+            </div>
+            <p className="text-muted-foreground">{activity.description}</p>
+            </div>
+          ))}
+        </div>
+        </div>
+      )} */}
     </div>
    </DialogContent>
   </Dialog>
