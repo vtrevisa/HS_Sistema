@@ -106,8 +106,6 @@ class MicrosoftSender
             
             throw new Exception("Falha no envio do e-mail: HTTP {$status}");
         }
-
-        Log::info("E-mail enviado com sucesso via microsoft para {$to} (usuário {$userId})");
         return true;
     }
 

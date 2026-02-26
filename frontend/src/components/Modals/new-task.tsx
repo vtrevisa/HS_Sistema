@@ -20,6 +20,7 @@ import { format } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 import { toast } from 'sonner'
 import type { CreateTask } from '@/http/types/calendar'
+import { useGoogleCalendar } from '@/http/use-google-calendar'
 
 interface NewTaskModalProps {
  isOpen: boolean
@@ -28,6 +29,7 @@ interface NewTaskModalProps {
  defaultDate?: Date
  task?: any | null
  leadId?: number
+ onDelete?: (taskId: number) => void
 }
 
 export function NewTaskModal({
@@ -36,13 +38,24 @@ export function NewTaskModal({
  onSave,
  defaultDate,
  task,
- leadId
+ leadId,
+ onDelete
 }: NewTaskModalProps) {
  const [title, setTitle] = useState('')
  const [description, setDescription] = useState('')
  const [date, setDate] = useState<Date | undefined>(defaultDate || new Date())
  const [hour, setHour] = useState('09:00')
  const [priority, setPriority] = useState<'baixa' | 'media' | 'alta'>('media')
+ const [hasGoogleCalendar, setHasGoogleCalendar] = useState(false)
+ const [syncingCalendar, setSyncingCalendar] = useState(false)
+ 
+ const { checkStatus, createEvent, deleteEvent, updateEvent } = useGoogleCalendar()
+ 
+ useEffect(() => {
+    if (isOpen) {
+        checkStatus().then(connected => setHasGoogleCalendar(connected));
+    }
+ }, [isOpen]);
 
  function handleSaveTask() {
   if (!title.trim()) {
@@ -62,7 +75,30 @@ export function NewTaskModal({
 
   const formattedHour = hour.length === 8 ? hour.slice(0, 5) : hour
 
-  onSave({
+  if (syncingCalendar) {
+    if (task && task.google_event_id) {
+        updateEvent(task.google_event_id, {
+            title,
+            description,
+            date,
+            hour: formattedHour,
+    }).catch(e => {
+      toast.error('Erro ao sincronizar com Google Calendar')
+      console.error('Erro ao sincronizar com Google Calendar:', e)
+    })
+  } else {
+        createEvent({
+        title,
+        description,
+        date,
+        hour: formattedHour,
+        }).catch(e => {
+        toast.error('Erro ao sincronizar com Google Calendar')
+        console.error('Erro ao sincronizar com Google Calendar:', e)
+        })
+    }
+  } else {
+    onSave({
    title,
    description,
    date,
@@ -70,6 +106,8 @@ export function NewTaskModal({
    priority,
    lead_id: leadId
   })
+  }
+  
 
   // reset
   if (!task) {
@@ -81,6 +119,21 @@ export function NewTaskModal({
 
   onOpenChange(false)
  }
+
+ function handleDeleteTask() {
+    console.log('Deletar tarefa', task)
+    if (!task || !task.id) return
+
+    if (syncingCalendar && task.google_event_id) {
+        deleteEvent(task.google_event_id).catch(e => {
+            toast.error('Erro ao sincronizar exclusão com Google Calendar')
+            console.error('Erro ao sincronizar exclusão com Google Calendar:', e)
+        })
+    } else {
+        onDelete?.(task.id)
+    }
+    onOpenChange(false)
+  }
 
  useEffect(() => {
   if (!isOpen) return
@@ -188,9 +241,22 @@ export function NewTaskModal({
        <option value="alta">🔴 Alta</option>
       </select>
      </div>
+     {hasGoogleCalendar && (
+     <div>
+        <input type='checkbox'
+         id='syncGoogleCalendar'
+         checked={syncingCalendar}
+         onChange={e => setSyncingCalendar(e.target.checked)}
+        />
+        <label htmlFor='syncGoogleCalendar' className="ml-2 text-sm">Sincronizar com Google Calendar</label>
+     </div>
+    )}
     </div>
 
     <DialogFooter>
+      <Button variant='destructive' onClick={handleDeleteTask} disabled={!task}>
+        Excluir Tarefa
+      </Button>
      <Button variant="outline" onClick={() => onOpenChange(false)}>
       Cancelar
      </Button>

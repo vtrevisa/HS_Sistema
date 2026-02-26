@@ -25,7 +25,6 @@ use App\Http\Controllers\Api\IntegrationController;
 // Auth
 Route::post('/auth', [AuthController::class, 'login']); //POST
 
-// 
 // Dashboard
 Route::get('/dashboard', [DashboardController::class, 'index']); //GET 
 
@@ -38,6 +37,8 @@ Route::post('/user/avatar', [UserController::class, 'uploadAvatar']); //POST
 // OAuth start/callback for providers (gmail, microsoft, calendar)
 Route::get('/auth/{provider}/start', [IntegrationController::class, 'start']);
 Route::get('/auth/{provider}/callback', [IntegrationController::class, 'callback']);
+
+// Calendar routes
 Route::prefix('calendar')->group(function () {
     Route::get('status', [IntegrationController::class, 'calendarStatus']);
     Route::delete('disconnect', [IntegrationController::class, 'disconnectCalendar']);
@@ -93,6 +94,7 @@ Route::get('/tasks', [TaskController::class, 'index']); //GET
 Route::post('/tasks', [TaskController::class, 'store']); //POST
 Route::put('/tasks/{id}/completed', [TaskController::class, 'completed']); //PATCH
 Route::put('/tasks/{id}', [TaskController::class, 'update']); //PUT
+Route::delete('/tasks/{id}', [TaskController::class, 'destroy']); //DELETE
 
 // Leads
 Route::get('/leads', [LeadController::class, 'index']); //GET

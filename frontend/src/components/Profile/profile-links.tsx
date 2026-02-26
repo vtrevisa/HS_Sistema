@@ -31,7 +31,6 @@ export function ProfileLinks({ user }: ProfileLinksProps) {
  const { connected, disconnect } = useGoogleCalendar()
 
  useEffect(() => {
-  console.log('useGoogleCalendar object:', { connected, disconnect })
  }, [connected, disconnect])
 
  useEffect(() => {

@@ -1,15 +1,15 @@
 import { useCallback, useMemo, useState } from "react";
 import { useLead } from "@/http/use-lead";
 import type { LeadRequest } from "./types/leads";
-import { useUser } from "./use-user";
-import type { UserRequest } from "./types/user";
+import { useTemplates } from "./use-templates";
 import { usePipelineAutomation } from "./use-pipeline-automation";
+import type { EmailTemplate } from "./types/email";
 
 export function useCRM(){
   const { leadsDB, updateLead } = useLead();
   const { runAutomations } = usePipelineAutomation();
-  const { user } = useUser();
-
+  const { getTemplates } = useTemplates();
+  const template = getTemplates.data?.find(t => t.active);
   const leads = useMemo(() => leadsDB.data ?? [], [leadsDB.data]);
  
   const statusMap = useMemo(() => ({
@@ -92,7 +92,8 @@ export function useCRM(){
         await updateLead.mutate(updatedLead);
         console.log(`✅ Lead #${leadId} movido para: ${newStatusLabel}`);
 
-        await runAutomations(updatedLead, newStatusId, user as UserRequest);
+        await runAutomations(updatedLead, newStatusId, template as EmailTemplate);
+        console.log('Automação iniciada com o template ativo:', template);
       } catch (error) {
         console.error("Erro ao atualizar status do lead:", error);
       }

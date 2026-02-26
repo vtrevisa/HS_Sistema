@@ -125,4 +125,36 @@ class TaskController extends Controller
             'task' => $task,
         ]);
     }
+
+    public function destroy(int $id)
+    {
+        $token = request()->cookie('auth-token');
+        $accessToken = PersonalAccessToken::findToken($token);
+        $user = $accessToken?->tokenable;
+
+        if (!$token || !$accessToken || !$user) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Usuário não autenticado ou token inválido.'
+            ], 401);
+        }
+
+        $task = Task::where('id', $id) 
+            ->where('user_id', $user->id)
+            ->first();
+
+        if (!$task) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Tarefa não encontrada.'
+            ], 404);
+        }
+
+        $task->delete();
+
+        return response()->json([
+            'status' => true,
+            'message' => 'Tarefa deletada com sucesso.'
+        ], 200);
+    }
 }

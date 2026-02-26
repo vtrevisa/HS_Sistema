@@ -18,24 +18,13 @@ export const useGoogleCalendar = () => {
     const [events, setEvents] = useState<CalendarEvent[]>([]);
     const [loading, setLoading] = useState(true);
 
-    useEffect(() => {
-        checkStatus();
-    }, []);
-
     const checkStatus = async () => {
         try {
             const res = await api.get('/calendar/status');
             console.log('Status do calendário:', res);
-            // backend may return either { connected: boolean } or { calendar: { connected: boolean } }
-            const connectedFlag = res.data?.connected ?? res.data?.calendar?.connected ?? false;
-            setConnected(connectedFlag);
-            if (connectedFlag) {
-                syncEvents();
-            }
+            return res.data.calendar.connected;     
         } catch (error) {
             console.error('Erro ao verificar status do calendário', error);
-        } finally {
-            setLoading(false);
         }
     };
 
@@ -43,36 +32,7 @@ export const useGoogleCalendar = () => {
         try {
         // trigger backend sync that saves Google events as Tasks
         await api.post('/calendar/sync').catch(e => console.warn('Failed to dispatch calendar sync', e));
-        const calRes = await api.get('/calendar/calendars');
-        console.log('DEBUG /calendar/calendars response:', calRes);
-
-        const calendars = Array.isArray(calRes.data) ? calRes.data : calRes.data.items ?? [];
-        const now = new Date().toISOString();
-        const timeMax = new Date(); timeMax.setMonth(timeMax.getMonth() + 6); // ex: próximos 6 meses
-
-        const eventsResByCal = await Promise.all(
-        calendars.map(c =>
-            api.get('/calendar/events', {
-            params: {
-                calendarId: c.id,
-                singleEvents: true,
-                orderBy: 'startTime',
-                timeMin: now,
-                timeMax: timeMax.toISOString(),
-                maxResults: 2500
-            }
-            })
-            .then(r => ({ calendar: c, response: r }))
-            .catch(err => ({ calendar: c, error: err }))
-        )
-        );
-
-        console.log('DEBUG aggregated events per calendar:', eventsResByCal);
-
-        // opcional: juntar todos os eventos em um único array
-        const allEvents = eventsResByCal.flatMap(x => (x.response?.data ?? []));
-        console.log('DEBUG allEvents combined:', allEvents);
-        return { calendars, eventsResByCal, allEvents };
+        
         } catch (e) {
             console.error('Erro ao agregar eventos:', e);
             throw e;
@@ -81,14 +41,130 @@ export const useGoogleCalendar = () => {
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const createEvent = async (eventData: any) => {
-        const res = await api.post('/calendar/events', eventData);
+
+        // normalize date (accepts YYYY-MM-DD or DD/MM/YYYY)
+        const normalizeDate = (dateInput: string | Date | undefined | null) => {
+            if (!dateInput) return '';
+            if (dateInput instanceof Date) {
+                const yyyy = dateInput.getFullYear();
+                const mm = String(dateInput.getMonth() + 1).padStart(2, '0');
+                const dd = String(dateInput.getDate()).padStart(2, '0');
+                return `${yyyy}-${mm}-${dd}`;
+            }
+            const dateStr = String(dateInput);
+            if (dateStr.includes('/')) {
+                const parts = dateStr.split('/'); // dd/MM/yyyy
+                if (parts.length === 3) return `${parts[2]}-${parts[1].padStart(2, '0')}-${parts[0].padStart(2, '0')}`;
+            }
+            return dateStr; // assume already YYYY-MM-DD
+        }
+
+        const normalizeTime = (timeInput: string | number | undefined | null) => {
+            if (timeInput === undefined || timeInput === null) return '00:00';
+            const timeStr = String(timeInput);
+            if (timeStr.includes(':')) {
+                const [h, m] = timeStr.split(':');
+                return `${h.padStart(2,'0')}:${(m || '00').padStart(2,'0')}`;
+            }
+            return `${timeStr.padStart(2,'0')}:00`;
+        }
+
+        const toLocalDateTimeString = (d: Date) => {
+            const yyyy = d.getFullYear();
+            const mm = String(d.getMonth() + 1).padStart(2, '0');
+            const dd = String(d.getDate()).padStart(2, '0');
+            const hh = String(d.getHours()).padStart(2, '0');
+            const mi = String(d.getMinutes()).padStart(2, '0');
+            const ss = String(d.getSeconds()).padStart(2, '0');
+            return `${yyyy}-${mm}-${dd}T${hh}:${mi}:${ss}`;
+        }
+
+        const datePart = normalizeDate(eventData.date);
+        const timePart = normalizeTime(eventData.hour);
+
+        // build Date from components in local timezone
+        const [y, mo, d] = datePart.split('-').map(Number);
+        const [hh, mm] = timePart.split(':').map(Number);
+        const startDateObj = new Date(y, (mo || 1) - 1, d || 1, hh || 0, mm || 0, 0);
+
+        // default duration: 60 minutes unless provided
+        const durationMinutes = Number(eventData.durationMinutes ?? 60);
+        const endDateObj = new Date(startDateObj.getTime() + durationMinutes * 60 * 1000);
+
+        const payload = {
+            summary: eventData.title,
+            description: eventData.description,
+            start_datetime: toLocalDateTimeString(startDateObj),
+            end_datetime: toLocalDateTimeString(endDateObj),
+            allDay: !!eventData.allDay,
+        };
+
+        const res = await api.post('/calendar/events', payload);
         await syncEvents();
         return res.data;
     };
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const updateEvent = async (eventId: string, eventData: any) => {
-        const res = await api.put(`/calendar/events/${eventId}`, eventData);
+
+        // normalize date (accepts YYYY-MM-DD or DD/MM/YYYY)
+        const normalizeDate = (dateInput: string | Date | undefined | null) => {
+            if (!dateInput) return '';
+            if (dateInput instanceof Date) {
+                const yyyy = dateInput.getFullYear();
+                const mm = String(dateInput.getMonth() + 1).padStart(2, '0');
+                const dd = String(dateInput.getDate()).padStart(2, '0');
+                return `${yyyy}-${mm}-${dd}`;
+            }
+            const dateStr = String(dateInput);
+            if (dateStr.includes('/')) {
+                const parts = dateStr.split('/'); // dd/MM/yyyy
+                if (parts.length === 3) return `${parts[2]}-${parts[1].padStart(2, '0')}-${parts[0].padStart(2, '0')}`;
+            }
+            return dateStr; // assume already YYYY-MM-DD
+        }
+
+        const normalizeTime = (timeInput: string | number | undefined | null) => {
+            if (timeInput === undefined || timeInput === null) return '00:00';
+            const timeStr = String(timeInput);
+            if (timeStr.includes(':')) {
+                const [h, m] = timeStr.split(':');
+                return `${h.padStart(2,'0')}:${(m || '00').padStart(2,'0')}`;
+            }
+            return `${timeStr.padStart(2,'0')}:00`;
+        }
+
+        const toLocalDateTimeString = (d: Date) => {
+            const yyyy = d.getFullYear();
+            const mm = String(d.getMonth() + 1).padStart(2, '0');
+            const dd = String(d.getDate()).padStart(2, '0');
+            const hh = String(d.getHours()).padStart(2, '0');
+            const mi = String(d.getMinutes()).padStart(2, '0');
+            const ss = String(d.getSeconds()).padStart(2, '0');
+            return `${yyyy}-${mm}-${dd}T${hh}:${mi}:${ss}`;
+        }
+
+        const datePart = normalizeDate(eventData.date);
+        const timePart = normalizeTime(eventData.hour);
+
+        // build Date from components in local timezone
+        const [y, mo, d] = datePart.split('-').map(Number);
+        const [hh, mm] = timePart.split(':').map(Number);
+        const startDateObj = new Date(y, (mo || 1) - 1, d || 1, hh || 0, mm || 0, 0);
+
+        // default duration: 60 minutes unless provided
+        const durationMinutes = Number(eventData.durationMinutes ?? 60);
+        const endDateObj = new Date(startDateObj.getTime() + durationMinutes * 60 * 1000);
+
+        const payload = {
+            summary: eventData.title,
+            description: eventData.description,
+            start_datetime: toLocalDateTimeString(startDateObj),
+            end_datetime: toLocalDateTimeString(endDateObj),
+            allDay: !!eventData.allDay,
+        };
+        
+        const res = await api.put(`/calendar/events/${eventId}`, payload);
         await syncEvents();
         return res.data;
     };
@@ -108,6 +184,7 @@ export const useGoogleCalendar = () => {
         connected,
         events,
         loading,
+        checkStatus,
         connectCalendar,
         syncEvents,
         createEvent,

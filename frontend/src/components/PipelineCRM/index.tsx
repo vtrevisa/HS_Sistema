@@ -7,8 +7,8 @@ import {
     DropdownMenuItem,
 } from '@/components/ui/dropdown-menu'
 import { EllipsisVertical } from 'lucide-react'
-import { EmailConfigModal, WhatsAppConfigModal } from '../Modals/lead-options'
-
+import {  WhatsAppConfigModal } from '../Modals/lead-options'
+import { EmailConfigModal } from '../Modals/templates-modal'
 import { useCRM } from '@/http/use-crm'
 import { useLead } from '@/http/use-lead'
 

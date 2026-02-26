@@ -67,18 +67,6 @@ class GoogleCalendarService
             'created' => time(),
         ]);
 
-        // Log token state for diagnosis (no secrets)
-        try {
-            Log::info('Google token state', [
-                'userId' => $userId,
-                'token_expires_at' => $token->expires_at ? $token->expires_at->toDateTimeString() : null,
-                'computed_expires_in' => $expiresIn,
-                'has_refresh_token' => !empty($refreshToken),
-            ]);
-        } catch (\Exception $e) {
-            // ignore logging errors
-        }
-
         // Refresh only when necessary: client reports expired or stored expiry is within threshold
         $refreshThreshold = 30; // seconds
 
@@ -98,7 +86,6 @@ class GoogleCalendarService
             throw new Exception('Token expirado e sem refresh_token. Reconecte o calendário.');
         }
 
-        Log::info("Token Google Calendar próximo do fim/expirado para usuário {$userId}. Renovando...");
         try {
             $newToken = $client->fetchAccessTokenWithRefreshToken($refreshToken);
         } catch (\Exception $e) {
@@ -303,7 +290,6 @@ class GoogleCalendarService
     public function syncUserCalendars(int $userId, array $options = []): array
     {
         file_put_contents('/tmp/gcal_debug.txt', 'hit start '.date('c').PHP_EOL, FILE_APPEND);
-        Log::info('syncUserCalendars start', ['userId' => $userId, 'options' => $options]);
         $summary = [];
         $calendars = $this->listCalendars($userId);
 
@@ -408,51 +394,17 @@ class GoogleCalendarService
 
             } while ($pageToken);
 
-            // Remove any events that are no longer in the calendar
-                Log::info('EVENT_IDS', ['ids' => $eventIds, 'calendarId' => $calendarId, 'userId' => $userId]);
-
-                // Diagnostic logs: list current tasks for this user/calendar
-                try {
-                    $existingTasks = Task::where('user_id', $userId)
-                        ->where('calendar_id', $calendarId)
-                        ->pluck('google_event_id')
-                        ->toArray();
-
-                    Log::info('TASKS_BEFORE_DELETE', [
-                        'userId' => $userId,
-                        'calendarId' => $calendarId,
-                        'existing_count' => count($existingTasks),
-                        'existing_ids_sample' => array_slice($existingTasks, 0, 20),
-                        'fetched_event_count' => count($eventIds),
-                        'fetched_ids_sample' => array_slice($eventIds, 0, 20),
-                    ]);
-                } catch (\Exception $e) {
-                    Log::error('TASKS_BEFORE_DELETE_FAILED', ['error' => $e->getMessage(), 'userId' => $userId, 'calendarId' => $calendarId]);
-                }
-
                 try {
                     if (!empty($eventIds)) {
                         $deleted = Task::where('user_id', $userId)
                             ->where('calendar_id', $calendarId)
                             ->whereNotIn('google_event_id', $eventIds)
                             ->delete();
-
-                        Log::info('TASKS_DELETED', ['deleted' => $deleted, 'userId' => $userId, 'calendarId' => $calendarId]);
                     } else {
                         // sem eventos retornados: apagar todas as tasks deste calendário
                         $deleted = Task::where('user_id', $userId)
                             ->where('calendar_id', $calendarId)
                             ->delete();
-
-                        Log::info('TASKS_DELETED_ALL', ['deleted' => $deleted, 'userId' => $userId, 'calendarId' => $calendarId]);
-                    }
-
-                    // Log remaining tasks after deletion
-                    try {
-                        $remaining = Task::where('user_id', $userId)->where('calendar_id', $calendarId)->pluck('google_event_id')->toArray();
-                        Log::info('TASKS_AFTER_DELETE', ['remaining_count' => count($remaining), 'remaining_sample' => array_slice($remaining, 0, 20), 'userId' => $userId, 'calendarId' => $calendarId]);
-                    } catch (\Exception $e) {
-                        Log::error('TASKS_AFTER_DELETE_FAILED', ['error' => $e->getMessage(), 'userId' => $userId, 'calendarId' => $calendarId]);
                     }
                 } catch (\Exception $e) {
                     Log::error('TASK_DELETE_FAILED', ['error' => $e->getMessage(), 'trace' => $e->getTraceAsString(), 'userId' => $userId, 'calendarId' => $calendarId]);

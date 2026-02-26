@@ -49,7 +49,6 @@ class IntegrationController extends Controller
 
     public function callback(Request $request, $provider)
     {
-        Log::info('OAuth callback received', ['provider' => $provider, 'query' => $request->query()]);
         $code = $request->query('code');
         $state = $request->query('state');
 
@@ -215,7 +214,6 @@ class IntegrationController extends Controller
 
     public function start(Request $request, $provider)
     {
-        Log::info('Starting OAuth flow', ['provider' => $provider, 'user_id' => $request->user()->id ?? null]);
         if (!isset($this->providers[$provider])) {
             return response()->json(['status' => false, 'message' => 'Unsupported provider'], 400);
         }
@@ -312,7 +310,6 @@ class IntegrationController extends Controller
      */
     public function emailStatus(Request $request)
     {
-        Log::info('Checking email integration status for user', ['user_id' => $request->user()->id ?? null]);
         $user = $request->user() ?? $this->getAuthenticatedUser($request);
         if (!$user) {
             return response()->json(['status' => false, 'message' => 'Unauthenticated'], 401);
@@ -338,7 +335,6 @@ class IntegrationController extends Controller
      */
     public function disconnectEmail(Request $request, $provider)
     {
-        Log::info('Disconnecting email integration', ['provider' => $provider, 'user_id' => $request->user()->id ?? null]);
         $user = $request->user() ?? $this->getAuthenticatedUser($request);
         if (!$user) {
             return response()->json(['status' => false, 'message' => 'Unauthenticated'], 401);
@@ -364,7 +360,6 @@ class IntegrationController extends Controller
      */
     public function calendarStatus(Request $request)
     {
-        Log::info('Checking calendar integration status for user', ['user_id' => $request->user()->id ?? null]);
         $user = $request->user() ?? $this->getAuthenticatedUser($request);
         if (!$user) {
             return response()->json(['status' => false, 'message' => 'Unauthenticated'], 401);
@@ -385,7 +380,6 @@ class IntegrationController extends Controller
      */
     public function disconnectCalendar(Request $request, $provider)
     {
-        Log::info('Disconnecting calendar integration', ['provider' => $provider, 'user_id' => $request->user()->id ?? null]);
         $user = $request->user() ?? $this->getAuthenticatedUser($request);
         if (!$user) {
             return response()->json(['status' => false, 'message' => 'Unauthenticated'], 401);

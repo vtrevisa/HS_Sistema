@@ -92,7 +92,6 @@ class GmailSender
 
         try {
             $gmail->users_messages->send('me', $message);
-            Log::info("E-mail enviado via Gmail para {$to} (usuário {$userId})");
             return true;
         } catch (\Exception $e) {
             Log::error("Falha no envio Gmail: " . $e->getMessage());
