@@ -139,7 +139,6 @@ class ScraperService
                 ]);
                 if ($response->getStatusCode() === 200) {
                     $workingProxies[] = $proxy;
-                    Log::info("Valid proxy: $proxy");
                 }
             } catch (\Exception $e) {
                 // Proxy failed - skip it

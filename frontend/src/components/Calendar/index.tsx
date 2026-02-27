@@ -9,9 +9,10 @@ import type { CreateTask } from '@/http/types/calendar'
 export function Calendario() {
  const calendar = useCalendar()
 
- const { saveTasks, updateTask } = useTasks()
+ const { saveTasks, updateTask, deleteTask } = useTasks()
 
  function handleSaveTask(task: CreateTask) {
+    console.log('calendar.taskToEdit', calendar.taskToEdit)
   if (calendar.taskToEdit) {
    updateTask.mutate({
     id: calendar.taskToEdit.id,
@@ -20,6 +21,11 @@ export function Calendario() {
   } else {
    saveTasks.mutate(task)
   }
+ }
+
+ function handleDeleteTask(taskId: any) {
+    if (!calendar.taskToEdit) return
+    deleteTask.mutate(calendar.taskToEdit.id)
  }
 
  return (
@@ -73,6 +79,7 @@ export function Calendario() {
     defaultDate={calendar.modalDefaultDate}
     task={calendar.taskToEdit}
     onSave={handleSaveTask}
+    onDelete={handleDeleteTask}
    />
   </div>
  )

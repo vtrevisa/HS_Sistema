@@ -9,7 +9,11 @@ use Illuminate\Support\Facades\Log;
 use Exception;
 use App\Models\User;
 use App\Models\EmailTemplate;
+use App\Services\GmailSender;
+use App\Services\MicrosoftSender;
+use App\Services\SmtpSender;
 use App\Traits\AuthenticatesWithToken;
+use Illuminate\Support\Facades\Validator;
 
 class EmailController extends Controller
 {
@@ -19,11 +23,9 @@ class EmailController extends Controller
     public function getTemplates(Request $request, User $user): JsonResponse
     {
         $user = $this->getAuthenticatedUser($request);
-        Log::info('Fetching email templates for user', ['user_id' => $user->id]);
-
         $templates = EmailTemplate::where('user_id', $user->id)
             ->orderBy('position')
-            ->get(['id', 'subject', 'body', 'position', 'active']);
+            ->get(['id', 'subject', 'body', 'position', 'active', 'user_id']);
 
         $activeTemplate = $templates->firstWhere('active', true);
 
@@ -36,10 +38,9 @@ class EmailController extends Controller
     // Create or update an email template for a user
     public function setEmailConfig(Request $request, User $user): JsonResponse
     {
-        Log::info('Setting email config for user', ['user_id' => $user->id, 'request' => $request->all()]);
         $request->validate([
-            'email_subject' => 'required|string',
-            'email_body' => 'required|string',
+            'email_subject' => 'string|nullable',
+            'email_body' => 'string|nullable',
             'position' => 'required|in:1,2,3,4,5',
             'active' => 'nullable|boolean',
         ]);
@@ -48,8 +49,6 @@ class EmailController extends Controller
         $body = $request->input('email_body');
         $position = (string) $request->input('position');
         $active = (bool) $request->input('active', false);
-
-
         try {
             // Ensure only one template per (user_id, position)
             $template = EmailTemplate::firstOrNew([
@@ -88,12 +87,12 @@ class EmailController extends Controller
         }
     }
 
-    public function send(Request $request, GmailSender $gmail, MicrosoftSender $microsoft)
+    public function send(Request $request, GmailSender $gmail, MicrosoftSender $microsoft, SmtpSender $smtp)
     {
-        Log::info('Attempting to send email', ['user_id' => $request->user()->id, 'request' => $request->all()]);
+        Log::info('send-email request received', ['request' => $request->all()]);
         $validator = Validator::make($request->all(), [
             'user_id' => 'required|integer',
-            'provider' => 'required|in:gmail,microsoft',
+            'provider' => 'required|in:gmail,microsoft,smtp',
             'to' => 'required|email',
             'subject' => 'required|string|max:255',
             'body' => 'required|string',
@@ -116,6 +115,13 @@ class EmailController extends Controller
                 );
             } else if ($request->provider === 'microsoft') {
                 $microsoft->send(
+                    $request->user_id,
+                    $request->to,
+                    $request->subject,
+                    $request->body
+                );
+            } else if ($request->provider === 'smtp') {
+                $smtp->send(
                     $request->user_id,
                     $request->to,
                     $request->subject,

@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 use App\Models\User;
 use App\Models\IntegrationToken;
+use App\Models\SmtpConfig;
 use App\Services\GmailSender;
 use App\Services\MicrosoftSender;
 use App\Traits\AuthenticatesWithToken;
@@ -45,11 +46,11 @@ class IntegrationController extends Controller
             // request openid/email/profile and offline access to retrieve provider email and refresh tokens
             'scope' => 'openid email profile offline_access https://graph.microsoft.com/Mail.Send User.Read',
         ],
+        'smtp' => []
     ];
 
     public function callback(Request $request, $provider)
     {
-        Log::info('OAuth callback received', ['provider' => $provider, 'query' => $request->query()]);
         $code = $request->query('code');
         $state = $request->query('state');
 
@@ -215,7 +216,6 @@ class IntegrationController extends Controller
 
     public function start(Request $request, $provider)
     {
-        Log::info('Starting OAuth flow', ['provider' => $provider, 'user_id' => $request->user()->id ?? null]);
         if (!isset($this->providers[$provider])) {
             return response()->json(['status' => false, 'message' => 'Unsupported provider'], 400);
         }
@@ -312,7 +312,6 @@ class IntegrationController extends Controller
      */
     public function emailStatus(Request $request)
     {
-        Log::info('Checking email integration status for user', ['user_id' => $request->user()->id ?? null]);
         $user = $request->user() ?? $this->getAuthenticatedUser($request);
         if (!$user) {
             return response()->json(['status' => false, 'message' => 'Unauthenticated'], 401);
@@ -320,7 +319,7 @@ class IntegrationController extends Controller
 
         $gmailToken = IntegrationToken::where('user_id', $user->id)->where('type', 'email')->where('provider', 'gmail')->first();
         $msToken = IntegrationToken::where('user_id', $user->id)->where('type', 'email')->where('provider', 'microsoft')->first();
-
+        $smtpToken = SmtpConfig::where('user_id', $user->id)->first();
         return response()->json([
             'gmail' => [
                 'connected' => (bool) $gmailToken,
@@ -330,6 +329,10 @@ class IntegrationController extends Controller
                 'connected' => (bool) $msToken,
                 'email' => $msToken->email ?? null,
             ],
+            'smtp' => [
+                'connected' => (bool) $smtpToken,
+                'email' => $smtpToken->from_name ?? $smtpToken->from_email ?? null,
+            ],
         ]);
     }
 
@@ -338,7 +341,6 @@ class IntegrationController extends Controller
      */
     public function disconnectEmail(Request $request, $provider)
     {
-        Log::info('Disconnecting email integration', ['provider' => $provider, 'user_id' => $request->user()->id ?? null]);
         $user = $request->user() ?? $this->getAuthenticatedUser($request);
         if (!$user) {
             return response()->json(['status' => false, 'message' => 'Unauthenticated'], 401);
@@ -346,17 +348,26 @@ class IntegrationController extends Controller
 
         // Allow 'microsoft' alias map to 'microsoft'
         $prov = $provider === 'microsoft' ? 'microsoft' : $provider;
-        if (!in_array($prov, ['gmail', 'microsoft'])) {
+        if (!in_array($prov, ['gmail', 'microsoft', 'smtp'])) {
             return response()->json(['status' => false, 'message' => 'Unsupported provider'], 400);
         }
 
-        // Only delete email-type tokens for this provider — do not remove calendar tokens
-        $deleted = IntegrationToken::where('user_id', $user->id)
-            ->where('type', 'email')
-            ->where('provider', $prov)
-            ->delete();
+        try {
+            if ($prov === 'smtp') {
+                $deleted = SmtpConfig::where('user_id', $user->id)->delete();
+            } else if (in_array($prov, ['gmail', 'microsoft'])) {
+            // Only delete email-type tokens for this provider — do not remove calendar tokens
+                $deleted = IntegrationToken::where('user_id', $user->id)
+                ->where('type', 'email')
+                ->where('provider', $prov)
+                ->delete();
+                
+                return response()->json(['status' => true, 'deleted' => (bool) $deleted]);
+            }
+        } catch (\Exception $e) {
+            return response()->json(['status' => false, 'error' => $e->getMessage()], 500);
+        }
 
-        return response()->json(['status' => true, 'deleted' => (bool) $deleted]);
     }
 
     /**
@@ -364,7 +375,6 @@ class IntegrationController extends Controller
      */
     public function calendarStatus(Request $request)
     {
-        Log::info('Checking calendar integration status for user', ['user_id' => $request->user()->id ?? null]);
         $user = $request->user() ?? $this->getAuthenticatedUser($request);
         if (!$user) {
             return response()->json(['status' => false, 'message' => 'Unauthenticated'], 401);
@@ -385,7 +395,6 @@ class IntegrationController extends Controller
      */
     public function disconnectCalendar(Request $request, $provider)
     {
-        Log::info('Disconnecting calendar integration', ['provider' => $provider, 'user_id' => $request->user()->id ?? null]);
         $user = $request->user() ?? $this->getAuthenticatedUser($request);
         if (!$user) {
             return response()->json(['status' => false, 'message' => 'Unauthenticated'], 401);

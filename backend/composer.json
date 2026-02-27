@@ -16,7 +16,8 @@
         "league/csv": "^9.24",
         "openai-php/client": "^0.16.1",
         "spatie/robots-txt": "^2.5",
-        "symfony/dom-crawler": "^7.3"
+        "symfony/dom-crawler": "^7.3",
+        "symfony/mailer": "^7.4"
     },
     "require-dev": {
         "fakerphp/faker": "^1.23",

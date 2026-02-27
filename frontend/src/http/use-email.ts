@@ -11,7 +11,6 @@ export function useEmail() {
     queryKey: ['email', 'status'],
     queryFn: async () => {
       const { data } = await api.get('/email/status')
-      console.log("📧 Email status fetched:", data);
       // backend returns { gmail: { connected, email }, microsoft: { connected, email } }
       return data as EmailStatus
     },
@@ -26,10 +25,11 @@ export function useEmail() {
       if (!userId) throw new Error("User id not provided for email config");
 
       const bodyPayload: any = {
-        email_subject: payload.email_subject ?? payload.subject ?? payload.template?.subject,
-        email_body: payload.email_body ?? payload.body ?? payload.template?.body,
-        position: payload.position ?? payload.template?.position,
-        active: payload.active ?? payload.template?.active ?? false,
+        user_id: userId,
+        email_subject: payload.email_subject,
+        email_body: payload.email_body,
+        position: payload.position,
+        active: payload.active,
       };
 
       const { data } = await api.put<{ status: boolean; template: EmailTemplate }>(
@@ -43,6 +43,7 @@ export function useEmail() {
       queryClient.invalidateQueries({ queryKey: ["authUser"] });
       queryClient.invalidateQueries({ queryKey: ["users"] });
       queryClient.invalidateQueries({ queryKey: ["authUser", updatedUser.id] });
+      queryClient.invalidateQueries({ queryKey: ["emailTemplates"] });
       console.log('Email config updated for user', updatedUser?.id);
     },
     onError: (error) => {

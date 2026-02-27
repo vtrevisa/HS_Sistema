@@ -14,7 +14,7 @@ export function CalendarActions({
  selectedDate
 }: CalendarActionsProps) {
     
-  const { syncEvents } = useGoogleCalendar()
+ const { syncEvents } = useGoogleCalendar()
  return (
   <div className="flex items-center gap-2">
     <Button

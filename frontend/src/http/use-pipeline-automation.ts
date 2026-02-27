@@ -1,8 +1,8 @@
 import { useCallback, useRef, useEffect } from "react";
 import type { LeadRequest } from "./types/leads";
-import type { UserRequest } from "./types/user";
 import { useEmail } from "./use-email";
 import { api } from "@/lib/api";
+import type { EmailTemplate } from "./types/email";
 
 export function usePipelineAutomation() {
   const { emailStatus } = useEmail();
@@ -13,39 +13,37 @@ export function usePipelineAutomation() {
   }, [emailStatus]);
   
   
-  const runAutomations = useCallback(async (lead: LeadRequest, newStatusId: string, user: UserRequest) => {
+  const runAutomations = useCallback(async (lead: LeadRequest, newStatusId: string, template: EmailTemplate) => {
     console.log("🔧 Automação acionada para:", lead, "status:", newStatusId);
 
     const provider = dataRef.current?.data?.gmail?.connected
     ? "gmail"
     : dataRef.current?.data?.microsoft?.connected
       ? "microsoft"
-      : null;
-    console.log('📧 Provedor de e-mail gmail: ', dataRef.current?.data?.gmail?.connected,
-      'microsoft: ', dataRef.current?.data?.microsoft?.connected,
-      'provider selecionado: ', provider
-     )
+      : dataRef.current?.data?.smtp?.connected
+        ? "smtp"
+        : null;
 
     switch (newStatusId) {
       case "contato-automatico": {
-        const providerEmail = dataRef.current?.data?.gmail?.email || dataRef.current?.data?.microsoft?.email || null;
+        const providerEmail = dataRef.current?.data?.gmail?.email || dataRef.current?.data?.microsoft?.email || dataRef.current?.data?.smtp?.email;
         if (!providerEmail) {
           console.warn('Nenhum provedor de e-mail conectado para o usuário.');
           break;
         }
-
+        console.log(`📧 Enviando e-mail de contato automático via ${provider} para ${lead.email} usando template:`, template);
         try {
           await api.post('send-email', {
-            user_id: user.id,
+            user_id: template.user_id,
             provider,
             to: lead.email,
-            subject: (user as any).email_subject,
-            body: (user as any).email_body,
+            subject: (template as any).subject,
+            body: (template as any).body,
           });
           console.log("📧 E-mail de contato automático enviado para", lead.email);
         } catch (error: any) {
           console.error('Erro ao enviar e-mail:', error.response?.data ?? error.message);
-          }
+        }
         console.log("💬 Aqui futuramente enviaremos WhatsApp via Waseller");
         break;
       }

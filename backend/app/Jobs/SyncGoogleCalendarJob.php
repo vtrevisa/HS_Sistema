@@ -23,8 +23,6 @@ class SyncGoogleCalendarJob implements ShouldQueue
 
     public function handle(GoogleCalendarService $calendarService)
     {
-        Log::info('SyncGoogleCalendarJob handle start', ['userId' => $this->userId]);
-
         $options = [
             'timeMin' => now()->toRfc3339String(),
             'timeMax' => now()->addMonths(6)->toRfc3339String(),
@@ -35,7 +33,6 @@ class SyncGoogleCalendarJob implements ShouldQueue
 
         try {
             $calendarService->syncUserCalendars($this->userId, $options);
-            Log::info('SyncGoogleCalendarJob handle finished', ['userId' => $this->userId]);
         } catch (\Exception $e) {
             Log::error('SyncGoogleCalendarJob handle failed', ['userId' => $this->userId, 'error' => $e->getMessage()]);
             throw $e;

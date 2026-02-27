@@ -96,8 +96,28 @@ export function useTasks() {
       }, 3200)
     }
   })
-
-
+  // Mutation to delete task
+  const deleteMutation = useMutation<void, AxiosError<any>, string>({
+    mutationFn: async (id: string) => {
+      await api.delete(`/tasks/${id}`)
+    },
+    onMutate: async (id: string) => {
+      await queryClient.cancelQueries({ queryKey: ['tasks-calendar'] })
+      const previousTasks = queryClient.getQueryData<Task[]>(['tasks-calendar'])
+      queryClient.setQueryData<Task[]>(['tasks-calendar'], old => old?.filter(t => t.id !== id) ?? [])
+      return { previousTasks }
+    },
+    onError: (error, _id, context: any) => {
+      queryClient.setQueryData(['tasks-calendar'], context?.previousTasks)
+      toast.error('Erro ao deletar a tarefa')
+    },
+    onSuccess: () => {
+      toast.success('Tarefa deletada com sucesso')
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ['tasks-calendar'] })
+    }
+  })
 
   // Mutation to set task completed
 
@@ -146,6 +166,7 @@ export function useTasks() {
     taskCompleted: toggleCompletedMutation.mutate,
     isLoading: tasksDB.isLoading,
     saveTasks: saveMutation,
-    updateTask: updateMutation
+    updateTask: updateMutation,
+    deleteTask: deleteMutation
   }
 }
