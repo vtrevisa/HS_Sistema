@@ -183,7 +183,7 @@ export function EmailConfigModal({ isOpen, onClose, user }: BaseModalProps) {
       </div>
      </div>
 
-     <div className="flex-1 pl-4">
+     <div className="flex-1 lg:pl-4">
       <Input
        type="text"
        value={subject}
