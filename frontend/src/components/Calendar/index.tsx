@@ -12,7 +12,7 @@ export function Calendario() {
  const { saveTasks, updateTask, deleteTask } = useTasks()
 
  function handleSaveTask(task: CreateTask) {
-    console.log('calendar.taskToEdit', calendar.taskToEdit)
+  console.log('calendar.taskToEdit', calendar.taskToEdit)
   if (calendar.taskToEdit) {
    updateTask.mutate({
     id: calendar.taskToEdit.id,
@@ -23,9 +23,9 @@ export function Calendario() {
   }
  }
 
- function handleDeleteTask(taskId: any) {
-    if (!calendar.taskToEdit) return
-    deleteTask.mutate(calendar.taskToEdit.id)
+ function handleDeleteTask() {
+  if (!calendar.taskToEdit) return
+  deleteTask.mutate(calendar.taskToEdit.id)
  }
 
  return (

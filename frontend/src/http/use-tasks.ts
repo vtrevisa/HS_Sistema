@@ -97,6 +97,7 @@ export function useTasks() {
     }
   })
   // Mutation to delete task
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const deleteMutation = useMutation<void, AxiosError<any>, string>({
     mutationFn: async (id: string) => {
       await api.delete(`/tasks/${id}`)
@@ -107,7 +108,8 @@ export function useTasks() {
       queryClient.setQueryData<Task[]>(['tasks-calendar'], old => old?.filter(t => t.id !== id) ?? [])
       return { previousTasks }
     },
-    onError: (error, _id, context: any) => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    onError: (_id, context: any) => {
       queryClient.setQueryData(['tasks-calendar'], context?.previousTasks)
       toast.error('Erro ao deletar a tarefa')
     },

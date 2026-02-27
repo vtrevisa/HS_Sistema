@@ -1,5 +1,5 @@
 // hooks/useCalendar.ts
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { api } from '@/lib/api'
 import { connectCalendar } from '@/components/Profile/calendarConnector';
 
@@ -16,7 +16,7 @@ interface CalendarEvent {
 export const useGoogleCalendar = () => {
     const [connected, setConnected] = useState(false);
     const [events, setEvents] = useState<CalendarEvent[]>([]);
-    const [loading, setLoading] = useState(true);
+    const [loading] = useState(true);
 
     const checkStatus = async () => {
         try {
