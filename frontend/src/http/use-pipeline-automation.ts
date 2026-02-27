@@ -20,11 +20,13 @@ export function usePipelineAutomation() {
     ? "gmail"
     : dataRef.current?.data?.microsoft?.connected
       ? "microsoft"
-      : null;
+      : dataRef.current?.data?.smtp?.connected
+        ? "smtp"
+        : null;
 
     switch (newStatusId) {
       case "contato-automatico": {
-        const providerEmail = dataRef.current?.data?.gmail?.email || dataRef.current?.data?.microsoft?.email || null;
+        const providerEmail = dataRef.current?.data?.gmail?.email || dataRef.current?.data?.microsoft?.email || dataRef.current?.data?.smtp?.email;
         if (!providerEmail) {
           console.warn('Nenhum provedor de e-mail conectado para o usuário.');
           break;
@@ -41,7 +43,7 @@ export function usePipelineAutomation() {
           console.log("📧 E-mail de contato automático enviado para", lead.email);
         } catch (error: any) {
           console.error('Erro ao enviar e-mail:', error.response?.data ?? error.message);
-          }
+        }
         console.log("💬 Aqui futuramente enviaremos WhatsApp via Waseller");
         break;
       }

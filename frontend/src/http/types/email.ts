@@ -1,6 +1,7 @@
 export type EmailStatus = {
   gmail: { connected: boolean; email?: string | null }
   microsoft: { connected: boolean; email?: string | null }
+  smtp: { connected: boolean; email?: string | null }
 }
 
 export type EmailTemplate = {

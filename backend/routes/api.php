@@ -1,5 +1,6 @@
 <?php
 
+use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\AlvaraController;
 use App\Http\Controllers\Api\AlvaraLogController;
 use App\Http\Controllers\Api\AlvaraPurchaseController;
@@ -19,8 +20,8 @@ use App\Http\Controllers\Api\CreditPurchaseController;
 use App\Http\Controllers\Api\DashboardController;
 use App\Http\Controllers\Api\InvoiceController;
 use App\Http\Controllers\Api\TaskController;
-use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\IntegrationController;
+use App\Http\Controllers\Api\SmtpConfigController;
 
 // Auth
 Route::post('/auth', [AuthController::class, 'login']); //POST
@@ -52,11 +53,18 @@ Route::prefix('calendar')->group(function () {
 
 
 // Email status, config & disconnect
-// Note: generic provider routes above handle gmail, microsoft and calendar
 Route::get('/email/status', [IntegrationController::class, 'emailStatus']); //GET - returns connected status per provider
 Route::delete('/email/disconnect/{provider}', [IntegrationController::class, 'disconnectEmail']); //DELETE - disconnect provider for user
 Route::post('/send-email', [EmailController::class, 'send']); //POST - send email using connected provider
 Route::put('/users/{user}/email-config', [EmailController::class, 'setEmailConfig']); //PUT - update email config like subject and body templates
+
+// Configurações SMTP
+Route::prefix('/smtp')->group(function () {
+        Route::get('/', [SmtpConfigController::class, 'show']);
+        Route::post('/', [SmtpConfigController::class, 'store']);
+        Route::delete('/', [SmtpConfigController::class, 'destroy']);
+        Route::post('/test', [SmtpConfigController::class, 'test']);
+    });
 
 //Templates
 Route::get('/email/templates', [EmailController::class, 'getTemplates']); //GET

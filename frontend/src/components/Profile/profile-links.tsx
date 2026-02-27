@@ -25,7 +25,7 @@ interface ProfileLinksProps {
 export function ProfileLinks({ user }: ProfileLinksProps) {
  const [activeModal, setActiveModal] = useState<string | null>(null)
  const [emailProvider, setEmailProvider] = useState<
-  'gmail' | 'microsoft' | null
+  'gmail' | 'microsoft' | 'smtp' | null
  >(null)
 
  const { connected, disconnect } = useGoogleCalendar()
@@ -41,9 +41,12 @@ export function ProfileLinks({ user }: ProfileLinksProps) {
     const data = res.data || {}
     const gmail = data.gmail?.connected
     const microsoft = data.microsoft?.connected
+    const smtp = data.smtp?.connected
+
     if (!mounted) return
     if (gmail) setEmailProvider('gmail')
     else if (microsoft) setEmailProvider('microsoft')
+    else if (smtp) setEmailProvider('smtp')
     else setEmailProvider(null)
    })
    .catch(() => {
@@ -148,6 +151,12 @@ export function ProfileLinks({ user }: ProfileLinksProps) {
            src="/microsoft_office_outlook_logo_icon.png"
            alt="microsoft"
            className="h-4 w-4 inline mr-1"
+          />
+         ) : emailProvider === 'smtp' ? (
+          <img
+           src="/public/locaweb-icon.png"
+           alt="Locaweb"
+           className="h-10 w-10 inline mr-1"
           />
          ) : (
           ''

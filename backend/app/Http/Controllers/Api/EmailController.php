@@ -11,6 +11,7 @@ use App\Models\User;
 use App\Models\EmailTemplate;
 use App\Services\GmailSender;
 use App\Services\MicrosoftSender;
+use App\Services\SmtpSender;
 use App\Traits\AuthenticatesWithToken;
 use Illuminate\Support\Facades\Validator;
 
@@ -86,11 +87,12 @@ class EmailController extends Controller
         }
     }
 
-    public function send(Request $request, GmailSender $gmail, MicrosoftSender $microsoft)
+    public function send(Request $request, GmailSender $gmail, MicrosoftSender $microsoft, SmtpSender $smtp)
     {
+        Log::info('send-email request received', ['request' => $request->all()]);
         $validator = Validator::make($request->all(), [
             'user_id' => 'required|integer',
-            'provider' => 'required|in:gmail,microsoft',
+            'provider' => 'required|in:gmail,microsoft,smtp',
             'to' => 'required|email',
             'subject' => 'required|string|max:255',
             'body' => 'required|string',
@@ -113,6 +115,13 @@ class EmailController extends Controller
                 );
             } else if ($request->provider === 'microsoft') {
                 $microsoft->send(
+                    $request->user_id,
+                    $request->to,
+                    $request->subject,
+                    $request->body
+                );
+            } else if ($request->provider === 'smtp') {
+                $smtp->send(
                     $request->user_id,
                     $request->to,
                     $request->subject,
