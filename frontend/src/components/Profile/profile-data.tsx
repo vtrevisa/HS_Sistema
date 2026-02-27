@@ -31,7 +31,9 @@ interface ProfileDataProps {
  user: UserRequest
 }
 
-const BASE_URL = 'http://localhost:8000'
+//const BASE_URL = 'http://localhost:8000'
+
+const BASE_URL = import.meta.env.VITE_PROFILE_URL || ''
 
 export function ProfileData({ user }: ProfileDataProps) {
  const fileInputRef = useRef<HTMLInputElement>(null)
@@ -117,10 +119,11 @@ export function ProfileData({ user }: ProfileDataProps) {
  }, [userData?.cnpj, isEditing])
 
  useEffect(() => {
-    return () => {
-        if (previewUrl && previewUrl.startsWith('blob:')) URL.revokeObjectURL(previewUrl)
-    }
-  }, [previewUrl])
+  return () => {
+   if (previewUrl && previewUrl.startsWith('blob:'))
+    URL.revokeObjectURL(previewUrl)
+  }
+ }, [previewUrl])
 
  function handleSaveProfile() {
   if (!userData) return
