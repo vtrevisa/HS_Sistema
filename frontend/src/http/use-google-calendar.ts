@@ -1,5 +1,5 @@
 // hooks/useCalendar.ts
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { api } from '@/lib/api'
 import { connectCalendar } from '@/components/Profile/calendarConnector';
 
@@ -21,10 +21,13 @@ export const useGoogleCalendar = () => {
     const checkStatus = async () => {
         try {
             const res = await api.get('/calendar/status');
-            console.log('Status do calendário:', res);
-            return res.data.calendar.connected;     
+            const connectedStatus = !!(res && res.data && res.data.calendar && res.data.calendar.connected);
+            setConnected(connectedStatus);
+            return connectedStatus;
         } catch (error) {
             console.error('Erro ao verificar status do calendário', error);
+            setConnected(false);
+            return false;
         }
     };
 
@@ -179,6 +182,12 @@ export const useGoogleCalendar = () => {
         setConnected(false);
         setEvents([]);
     };
+
+    useEffect(() => {
+        // verify connection status when the hook is first used (component mount)
+        checkStatus().catch(() => {});
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
 
     return {
         connected,

@@ -228,7 +228,7 @@ class GoogleCalendarService
 
         // Buscar evento existente
         $event = $service->events->get($calendarId, $eventId);
-
+        Log::info('Fetched event for update', ['user_id' => $userId, 'event_id' => $eventId, 'event_summary' => $event->getSummary()]);
         if (isset($data['summary'])) $event->setSummary($data['summary']);
         if (isset($data['location'])) $event->setLocation($data['location']);
         if (isset($data['description'])) $event->setDescription($data['description']);

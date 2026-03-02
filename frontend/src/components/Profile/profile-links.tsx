@@ -28,10 +28,12 @@ export function ProfileLinks({ user }: ProfileLinksProps) {
   'gmail' | 'microsoft' | 'smtp' | null
  >(null)
 
- const { connected, disconnect } = useGoogleCalendar()
+ const { connected, disconnect, checkStatus } = useGoogleCalendar()
 
  useEffect(() => {
- }, [connected, disconnect])
+  // refresh calendar connection status when this component mounts
+  checkStatus?.().catch(() => {})
+ }, [checkStatus])
 
  useEffect(() => {
   let mounted = true

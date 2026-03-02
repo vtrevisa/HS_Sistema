@@ -5,6 +5,7 @@ use App\Http\Controllers\Controller;
 use App\Services\GoogleCalendarService;
 use App\Traits\AuthenticatesWithToken;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 
 class GoogleCalendarController extends Controller
 {
@@ -102,6 +103,7 @@ class GoogleCalendarController extends Controller
             if (! $user) {
                 return response()->json(['error' => 'Unauthenticated'], 401);
             }
+            Log::info('Updating event controller: ', ['user_id' => $user->id, 'event_id' => $eventId, 'data' => $validated]);
 
             $event = $this->calendarService->updateEvent(
                 $user->id,
