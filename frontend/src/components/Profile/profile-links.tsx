@@ -90,7 +90,7 @@ export function ProfileLinks({ user }: ProfileLinksProps) {
         </div>
         <div className="text-sm text-muted-foreground">
          <img
-          src="/public/Google_Calendar_icon.png"
+          src="/Google_Calendar_icon.png"
           alt="Google Calendar"
           className="h-10 w-10 inline mr-1"
          />
@@ -144,7 +144,7 @@ export function ProfileLinks({ user }: ProfileLinksProps) {
         <div className="text-sm text-muted-foreground">
          {emailProvider === 'gmail' ? (
           <img
-           src="/public/gmail-icon.png"
+           src="/gmail-icon.png"
            alt="Gmail"
            className="h-10 w-10 inline mr-1"
           />
@@ -156,7 +156,7 @@ export function ProfileLinks({ user }: ProfileLinksProps) {
           />
          ) : emailProvider === 'smtp' ? (
           <img
-           src="/public/locaweb-icon.png"
+           src="/locaweb-icon.png"
            alt="Locaweb"
            className="h-10 w-10 inline mr-1"
           />
