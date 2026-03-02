@@ -1,4 +1,3 @@
-import { useState } from 'react'
 import {
  ChevronsLeftRightEllipsis,
  CreditCard,
@@ -14,23 +13,21 @@ import { ProfileCancelSubscription } from './profile-cancelsubscription'
 import type { UserRequest } from '@/http/types/user'
 import { ProfileLinks } from './profile-links'
 
-const mockSubscription = {
- planId: 1,
- planName: 'Básico',
- status: 'active',
- creditsLimit: 200,
- alvarasUsed: 45,
- nextBillingDate: '2025-01-04',
- price: 800
-}
+// const mockSubscription = {
+//  planId: 1,
+//  planName: 'Básico',
+//  status: 'active',
+//  creditsLimit: 200,
+//  alvarasUsed: 45,
+//  nextBillingDate: '2025-01-04',
+//  price: 800
+// }
 
 interface ProfileTabsProps {
  user: UserRequest
 }
 
 export function ProfileTabs({ user }: ProfileTabsProps) {
- const [subscription] = useState(mockSubscription)
-
  return (
   <Tabs defaultValue="plan-features" className="w-full">
    <TabsList className="grid w-full grid-cols-5">
@@ -74,10 +71,7 @@ export function ProfileTabs({ user }: ProfileTabsProps) {
    </TabsContent>
    <TabsContent value="cancel" className="mt-6">
     <div className="max-w-md">
-     <ProfileCancelSubscription
-      planName={subscription.planName}
-      nextBillingDate={subscription.nextBillingDate}
-     />
+     <ProfileCancelSubscription user={user} />
     </div>
    </TabsContent>
   </Tabs>

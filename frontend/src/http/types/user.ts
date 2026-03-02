@@ -2,6 +2,8 @@ export interface UserPlan {
   id: number
   name: string
   monthly_credits: number
+  plan_renews_at?: string
+
 }
 
 

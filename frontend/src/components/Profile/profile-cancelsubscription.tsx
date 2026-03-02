@@ -29,10 +29,10 @@ import { Button } from '../ui/button'
 import { Label } from '../ui/label'
 import { RadioGroup, RadioGroupItem } from '../ui/radio-group'
 import { Textarea } from '../ui/textarea'
+import type { UserRequest } from '@/http/types/user'
 
 interface ProfileCancelSubscriptionProps {
- planName: string
- nextBillingDate: string
+ user: UserRequest
  onCancel?: () => void
 }
 
@@ -46,8 +46,7 @@ const cancellationReasons = [
 ]
 
 export function ProfileCancelSubscription({
- planName,
- nextBillingDate,
+ user,
  onCancel
 }: ProfileCancelSubscriptionProps) {
  const [selectedReason, setSelectedReason] = useState('')
@@ -62,9 +61,6 @@ export function ProfileCancelSubscription({
   }
 
   setIsProcessing(true)
-
-  // TODO: Integrate with backend
-  // await new Promise(resolve => setTimeout(resolve, 2000))
 
   setIsProcessing(false)
   setIsCancelled(true)
@@ -95,9 +91,10 @@ export function ProfileCancelSubscription({
        <div>
         <p className="font-medium text-yellow-600">Cancelamento confirmado</p>
         <p className="text-sm text-muted-foreground mt-1">
-         Você continuará tendo acesso ao plano {planName} até{' '}
+         Você continuará tendo acesso ao plano {user.plan?.name} até{' '}
          <strong>
-          {new Date(nextBillingDate).toLocaleDateString('pt-BR')}
+          {user.plan?.plan_renews_at &&
+           new Date(user.plan.plan_renews_at).toLocaleDateString('pt-BR')}
          </strong>
          . Após essa data, sua conta será convertida para o plano gratuito.
         </p>
@@ -129,7 +126,7 @@ export function ProfileCancelSubscription({
      </div>
      <div>
       <CardTitle>Cancelar Assinatura</CardTitle>
-      <CardDescription>Encerrar seu plano {planName}</CardDescription>
+      <CardDescription>Encerrar seu plano {user.plan?.name}</CardDescription>
      </div>
     </div>
    </CardHeader>
@@ -140,7 +137,7 @@ export function ProfileCancelSubscription({
       <div className="text-sm">
        <p className="font-medium">Ao cancelar você perderá:</p>
        <ul className="mt-2 space-y-1 text-muted-foreground">
-        <li>• Acesso a 200 alvarás mensais</li>
+        <li>• Acesso a {user.plan?.monthly_credits} alvarás mensais</li>
         <li>• CRM completo de gestão de leads e pipeline</li>
         <li>• Busca de dados empresariais</li>
         <li>• Suporte prioritário</li>
@@ -197,7 +194,9 @@ export function ProfileCancelSubscription({
        <div className="p-3 rounded-lg bg-yellow-500/10 border border-yellow-500/20">
         <p className="text-sm text-yellow-600">
          <strong>Importante:</strong> Você continuará tendo acesso até{' '}
-         {new Date(nextBillingDate).toLocaleDateString('pt-BR')}.
+         {user.plan?.plan_renews_at &&
+          new Date(user.plan.plan_renews_at).toLocaleDateString('pt-BR')}
+         .
         </p>
        </div>
       </div>
