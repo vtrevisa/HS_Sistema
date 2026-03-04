@@ -26,18 +26,31 @@ export function useCompany() {
   // Mutation to save companies
   const saveMutation = useMutation<CompanyRequest[], AxiosError, Omit<CompanyRequest, 'id'>[]>({
     mutationFn: async (companies) => {
-      const responses = await Promise.all(
-        companies.map(company =>
-          api.post<CompanyRequest>("/companies", company).then(res => res.data)
+      const responses: CompanyRequest[] = []
+
+      for (const company of companies) {
+        const res = await api.post<CompanyRequest>(
+          '/companies',
+          company
         )
-      )
+
+        responses.push(res.data)
+      }
+
       return responses
     },
     onSuccess: () => {
-      alert('Alvarás exportados com sucesso!')
+      queryClient.invalidateQueries({ queryKey: ["companies"] });
+
+      toast.success('Alvarás exportados com sucesso!', {
+        id: 'import-companies',
+        description: undefined
+      })
     },
     onError: (error) => {
-      alert('Erro ao exportar alvarás: ' + error.message)
+      toast.error('Erro ao exportar alvarás: ' + error.message, {
+        id: 'import-companies'
+      })
     }
   })
 

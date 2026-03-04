@@ -107,9 +107,6 @@ export function ImportAlvarasModal({
 
   setIsLoading(true)
   setImportProgress({ current: 0, total: 0 })
-  console.log(
-   `Iniciando importação ${importType === 'sheets' ? 'Google Sheets' : 'Excel'}`
-  )
 
   try {
    const rawAlvaras = (await loadRawAlvaras()) as ExcelAlvara[]
@@ -134,17 +131,18 @@ export function ImportAlvarasModal({
     complement: lead.complement || lead.complemento || ''
    }))
 
-   onImportComplete(processedAlvaras)
-
-   setImportStatus('success')
-
-   toast.success('Importação concluída!', {
+   toast.warning('Importando dados...', {
+    id: 'import-companies',
     description:
      processedAlvaras.length === 1
       ? '1 alvará importado, salvando no sistema...'
       : `${processedAlvaras.length} alvarás importados, salvando no sistema...`,
-    duration: 3000
+    duration: Infinity
    })
+
+   onImportComplete(processedAlvaras)
+
+   setImportStatus('success')
 
    resetImportStateAfterDelay()
   } catch (error) {

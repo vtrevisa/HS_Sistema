@@ -206,7 +206,7 @@ export function Companies() {
   saveLeads.mutate(leadsToCreate)
  }
 
- function handleImportComplete(importedAlvaras: CompanyRequest[]) {
+ async function handleImportComplete(importedAlvaras: CompanyRequest[]) {
   const processedAlvaras = importedAlvaras.map(alvara => {
    return {
     ...alvara,
@@ -220,7 +220,7 @@ export function Companies() {
    }
   })
 
-  saveCompanies.mutate(processedAlvaras)
+  await saveCompanies.mutateAsync(processedAlvaras)
  }
 
  const companiesWithLead = useMemo<Set<string>>(() => {
