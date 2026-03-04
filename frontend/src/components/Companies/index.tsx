@@ -223,6 +223,37 @@ export function Companies() {
   await saveCompanies.mutateAsync(processedAlvaras)
  }
 
+ async function handleExcelModelDownload() {
+  try {
+   toast.warning('Preparando download...')
+
+   const response = await fetch(
+    'https://app.avcbcerto.com.br/excel/MODELO_PLANILHA_AVCBCERTO.xlsx'
+   )
+
+   if (!response.ok) {
+    throw new Error('Erro ao baixar arquivo')
+   }
+
+   const blob = await response.blob()
+   const url = window.URL.createObjectURL(blob)
+
+   const link = document.createElement('a')
+   link.href = url
+   link.download = 'MODELO_PLANILHA_AVCBCERTO.xlsx'
+   document.body.appendChild(link)
+   link.click()
+   link.remove()
+
+   window.URL.revokeObjectURL(url)
+
+   toast.success('Download iniciado')
+  } catch (error) {
+   toast.error('Erro ao baixar arquivo')
+   console.log(error)
+  }
+ }
+
  const companiesWithLead = useMemo<Set<string>>(() => {
   return new Set(
    (leadsDB.data ?? [])
@@ -245,6 +276,7 @@ export function Companies() {
      generateAllLeads={generateAllLeads}
      onNewCompanyClick={() => setIsNewCompanyModalOpen(true)}
      onImportClick={() => setIsImportModalOpen(true)}
+     onDownloadClick={handleExcelModelDownload}
     />
    </div>
 

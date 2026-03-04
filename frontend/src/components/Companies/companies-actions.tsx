@@ -1,19 +1,30 @@
-import { Plus, RefreshCw, Upload } from 'lucide-react'
+import { Download, Plus, RefreshCw, Upload } from 'lucide-react'
 import { Button } from '../ui/button'
 
 interface CompaniesActionsProps {
  onNewCompanyClick: () => void
  onImportClick: () => void
  generateAllLeads?: () => Promise<void>
+ onDownloadClick: () => Promise<void>
 }
 
 export function CompaniesActions({
  onImportClick,
  generateAllLeads,
- onNewCompanyClick
+ onNewCompanyClick,
+ onDownloadClick
 }: CompaniesActionsProps) {
  return (
   <div className="flex gap-2 flex-col sm:flex-row">
+   <Button
+    onClick={onDownloadClick}
+    variant="outline"
+    className="bg-secondary text-secondary-foreground"
+   >
+    <Download className="h-4 w-4 mr-2" />
+    Baixar Modelo de Planilha
+   </Button>
+
    <Button onClick={onImportClick}>
     <Upload className="h-4 w-4 mr-2" />
     Importar Planilha
