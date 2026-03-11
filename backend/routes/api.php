@@ -27,6 +27,7 @@ use App\Http\Controllers\Api\SmtpConfigController;
 Route::post('/auth', [AuthController::class, 'login']); //POST
 
 // Dashboard
+use App\Http\Controllers\Api\NakayaController;
 Route::get('/dashboard', [DashboardController::class, 'index']); //GET 
 
 
@@ -162,5 +163,10 @@ Route::post('/whatsapp/webhook', [AutomationController::class, 'receiveWhatsAppW
 // Route::group(['middleware' => ['auth:sanctum']], function () {
 
   
+ 
+// Nakaya proxy endpoints (proxy to external API, keeps token on backend)
+Route::post('/nakaya/cidades/diferentes', [NakayaController::class, 'consultaCidades']);
+Route::post('/nakaya/solicitacao/vencimentos', [NakayaController::class, 'solicitacaoVencimentos']);
+Route::get('/nakaya/records', [NakayaController::class, 'getRecords']);
 
 // });
