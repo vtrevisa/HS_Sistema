@@ -42,4 +42,10 @@ return [
     'tenant' => env('MICROSOFT_TENANT_ID', 'common'),
 ],
 
+    'nakaya' => [
+        'base_uri' => env('NAKAYA_BASE_URL'),
+        'auth_header' => env('NAKAYA_AUTH', 'Authorization'),
+        'token' => env('NAKAYA_TOKEN'),
+    ],
+
 ];
